@@ -17,55 +17,58 @@ NOME_ARQUIVO = "acidentes_2025.xlsx"
 
 @st.cache_data(ttl=1800)  # Mantém o cache por 30 minutos para performance
 def carregar_e_limpar_dados(caminho):
-    colunas_excel = "B,E,I,O,R:U,X:AA,AD:AG,AK:AM,BF,BI,BM,BO,BZ,CB:CE,CF"
+    # Carrega a aba inteira para evitar erros de índice de coluna
+    df = pd.read_excel(caminho, sheet_name="Geral")
     
-    # Leitura direcionada explicitamente para a aba "Geral"
-    df = pd.read_excel(
-        caminho, 
-        sheet_name="Geral", 
-        usecols=colunas_excel
-    )
+    # REMOVE ESPAÇOS EM BRANCO EXTRA (Limpando "Marca Comercial Produto 1 " para "Marca Comercial Produto 1")
+    df.columns = df.columns.str.strip()
     
+    # Mapeamento exato baseado na lista oficial fornecida
     dicionario_colunas = {
-        'Número do Processo': 'num_processo',
-        'Instalação': 'instalacao',
-        'Bacia Sedimentar': 'bacia_sedimentar',
-        'Origem do Acidente': 'origem_acidente',
-        'Empresa': 'empresa',
-        'Acionamento do PEI': 'acionamento_pei',
-        'Tempo de Atendimento': 'tempo_atendimento',
-        'Forma de Atendimento': 'forma_atendimento',
-        'Dias até o encerramento': 'dias_encerramento',
-        'Caracteristica do Produto': 'caracteristica_produto',
-        'Marca Comercial do Produto 1': 'marca_p1',
-        'Produto 1': 'prod_1',
-        'Quantidade do Produto 1': 'qtd_p1',
-        'Unidade': 'uni_p1',
-        'Marca Comercial Produto 2': 'marca_p2',
-        'Produto 2': 'prod_2',
-        'Quantidade Produt 2': 'qtd_p2',
-        'Unidade Produt 2': 'uni_p2',
-        'Marca Comercial Produto 3': 'marca_p3',
-        'Produto 3': 'prod_3',
-        'Quantidade Produt 3': 'qtd_p3',
-        'Unidade Produt 3': 'uni_p3',
-        'Causas 1': 'causa_1',
-        'Causas 2': 'causa_2',
-        'Causas 3': 'causa_3',
-        'OperaçãoOperação/ocorrência/sistema': 'operacao',
-        'Equipamento/sistema envolvido': 'equipamento',
-        'Técnica de contenção/dispersão': 'tecnica_contencao',
-        'Mobilização de embarcação de resposta': 'mobilizacao_barco'
+        "Processo SEI": "num_processo",
+        "Endereço (especificar plataforma, navio, km da rodovia, ferrovia e duto)": "instalacao",
+        "Bacia Sedimentar": "bacia_sedimentar",
+        "Origem do acidente": "origem_acidente",
+        "Marca Comercial Produto 1": "marca_p1",
+        "Produto 1": "prod_1",
+        "Quantidade do vazamento (Produto 1)": "qtd_p1",
+        "Unidade do vazamento (Produto 1)": "uni_p1",
+        "Marca Comercial Produto 2": "marca_p2",
+        "Produto 2": "prod_2",
+        "Quantidade do vazamento (Produto 2)": "qtd_p2",
+        "Unidade do vazamento (Produto 2)": "uni_p2",
+        "Marca Comercial Produto 3": "marca_p3",
+        "Produto 3": "prod_3",
+        "Quantidade do vazamento (Produto 3)": "qtd_p3",
+        "Unidade do vazamento (Produto 3)": "uni_p3",
+        "Causa do Evento Padronizada 1 (indicado no Relat. Pós-Acidente ou outro documento)": "causa_1",
+        "Causa do Evento Padronizada 2 (indicado no Relat. Pós-Acidente ou outro documento)": "causa_2",
+        "Causa do Evento Padronizada 3 (indicado no Relat. Pós-Acidente ou outro documento)": "causa_3",
+        "Empresa": "empresa",
+        "Acionado PEI ou similar?": "acionamento_pei",
+        "Tempo de atendimento (em dias)": "tempo_atendimento",
+        "Forma de atendimento (primeiro documento/ação)": "forma_atendimento",
+        "Dias Até Encerramento da Investigação": "dias_encerramento",
+        "Operação/ocorrência/sistema": "operacao",
+        "Equipamento/sistema envolvido": "equipamento",
+        "Técnica de contenção/dispersão": "tecnica_contencao",
+        "Mobilização de embarcação de resposta": "mobilizacao_barco",
+        "Característica do produto": "caracteristica_produto"
     }
     
-    df.columns = [dicionario_colunas.get(col, col) for col in df.columns]
+    # Filtra apenas as colunas mapeadas que de fato existem no Excel (evita KeyError)
+    colunas_existentes = [col for col in dicionario_colunas.keys() if col in df.columns]
+    df_filtrado = df[colunas_existentes].rename(columns=dicionario_colunas)
     
     # --- Tratamento de Dados (Data Cleaning) ---
-    df['empresa'] = df['empresa'].astype(str).str.strip().replace('nan', 'Não Informado')
-    df['bacia_sedimentar'] = df['bacia_sedimentar'].astype(str).str.strip().replace('nan', 'Não Informada')
-    df['dias_encerramento'] = pd.to_numeric(df['dias_encerramento'], errors='coerce').fillna(0).astype(int)
+    if 'empresa' in df_filtrado.columns:
+        df_filtrado['empresa'] = df_filtrado['empresa'].astype(str).str.strip().replace('nan', 'Não Informado')
+    if 'bacia_sedimentar' in df_filtrado.columns:
+        df_filtrado['bacia_sedimentar'] = df_filtrado['bacia_sedimentar'].astype(str).str.strip().replace('nan', 'Não Informada')
+    if 'dias_encerramento' in df_filtrado.columns:
+        df_filtrado['dias_encerramento'] = pd.to_numeric(df_filtrado['dias_encerramento'], errors='coerce').fillna(0).astype(int)
     
-    return df
+    return df_filtrado
 
 if os.path.exists(NOME_ARQUIVO):
     try:
@@ -73,41 +76,59 @@ if os.path.exists(NOME_ARQUIVO):
         
         # Filtro de Plataformas (busca inteligente na coluna de Origem ou Instalação)
         termos_plataforma = "Plataforma|FPSO|Sonda|FSO|Semi-submersível"
+        
+        # Garante que as colunas existam antes de aplicar o filtro de texto
+        coluna_origem = df_bruto['origem_acidente'].astype(str) if 'origem_acidente' in df_bruto.columns else pd.Series()
+        coluna_instalacao = df_bruto['instalacao'].astype(str) if 'instalacao' in df_bruto.columns else pd.Series()
+        
         df_plataformas = df_bruto[
-            df_bruto['origem_acidente'].astype(str).str.contains(termos_plataforma, case=False, na=False) |
-            df_bruto['instalacao'].astype(str).str.contains(termos_plataforma, case=False, na=False)
+            coluna_origem.str.contains(termos_plataforma, case=False, na=False) |
+            coluna_instalacao.str.contains(termos_plataforma, case=False, na=False)
         ].copy()
         
         # --- PAINEL LATERAL (Filtros) ---
         st.sidebar.header("Filtros do Painel")
         
-        bacias_disponiveis = sorted(df_plataformas['bacia_sedimentar'].unique())
+        # Filtro de Bacias
+        bacias_disponiveis = sorted(df_plataformas['bacia_sedimentar'].unique()) if 'bacia_sedimentar' in df_plataformas.columns else []
         bacias_selecionadas = st.sidebar.multiselect(
             "Selecione as Bacias Sedimentares:",
             options=bacias_disponiveis,
             default=bacias_disponiveis
         )
         
-        empresas_disponiveis = sorted(df_plataformas['empresa'].unique())
+        # Filtro de Empresas
+        empresas_disponiveis = sorted(df_plataformas['empresa'].unique()) if 'empresa' in df_plataformas.columns else []
         empresas_selecionadas = st.sidebar.multiselect(
             "Selecione as Empresas:",
             options=empresas_disponiveis,
             default=empresas_disponiveis
         )
         
-        df_filtrado = df_plataformas[
-            (df_plataformas['bacia_sedimentar'].isin(bacias_selecionadas)) &
-            (df_plataformas['empresa'].isin(empresas_selecionadas))
-        ]
+        # Filtra os dados com base na seleção do usuário
+        df_filtrado = df_plataformas.copy()
+        if 'bacia_sedimentar' in df_filtrado.columns:
+            df_filtrado = df_filtrado[df_filtrado['bacia_sedimentar'].isin(bacias_selecionadas)]
+        if 'empresa' in df_filtrado.columns:
+            df_filtrado = df_filtrado[df_filtrado['empresa'].isin(empresas_selecionadas)]
         
         # --- CORPO PRINCIPAL (Visualizações) ---
         col1, col2, col3 = st.columns(3)
         
         total_acidentes = len(df_filtrado)
-        media_dias_fechamento = df_filtrado['dias_encerramento'].mean() if total_acidentes > 0 else 0
         
-        total_pei = df_filtrado['acionamento_pei'].astype(str).str.strip().str.upper().isin(['SIM', 'S']).sum()
-        percentual_pei = (total_pei / total_acidentes * 100) if total_acidentes > 0 else 0
+        # Média de dias para encerramento de forma segura
+        if 'dias_encerramento' in df_filtrado.columns and total_acidentes > 0:
+            media_dias_fechamento = df_filtrado['dias_encerramento'].mean()
+        else:
+            media_dias_fechamento = 0
+            
+        # Taxa de acionamento do PEI
+        if 'acionamento_pei' in df_filtrado.columns and total_acidentes > 0:
+            total_pei = df_filtrado['acionamento_pei'].astype(str).str.strip().str.upper().isin(['SIM', 'S']).sum()
+            percentual_pei = (total_pei / total_acidentes * 100)
+        else:
+            total_pei, percentual_pei = 0, 0
         
         with col1:
             st.metric("Total de Acidentes", f"{total_acidentes}")
@@ -122,7 +143,7 @@ if os.path.exists(NOME_ARQUIVO):
         
         with col_grafico:
             st.subheader("Acidentes por Empresa")
-            if not df_filtrado.empty:
+            if not df_filtrado.empty and 'empresa' in df_filtrado.columns:
                 df_grafico = df_filtrado['empresa'].value_counts().reset_index()
                 df_grafico.columns = ['Empresa', 'Quantidade']
                 
@@ -142,14 +163,16 @@ if os.path.exists(NOME_ARQUIVO):
                 
         with col_tabela:
             st.subheader("Base Filtrada")
+            # Exibe as colunas principais na tabela se elas existirem
+            colunas_exibicao = [c for c in ['num_processo', 'instalacao', 'bacia_sedimentar', 'empresa', 'dias_encerramento'] if c in df_filtrado.columns]
             st.dataframe(
-                df_filtrado[['num_processo', 'instalacao', 'bacia_sedimentar', 'empresa', 'dias_encerramento']], 
+                df_filtrado[colunas_exibicao], 
                 use_container_width=True,
                 height=400
             )
             
     except Exception as e:
-        st.error("Erro ao processar as colunas da planilha.")
+        st.error("Erro interno no processamento de dados do dashboard.")
         st.code(str(e))
 else:
     st.info(f"Aguardando o upload do arquivo `{NOME_ARQUIVO}` para o repositório.")
