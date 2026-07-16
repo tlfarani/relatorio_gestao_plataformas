@@ -12,7 +12,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# --- ESTILIZAÇÃO DO TEMA DO IBAMA (CSS PREMIUM COM CARD EFFECT) ---
+# --- ESTILIZAÇÃO DO TEMA DO IBAMA (CSS PREMIUM AJUSTADO) ---
 st.markdown("""
 <style>
     /* 1. Cor de fundo principal da página (Cinza Claro) */
@@ -75,13 +75,14 @@ st.markdown("""
         font-weight: bold !important;
     }
     
-    /* 8. ARREDONDAMENTO DAS BORDAS DAS FIGURAS (PLOTLY CHARTS) */
+    /* 8. ARREDONDAMENTO DAS BORDAS DAS FIGURAS (RESOLVENDO CONFLITO DE HOVER) */
     .stPlotlyChart {
         background-color: #FFFFFF !important;
         border-radius: 14px !important;
-        padding: 15px !important;
+        /* Padding de 15px removido para evitar colisão com o botão fullscreen do Streamlit */
         border: 1px solid #E2E8E2 !important;
         box-shadow: 0 4px 10px rgba(0,0,0,0.04) !important;
+        overflow: hidden !important; /* Mantém o corte suave nos cantos arredondados */
     }
     
     /* 9. Customização do painel lateral de filtros (Sidebar) */
@@ -270,7 +271,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO):
                         color_continuous_scale='Reds'
                     )
                     
-                    # Formatações: Título centralizado e fontes maiores
+                    # Formatações: Título centralizado e fontes ampliadas
                     fig.update_layout(
                         title=dict(
                             text="<b>Volume de Ocorrências por Operadora (2025)</b>",
@@ -280,10 +281,10 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO):
                         ),
                         plot_bgcolor='white',
                         paper_bgcolor='white',
-                        font=dict(color='black', size=13), # Fonte principal um pouco maior
+                        font=dict(color='black', size=13), 
                         yaxis={'categoryorder':'total ascending'}, 
                         showlegend=False,
-                        margin=dict(t=80, b=40, l=40, r=40)
+                        margin=dict(t=80, b=40, l=40, r=40) # Respiro inserido internamente
                     )
                     fig.update_xaxes(showgrid=False, zeroline=False, linecolor='black', tickfont=dict(color='black', size=12), title_font=dict(color='black', size=14))
                     fig.update_yaxes(showgrid=False, zeroline=False, linecolor='black', tickfont=dict(color='black', size=12), title_font=dict(color='black', size=14))
@@ -334,8 +335,8 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO):
                 
                 df_g1 = pd.DataFrame({'Ano': [str(x) for x in anos_g1], 'Acidentes': acid_vals_g1, 'Taxa': taxas_g1})
                 
-                # Solução Y-Axis Clash: O limite do eixo da esquerda é estendido para dar folga às barras
-                limite_y_comum = max(acid_vals_g1) * 1.25 # Margem segura para os rótulos de dados
+                # Alinha os dois eixos na mesma escala de tamanho para afastar a linha e as barras (sem sobreposição)
+                limite_y_comum = max(acid_vals_g1) * 1.25 
                 
                 fig1 = make_subplots(specs=[[{"secondary_y": True}]])
                 fig1.add_trace(
@@ -343,7 +344,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO):
                         x=df_g1['Ano'], y=df_g1['Acidentes'], 
                         name="Nº de Acidentes", marker_color='#3498db',
                         text=df_g1['Acidentes'], textposition='outside',
-                        textfont=dict(color='black', size=12, family="Arial Black") 
+                        textfont=dict(color='black', size=13) 
                     ),
                     secondary_y=False
                 )
@@ -353,12 +354,12 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO):
                         name="Acidentes / Mboe/d", mode='lines+markers+text',
                         line=dict(color='#2c3e50', width=3), marker=dict(size=8, symbol='circle'),
                         text=df_g1['Taxa'], textposition='top center',
-                        textfont=dict(color='black', size=12, family="Arial Black") 
+                        textfont=dict(color='black', size=13) 
                     ),
                     secondary_y=True
                 )
                 
-                # Centraliza o título, aumenta fontes gerais e ajusta legendas
+                # Centralização do título, legenda e aumento dos textos
                 fig1.update_layout(
                     title=dict(
                         text="<b>Total de Acidentes por Ano e Taxa por Produção (2021-2025)</b>",
@@ -370,12 +371,11 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO):
                     paper_bgcolor='white',
                     font=dict(color='black', size=13), 
                     legend=dict(
-                        orientation="h", yanchor="bottom", y=1.02, xanchor="center", x=0.5, # Centraliza a legenda
-                        font=dict(color='black', size=12) 
+                        orientation="h", yanchor="bottom", y=1.02, xanchor="center", x=0.5,
+                        font=dict(color='black', size=13) 
                     ),
-                    margin=dict(t=80, b=40, l=40, r=40)
+                    margin=dict(t=100, b=50, l=50, r=50) # Respiro interno
                 )
-                # Removendo grades e fixando as duas escalas de Y no mesmo limite dinâmico
                 fig1.update_xaxes(showgrid=False, zeroline=False, linecolor='black', tickfont=dict(color='black', size=12), title_font=dict(color='black', size=14))
                 fig1.update_yaxes(title_text="Nº de Acidentes por Ano (Barras)", secondary_y=False, range=[0, limite_y_comum], showgrid=False, zeroline=False, linecolor='black', tickfont=dict(color='black', size=12), title_font=dict(color='black', size=14))
                 fig1.update_yaxes(title_text="Acidentes / Mboe/d (Linha)", secondary_y=True, range=[0, limite_y_comum], showgrid=False, zeroline=False, linecolor='black', tickfont=dict(color='black', size=12), title_font=dict(color='black', size=14))
@@ -396,14 +396,17 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO):
                 )
                 df_g2_melted['Ano'] = df_g2_melted['Ano'].str.replace('Acid_', '')
                 
+                # Ordenação de Bacias pelo volume total
                 bacia_ranking = df_g2_clean.set_index('Bacia Sedimentar')[['Acid_2023', 'Acid_2024', 'Acid_2025']].sum(axis=1).sort_values(ascending=False).index.tolist()
                 df_g2_melted['Bacia Sedimentar'] = pd.Categorical(df_g2_melted['Bacia Sedimentar'], categories=bacia_ranking, ordered=True)
                 df_g2_melted = df_g2_melted.sort_values('Bacia Sedimentar')
                 
+                # CORREÇÃO CRÍTICA: category_orders força a ordenação exata das barras agrupadas por Ano
                 fig2 = px.bar(
                     df_g2_melted, x='Bacia Sedimentar', y='Acidentes', color='Ano', barmode='group',
                     text='Acidentes',
-                    color_discrete_sequence=['#2ecc71', '#3498db', '#f39c12'] 
+                    color_discrete_sequence=['#2ecc71', '#3498db', '#f39c12'], 
+                    category_orders={"Ano": ["2023", "2024", "2025"]} # <-- FORÇA ORDENAÇÃO DAS BARRAS
                 )
                 fig2.update_traces(textposition='outside', textfont=dict(color='black', size=12))
                 fig2.update_layout(
@@ -419,9 +422,9 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO):
                     font=dict(color='black', size=13),
                     legend=dict(
                         orientation="h", yanchor="bottom", y=1.02, xanchor="center", x=0.5,
-                        font=dict(color='black', size=12)
+                        font=dict(color='black', size=13)
                     ),
-                    margin=dict(t=80, b=40, l=40, r=40)
+                    margin=dict(t=100, b=50, l=50, r=50) # Respiro interno
                 )
                 fig2.update_xaxes(showgrid=False, zeroline=False, linecolor='black', tickfont=dict(color='black', size=12), title_font=dict(color='black', size=14))
                 fig2.update_yaxes(showgrid=False, zeroline=False, linecolor='black', tickfont=dict(color='black', size=12), title_font=dict(color='black', size=14))
@@ -458,7 +461,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO):
                     plot_bgcolor='white',
                     paper_bgcolor='white',
                     font=dict(color='black', size=13),
-                    margin=dict(t=80, b=40, l=40, r=40)
+                    margin=dict(t=100, b=50, l=50, r=50) # Respiro interno
                 )
                 fig3.update_xaxes(showgrid=False, zeroline=False, linecolor='black', tickfont=dict(color='black', size=12), title_font=dict(color='black', size=14))
                 fig3.update_yaxes(showgrid=False, zeroline=False, linecolor='black', tickfont=dict(color='black', size=12), title_font=dict(color='black', size=14))
@@ -479,9 +482,11 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO):
                 )
                 df_g4_melted['Ano'] = df_g4_melted['Ano'].str.replace('Rate_', '')
                 
+                # CORREÇÃO CRÍTICA: category_orders força a ordenação exata das barras agrupadas por Ano
                 fig4 = px.bar(
                     df_g4_melted, x='Bacia Sedimentar', y='Taxa', color='Ano', barmode='group',
-                    text='Taxa', color_discrete_sequence=['#2ecc71', '#3498db', '#f39c12'] 
+                    text='Taxa', color_discrete_sequence=['#2ecc71', '#3498db', '#f39c12'],
+                    category_orders={"Ano": ["2023", "2024", "2025"]} # <-- FORÇA ORDENAÇÃO DAS BARRAS
                 )
                 fig4.update_traces(texttemplate='%{text:.1f}', textposition='outside', textfont=dict(color='black', size=12))
                 fig4.update_layout(
@@ -497,9 +502,9 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO):
                     font=dict(color='black', size=13),
                     legend=dict(
                         orientation="h", yanchor="bottom", y=1.02, xanchor="center", x=0.5,
-                        font=dict(color='black', size=12)
+                        font=dict(color='black', size=13)
                     ),
-                    margin=dict(t=80, b=40, l=40, r=40)
+                    margin=dict(t=100, b=50, l=50, r=50) # Respiro interno
                 )
                 fig4.update_xaxes(showgrid=False, zeroline=False, linecolor='black', tickfont=dict(color='black', size=12), title_font=dict(color='black', size=14))
                 fig4.update_yaxes(showgrid=False, zeroline=False, linecolor='black', tickfont=dict(color='black', size=12), title_font=dict(color='black', size=14))
