@@ -567,7 +567,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                 st.plotly_chart(fig9, use_container_width=True)
 
         # =========================================================================
-        # ABA 4: CONSOLIDAÇÃO DE DADOS POR PRODUTO (HIGIENIZADA E FORMATAÇÃO BR)
+        # ABA 4: CONSOLIDAÇÃO DE DADOS POR PRODUTO (HIGIENIZADA E 8 CASAS DECIMAIS)
         # =========================================================================
         with tab_produtos:
             st.markdown("### 🛢️ Inventário Consolidado de Produtos e Marcas Comerciais")
@@ -595,12 +595,9 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                 
                 # 2. Trata misturas de ponto e vírgula comuns no Excel
                 if '.' in val_str and ',' in val_str:
-                    # Ex: 1.234,56 -> vira 1234.56
                     val_str = val_str.replace('.', '').replace(',', '.')
                 elif ',' in val_str:
-                    # Ex: 12,34 (Preenchimento manual) -> vira 12.34
                     val_str = val_str.replace(',', '.')
-                # Se tiver apenas o ponto (Ex: 12.34 do Siema), mantém o ponto
                 
                 try:
                     return float(val_str)
@@ -609,7 +606,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
 
             registros_produtos = []
             
-            # Varre as linhas aplicando os filtros e higienizações solicitadas
+            # Varre as linhas aplicando os filtros e higienizações
             for _, row in df_plataformas_2025.iterrows():
                 equipamento_atual = str(row.get('equipment', 'Não Informado')).strip()
                 id_processo = str(row.get('num_processo', 'S/N'))
@@ -655,15 +652,14 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                     'Nome do Produto', 'Quantidade de Acidentes', 'Soma dos Volumes', 'Classe de Risco', 'Tipo', 'Equipamentos Envolvidos'
                 ]
                 
-                # --- FORMATADOR PARA PALETA E LOCALIDADE BRASILEIRA (DECIMAL COM VÍRGULA) ---
-                # O Pandas Styler intercepta a exibição e injeta o formato regional (ponto para milhar, vírgula para decimal)
+                # --- FORMATADOR REGIONAL AJUSTADO PARA ATÉ 8 CASAS DECIMAIS ---
                 df_formatado_ibama = df_prod_summary.style.format(
-                    {'Soma dos Volumes': '{:,.2f}'}, 
+                    {'Soma dos Volumes': '{:,.8f}'}, # <-- Calibrado para exibir 8 zeros/casas decimais
                     decimal=',', 
                     thousands='.'
                 )
                 
-                # Renderização limpa e padronizada na tela
+                # Renderização limpa na tela
                 st.dataframe(df_formatado_ibama, use_container_width=True)
                 
             else:
