@@ -12,31 +12,81 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# --- ESTILIZAÇÃO COMPLEMENTAR DO TEMA DO IBAMA (CSS) ---
+# --- ESTILIZAÇÃO COMPLEMENTAR DO TEMA DO IBAMA (CSS ULTRA-RESILIENTE) ---
 st.markdown("""
 <style>
-    /* Forçar a página e as tabelas a seguirem uma paleta clara */
+    /* 1. Cor de fundo principal da página (Cinza Claro) */
     .stApp {
         background-color: #F4F6F4 !important;
     }
+    
+    /* 2. Garante contraste escuro para textos normais e rótulos */
+    .stApp p, .stApp span, .stApp label {
+        color: #2E3E2F !important;
+    }
+
+    /* 3. Estilo dos títulos e subtítulos (Verde Musgo Institucional) */
     h1, h2, h3, h4, h5, h6 {
         color: #1E4620 !important;
         font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif !important;
         font-weight: bold !important;
     }
     
-    /* Garante contraste escuro para textos normais */
-    .stApp p, .stApp span, .stApp label {
-        color: #2E3E2F !important;
+    /* 4. Rótulos de todos os widgets e filtros */
+    div[data-testid="stWidgetLabel"] p {
+        color: #1E4620 !important;
+        font-weight: bold !important;
+        font-size: 15px !important;
     }
-
-    /* Customização dos cartões de métricas */
+    
+    /* 5. Customização das caixas de seleção (Multiselect) */
+    div[data-baseweb="select"] > div {
+        background-color: #FFFFFF !important;
+        color: #2E3E2F !important;
+        border-color: #C2CDC2 !important;
+    }
+    
+    /* 6. CORREÇÃO CRÍTICA: Estilo geral das tags selecionadas (chips) */
+    [data-baseweb="tag"] {
+        background-color: #D1E2D3 !important; /* Fundo sálvia bem claro */
+        border: 1px solid #1E4620 !important; /* Borda escura bem definida */
+        border-radius: 4px !important;
+    }
+    
+    /* Força absolutamente todo elemento dentro do chip (texto e botão fechar) a ficar verde escuro */
+    [data-baseweb="tag"] * {
+        color: #1E4620 !important;
+        font-weight: bold !important;
+    }
+    
+    /* 7. Rótulos específicos das métricas (KPIs no topo) */
+    div[data-testid="stMetricLabel"] p {
+        color: #4A5D4E !important;
+        font-weight: bold !important;
+        font-size: 15px !important;
+    }
     div[data-testid="stMetricValue"] > div {
         color: #1E4620 !important;
         font-weight: bold !important;
     }
-    div[data-testid="stMetricLabel"] > label {
-        color: #4A5D4E !important;
+    
+    /* 8. Customização do painel lateral de filtros (Sidebar) */
+    [data-testid="stSidebar"] {
+        background-color: #E2E8E2 !important;
+        border-right: 1px solid #C2CDC2;
+    }
+    [data-testid="stSidebar"] h1, [data-testid="stSidebar"] h2, [data-testid="stSidebar"] h3 {
+        color: #1E4620 !important;
+    }
+
+    /* 9. Customização das abas de navegação (Tabs) */
+    button[data-baseweb="tab"] {
+        color: #6E8B75 !important;
+    }
+    button[data-baseweb="tab"][aria-selected="true"] {
+        color: #1E4620 !important;
+        border-bottom-color: #1E4620 !important;
+        font-weight: bold !important;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -52,8 +102,6 @@ NOME_PRODUCAO = "Producao.xlsx"
 @st.cache_data(ttl=1800)
 def carregar_dados_2025(caminho):
     df = pd.read_excel(caminho, sheet_name="Geral")
-    
-    # Remove espaços em branco extras dos nomes das colunas
     df.columns = df.columns.str.strip()
     
     dicionario_colunas = {
@@ -91,7 +139,6 @@ def carregar_dados_2025(caminho):
     colunas_existentes = [col for col in dicionario_colunas.keys() if col in df.columns]
     df_filtrado = df[colunas_existentes].rename(columns=dicionario_colunas)
     
-    # Tratamentos de texto e vazios
     if 'empresa' in df_filtrado.columns:
         df_filtrado['empresa'] = df_filtrado['empresa'].fillna('Não Informado').astype(str).str.strip()
     if 'bacia_sedimentar' in df_filtrado.columns:
@@ -111,11 +158,9 @@ def carregar_producao_historica(caminho):
 # --- VERIFICAÇÃO DE ARQUIVOS ---
 if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO):
     try:
-        # Carga dos dados brutos
         df_2025_bruto = carregar_dados_2025(NOME_ACIDENTES)
         df_total_prod, df_bacias_prod = carregar_producao_historica(NOME_PRODUCAO)
         
-        # Filtro estrito de Plataformas para 2025
         if 'origem_acidente' in df_2025_bruto.columns:
             df_plataformas_2025 = df_2025_bruto[
                 df_2025_bruto['origem_acidente'].astype(str).str.strip().str.lower() == 'plataforma'
@@ -123,7 +168,6 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO):
         else:
             df_plataformas_2025 = pd.DataFrame(columns=df_2025_bruto.columns)
             
-        # --- ENGENHARIA DE DADOS: Cruzando 2025 com o Histórico de Produção ---
         acid_total_2025 = len(df_plataformas_2025)
         
         df_plataformas_2025['bacia_clean'] = df_plataformas_2025['bacia_sedimentar'].astype(str).str.strip().str.lower()
@@ -132,7 +176,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO):
         df_bacias_prod['bacia_clean'] = df_bacias_prod['Bacia Sedimentar'].astype(str).str.strip().str.lower()
         df_bacias_prod['Acid_2025'] = df_bacias_prod['bacia_clean'].map(counts_2025_dict).fillna(0).astype(int)
         
-        # --- CONFIGURAÇÃO DA INTERFACE EM ABAS ---
+        # --- INTERFACE EM ABAS ---
         tab_operacional, tab_comparativa = st.tabs([
             "📊 Painel Operacional (2025)", 
             "📈 Relatório Comparativo & Produção (2021-2025)"
@@ -215,11 +259,10 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO):
                         color_continuous_scale='Reds'
                     )
                     
-                    # Formatações dos gráficos com textos em preto puro e sem grades de fundo
                     fig.update_layout(
                         plot_bgcolor='white',
                         paper_bgcolor='white',
-                        font=dict(color='black', size=11), # Força texto em preto
+                        font=dict(color='black', size=11), 
                         yaxis={'categoryorder':'total ascending'}, 
                         showlegend=False
                     )
@@ -298,14 +341,13 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO):
                     xaxis_title="Ano",
                     plot_bgcolor='white',
                     paper_bgcolor='white',
-                    font=dict(color='black', size=11), # Fonte preta global do gráfico
+                    font=dict(color='black', size=11), 
                     legend=dict(
                         orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1,
-                        font=dict(color='black') # Legenda preta
+                        font=dict(color='black') 
                     ),
                     margin=dict(t=80, b=40, l=40, r=40)
                 )
-                # Removendo grades e forçando texto escuro nos eixos
                 fig1.update_xaxes(showgrid=False, zeroline=False, linecolor='black', tickfont=dict(color='black'), title_font=dict(color='black'))
                 fig1.update_yaxes(title_text="Nº de Acidentes por Ano (Barras)", secondary_y=False, range=[0, max(acid_vals_g1)*1.2], showgrid=False, zeroline=False, linecolor='black', tickfont=dict(color='black'), title_font=dict(color='black'))
                 fig1.update_yaxes(title_text="Acidentes / Mboe/d (Linha)", secondary_y=True, range=[0, max(taxas_g1)*1.2], showgrid=False, zeroline=False, linecolor='black', tickfont=dict(color='black'), title_font=dict(color='black'))
