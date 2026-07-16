@@ -12,7 +12,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# --- ESTILIZAÇÃO COMPLEMENTAR DO TEMA DO IBAMA (CSS ULTRA-RESILIENTE) ---
+# --- ESTILIZAÇÃO DO TEMA DO IBAMA (CSS PREMIUM AJUSTADO) ---
 st.markdown("""
 <style>
     /* 1. Cor de fundo principal da página (Cinza Claro) */
@@ -36,7 +36,7 @@ st.markdown("""
     div[data-testid="stWidgetLabel"] p {
         color: #1E4620 !important;
         font-weight: bold !important;
-        font-size: 15px !important;
+        font-size: 16px !important;
     }
     
     /* 5. Customização das caixas de seleção (Multiselect) */
@@ -46,42 +46,54 @@ st.markdown("""
         border-color: #C2CDC2 !important;
     }
     
-    /* 6. CORREÇÃO CRÍTICA: Estilo geral das tags selecionadas (chips) */
+    /* 6. Estilo geral das tags selecionadas (chips) */
     [data-baseweb="tag"] {
-        background-color: #D1E2D3 !important; /* Fundo sálvia bem claro */
-        border: 1px solid #1E4620 !important; /* Borda escura bem definida */
+        background-color: #D1E2D3 !important; 
+        border: 1px solid #1E4620 !important; 
         border-radius: 4px !important;
     }
-    
-    /* Força absolutamente todo elemento dentro do chip (texto e botão fechar) a ficar verde escuro */
     [data-baseweb="tag"] * {
         color: #1E4620 !important;
         font-weight: bold !important;
     }
     
-    /* 7. Rótulos específicos das métricas (KPIs no topo) */
+    /* 7. Arredondamento e estilo dos cards de métricas (KPIs no topo) */
+    div[data-testid="stMetric"] {
+        background-color: #FFFFFF !important;
+        border-radius: 12px !important;
+        padding: 20px !important;
+        border: 1px solid #E2E8E2 !important;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.03) !important;
+    }
     div[data-testid="stMetricLabel"] p {
         color: #4A5D4E !important;
         font-weight: bold !important;
-        font-size: 15px !important;
+        font-size: 16px !important;
     }
     div[data-testid="stMetricValue"] > div {
         color: #1E4620 !important;
         font-weight: bold !important;
     }
     
-    /* 8. Customização do painel lateral de filtros (Sidebar) */
+    /* 8. ARREDONDAMENTO DAS BORDAS DAS FIGURAS */
+    .stPlotlyChart {
+        background-color: #FFFFFF !important;
+        border-radius: 14px !important;
+        border: 1px solid #E2E8E2 !important;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.04) !important;
+        overflow: hidden !important; 
+    }
+    
+    /* 9. Customização do painel lateral de filtros (Sidebar) */
     [data-testid="stSidebar"] {
         background-color: #E2E8E2 !important;
         border-right: 1px solid #C2CDC2;
     }
-    [data-testid="stSidebar"] h1, [data-testid="stSidebar"] h2, [data-testid="stSidebar"] h3 {
-        color: #1E4620 !important;
-    }
 
-    /* 9. Customização das abas de navegação (Tabs) */
+    /* 10. Customização das abas de navegação (Tabs) */
     button[data-baseweb="tab"] {
         color: #6E8B75 !important;
+        font-size: 15px !important;
     }
     button[data-baseweb="tab"][aria-selected="true"] {
         color: #1E4620 !important;
@@ -244,7 +256,6 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO):
             col_g_aba1, col_t_aba1 = st.columns([1.2, 1.8])
             
             with col_g_aba1:
-                st.subheader("Volume de Ocorrências por Operadora")
                 if not df_filtrado.empty and 'empresa' in df_filtrado.columns:
                     df_grafico = df_filtrado['empresa'].value_counts().reset_index()
                     df_grafico.columns = ['Empresa', 'Quantidade']
@@ -260,19 +271,26 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO):
                     )
                     
                     fig.update_layout(
+                        title=dict(
+                            text="<b>Volume de Ocorrências por Operadora (2025)</b>",
+                            x=0.5,
+                            xanchor='center',
+                            font=dict(size=18, color='#1E4620')
+                        ),
                         plot_bgcolor='white',
                         paper_bgcolor='white',
-                        font=dict(color='black', size=11), 
+                        font=dict(color='black', size=13), 
                         yaxis={'categoryorder':'total ascending'}, 
-                        showlegend=False
+                        showlegend=False,
+                        margin=dict(t=80, b=40, l=40, r=40) 
                     )
-                    fig.update_xaxes(showgrid=False, zeroline=False, linecolor='black', tickfont=dict(color='black'), title_font=dict(color='black'))
-                    fig.update_yaxes(showgrid=False, zeroline=False, linecolor='black', tickfont=dict(color='black'), title_font=dict(color='black'))
-                    fig.update_traces(textfont=dict(color='black'))
+                    fig.update_xaxes(showgrid=False, zeroline=False, linecolor='black', tickfont=dict(color='black', size=12), title_font=dict(color='black', size=14))
+                    fig.update_yaxes(showgrid=False, zeroline=False, linecolor='black', tickfont=dict(color='black', size=12), title_font=dict(color='black', size=14))
+                    fig.update_traces(textfont=dict(color='black', size=12))
                     fig.update_coloraxes(
                         colorbar=dict(
-                            tickfont=dict(color='black'),
-                            title_font=dict(color='black')
+                            tickfont=dict(color='black', size=11),
+                            title_font=dict(color='black', size=13)
                         )
                     )
                     st.plotly_chart(fig, use_container_width=True)
@@ -315,13 +333,15 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO):
                 
                 df_g1 = pd.DataFrame({'Ano': [str(x) for x in anos_g1], 'Acidentes': acid_vals_g1, 'Taxa': taxas_g1})
                 
+                limite_y_comum = max(acid_vals_g1) * 1.25 
+                
                 fig1 = make_subplots(specs=[[{"secondary_y": True}]])
                 fig1.add_trace(
                     go.Bar(
                         x=df_g1['Ano'], y=df_g1['Acidentes'], 
                         name="Nº de Acidentes", marker_color='#3498db',
                         text=df_g1['Acidentes'], textposition='outside',
-                        textfont=dict(color='black') 
+                        textfont=dict(color='black', size=13) 
                     ),
                     secondary_y=False
                 )
@@ -331,26 +351,31 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO):
                         name="Acidentes / Mboe/d", mode='lines+markers+text',
                         line=dict(color='#2c3e50', width=3), marker=dict(size=8, symbol='circle'),
                         text=df_g1['Taxa'], textposition='top center',
-                        textfont=dict(color='black') 
+                        textfont=dict(color='black', size=13) 
                     ),
                     secondary_y=True
                 )
                 
                 fig1.update_layout(
-                    title="<b>Total de Acidentes por Ano e Taxa por Produção (2021-2025)</b>",
-                    xaxis_title="Ano",
+                    title=dict(
+                        text="<b>Total de Acidentes por Ano e Taxa por Produção (2021-2025)</b>",
+                        x=0.5,
+                        xanchor='center',
+                        font=dict(size=18, color='#1E4620')
+                    ),
                     plot_bgcolor='white',
                     paper_bgcolor='white',
-                    font=dict(color='black', size=11), 
+                    font=dict(color='black', size=13), 
+                    legend_title_text='', # <-- GARANTE QUE NÃO HÁ TÍTULO DE LEGENDA FLUTUANDO
                     legend=dict(
-                        orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1,
-                        font=dict(color='black') 
+                        orientation="h", yanchor="bottom", y=1.02, xanchor="center", x=0.5,
+                        font=dict(color='black', size=13) 
                     ),
-                    margin=dict(t=80, b=40, l=40, r=40)
+                    margin=dict(t=100, b=50, l=50, r=50) 
                 )
-                fig1.update_xaxes(showgrid=False, zeroline=False, linecolor='black', tickfont=dict(color='black'), title_font=dict(color='black'))
-                fig1.update_yaxes(title_text="Nº de Acidentes por Ano (Barras)", secondary_y=False, range=[0, max(acid_vals_g1)*1.2], showgrid=False, zeroline=False, linecolor='black', tickfont=dict(color='black'), title_font=dict(color='black'))
-                fig1.update_yaxes(title_text="Acidentes / Mboe/d (Linha)", secondary_y=True, range=[0, max(taxas_g1)*1.2], showgrid=False, zeroline=False, linecolor='black', tickfont=dict(color='black'), title_font=dict(color='black'))
+                fig1.update_xaxes(showgrid=False, zeroline=False, linecolor='black', tickfont=dict(color='black', size=12), title_font=dict(color='black', size=14))
+                fig1.update_yaxes(title_text="Nº de Acidentes por Ano (Barras)", secondary_y=False, range=[0, limite_y_comum], showgrid=False, zeroline=False, linecolor='black', tickfont=dict(color='black', size=12), title_font=dict(color='black', size=14))
+                fig1.update_yaxes(title_text="Acidentes / Mboe/d (Linha)", secondary_y=True, range=[0, limite_y_comum], showgrid=False, zeroline=False, linecolor='black', tickfont=dict(color='black', size=12), title_font=dict(color='black', size=14))
                 st.plotly_chart(fig1, use_container_width=True)
                 
             # --- GRÁFICO 2: Acidentes por Bacia Sedimentar (2023-2025) ---
@@ -375,23 +400,30 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO):
                 fig2 = px.bar(
                     df_g2_melted, x='Bacia Sedimentar', y='Acidentes', color='Ano', barmode='group',
                     text='Acidentes',
-                    color_discrete_sequence=['#2ecc71', '#3498db', '#f39c12'] 
+                    color_discrete_sequence=['#2ecc71', '#3498db', '#f39c12'], 
+                    category_orders={"Ano": ["2023", "2024", "2025"]} 
                 )
-                fig2.update_traces(textposition='outside', textfont=dict(color='black'))
+                fig2.update_traces(textposition='outside', textfont=dict(color='black', size=12))
                 fig2.update_layout(
-                    title="<b>Distribuição de Ocorrências por Bacia Sedimentar (2023-2025)</b>",
+                    title=dict(
+                        text="<b>Distribuição de Ocorrências por Bacia Sedimentar (2023-2025)</b>",
+                        x=0.5,
+                        xanchor='center',
+                        font=dict(size=18, color='#1E4620')
+                    ),
                     xaxis_title="", yaxis_title="Nº de Acidentes",
                     plot_bgcolor='white',
                     paper_bgcolor='white',
-                    font=dict(color='black', size=11),
+                    font=dict(color='black', size=13),
+                    legend_title_text='', # <-- CORREÇÃO: REMOVE A PALAVRA "Ano" SOLTA NA LEGENDA
                     legend=dict(
-                        orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1,
-                        font=dict(color='black')
+                        orientation="h", yanchor="bottom", y=1.02, xanchor="center", x=0.5,
+                        font=dict(color='black', size=13)
                     ),
-                    margin=dict(t=80, b=40, l=40, r=40)
+                    margin=dict(t=100, b=50, l=50, r=50) 
                 )
-                fig2.update_xaxes(showgrid=False, zeroline=False, linecolor='black', tickfont=dict(color='black'), title_font=dict(color='black'))
-                fig2.update_yaxes(showgrid=False, zeroline=False, linecolor='black', tickfont=dict(color='black'), title_font=dict(color='black'))
+                fig2.update_xaxes(showgrid=False, zeroline=False, linecolor='black', tickfont=dict(color='black', size=12), title_font=dict(color='black', size=14))
+                fig2.update_yaxes(showgrid=False, zeroline=False, linecolor='black', tickfont=dict(color='black', size=12), title_font=dict(color='black', size=14))
                 st.plotly_chart(fig2, use_container_width=True)
                 
             st.write("---")
@@ -413,17 +445,22 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO):
                     df_g3, x='Percentual', y='Bacia Sedimentar', orientation='h',
                     text='Percentual', color_discrete_sequence=['#3498db'] 
                 )
-                fig3.update_traces(texttemplate='%{text:.2f}%', textposition='outside', textfont=dict(color='black'))
+                fig3.update_traces(texttemplate='%{text:.2f}%', textposition='outside', textfont=dict(color='black', size=12))
                 fig3.update_layout(
-                    title="<b>Percentual de Comunicados por Bacia Sedimentar (2025)</b>",
+                    title=dict(
+                        text="<b>Percentual de Comunicados por Bacia Sedimentar (2025)</b>",
+                        x=0.5,
+                        xanchor='center',
+                        font=dict(size=18, color='#1E4620')
+                    ),
                     xaxis_title="Percentual de Ocorrências (%)", yaxis_title="",
                     plot_bgcolor='white',
                     paper_bgcolor='white',
-                    font=dict(color='black', size=11),
-                    margin=dict(t=80, b=40, l=40, r=40)
+                    font=dict(color='black', size=13),
+                    margin=dict(t=100, b=50, l=50, r=50) 
                 )
-                fig3.update_xaxes(showgrid=False, zeroline=False, linecolor='black', tickfont=dict(color='black'), title_font=dict(color='black'))
-                fig3.update_yaxes(showgrid=False, zeroline=False, linecolor='black', tickfont=dict(color='black'), title_font=dict(color='black'))
+                fig3.update_xaxes(showgrid=False, zeroline=False, linecolor='black', tickfont=dict(color='black', size=12), title_font=dict(color='black', size=14))
+                fig3.update_yaxes(showgrid=False, zeroline=False, linecolor='black', tickfont=dict(color='black', size=12), title_font=dict(color='black', size=14))
                 st.plotly_chart(fig3, use_container_width=True)
                 
             # --- GRÁFICO 4: Acidentes por Produção por Bacia (Santos e Campos - 2023-2025) ---
@@ -443,23 +480,30 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO):
                 
                 fig4 = px.bar(
                     df_g4_melted, x='Bacia Sedimentar', y='Taxa', color='Ano', barmode='group',
-                    text='Taxa', color_discrete_sequence=['#2ecc71', '#3498db', '#f39c12'] 
+                    text='Taxa', color_discrete_sequence=['#2ecc71', '#3498db', '#f39c12'],
+                    category_orders={"Ano": ["2023", "2024", "2025"]} 
                 )
-                fig4.update_traces(texttemplate='%{text:.1f}', textposition='outside', textfont=dict(color='black'))
+                fig4.update_traces(texttemplate='%{text:.1f}', textposition='outside', textfont=dict(color='black', size=12))
                 fig4.update_layout(
-                    title="<b>Taxa de Acidentes por Produção Média Diária (2023-2025)</b>",
+                    title=dict(
+                        text="<b>Taxa de Acidentes por Produção Média Diária (2023-2025)</b>",
+                        x=0.5,
+                        xanchor='center',
+                        font=dict(size=18, color='#1E4620')
+                    ),
                     xaxis_title="", yaxis_title="Acidentes a cada Mboe/d",
                     plot_bgcolor='white',
                     paper_bgcolor='white',
-                    font=dict(color='black', size=11),
+                    font=dict(color='black', size=13),
+                    legend_title_text='', # <-- CORREÇÃO: REMOVE A PALAVRA "Ano" SOLTA NA LEGENDA
                     legend=dict(
-                        orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1,
-                        font=dict(color='black')
+                        orientation="h", yanchor="bottom", y=1.02, xanchor="center", x=0.5,
+                        font=dict(color='black', size=13)
                     ),
-                    margin=dict(t=80, b=40, l=40, r=40)
+                    margin=dict(t=100, b=50, l=50, r=50) 
                 )
-                fig4.update_xaxes(showgrid=False, zeroline=False, linecolor='black', tickfont=dict(color='black'), title_font=dict(color='black'))
-                fig4.update_yaxes(showgrid=False, zeroline=False, linecolor='black', tickfont=dict(color='black'), title_font=dict(color='black'))
+                fig4.update_xaxes(showgrid=False, zeroline=False, linecolor='black', tickfont=dict(color='black', size=12), title_font=dict(color='black', size=14))
+                fig4.update_yaxes(showgrid=False, zeroline=False, linecolor='black', tickfont=dict(color='black', size=12), title_font=dict(color='black', size=14))
                 st.plotly_chart(fig4, use_container_width=True)
                 
     except Exception as e:
