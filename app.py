@@ -19,7 +19,12 @@ NOME_ARQUIVO = "acidentes_2025.xlsx"
 def carregar_e_limpar_dados(caminho):
     colunas_excel = "B,E,I,O,R:U,X:AA,AD:AG,AK:AM,BF,BI,BM,BO,BZ,CB:CE,CF"
     
-    df = pd.read_excel(caminho, usecols=colunas_excel)
+    # Leitura direcionada explicitamente para a aba "Geral"
+    df = pd.read_excel(
+        caminho, 
+        sheet_name="Geral", 
+        usecols=colunas_excel
+    )
     
     dicionario_colunas = {
         'Número do Processo': 'num_processo',
@@ -56,18 +61,14 @@ def carregar_e_limpar_dados(caminho):
     df.columns = [dicionario_colunas.get(col, col) for col in df.columns]
     
     # --- Tratamento de Dados (Data Cleaning) ---
-    # Limpa espaços em branco e padroniza strings nulas
     df['empresa'] = df['empresa'].astype(str).str.strip().replace('nan', 'Não Informado')
     df['bacia_sedimentar'] = df['bacia_sedimentar'].astype(str).str.strip().replace('nan', 'Não Informada')
-    
-    # Garante que a coluna de dias de encerramento seja numérica
     df['dias_encerramento'] = pd.to_numeric(df['dias_encerramento'], errors='coerce').fillna(0).astype(int)
     
     return df
 
 if os.path.exists(NOME_ARQUIVO):
     try:
-        # Carrega a base bruta
         df_bruto = carregar_e_limpar_dados(NOME_ARQUIVO)
         
         # Filtro de Plataformas (busca inteligente na coluna de Origem ou Instalação)
@@ -80,7 +81,6 @@ if os.path.exists(NOME_ARQUIVO):
         # --- PAINEL LATERAL (Filtros) ---
         st.sidebar.header("Filtros do Painel")
         
-        # Filtro Multiselect por Bacia Sedimentar
         bacias_disponiveis = sorted(df_plataformas['bacia_sedimentar'].unique())
         bacias_selecionadas = st.sidebar.multiselect(
             "Selecione as Bacias Sedimentares:",
@@ -88,7 +88,6 @@ if os.path.exists(NOME_ARQUIVO):
             default=bacias_disponiveis
         )
         
-        # Filtro Multiselect por Empresa
         empresas_disponiveis = sorted(df_plataformas['empresa'].unique())
         empresas_selecionadas = st.sidebar.multiselect(
             "Selecione as Empresas:",
@@ -96,21 +95,17 @@ if os.path.exists(NOME_ARQUIVO):
             default=empresas_disponiveis
         )
         
-        # Aplicando os filtros ao DataFrame de exibição
         df_filtrado = df_plataformas[
             (df_plataformas['bacia_sedimentar'].isin(bacias_selecionadas)) &
             (df_plataformas['empresa'].isin(empresas_selecionadas))
         ]
         
         # --- CORPO PRINCIPAL (Visualizações) ---
-        
-        # Linha 1: Cartões de Métricas (KPIs)
         col1, col2, col3 = st.columns(3)
         
         total_acidentes = len(df_filtrado)
         media_dias_fechamento = df_filtrado['dias_encerramento'].mean() if total_acidentes > 0 else 0
         
-        # Tratamento da coluna de acionamento do PEI (Verifica se contém 'Sim' ou 'S')
         total_pei = df_filtrado['acionamento_pei'].astype(str).str.strip().str.upper().isin(['SIM', 'S']).sum()
         percentual_pei = (total_pei / total_acidentes * 100) if total_acidentes > 0 else 0
         
@@ -123,7 +118,6 @@ if os.path.exists(NOME_ARQUIVO):
             
         st.write("---")
         
-        # Linha 2: Gráficos e Tabelas lado a lado
         col_grafico, col_tabela = st.columns([1.2, 1.8])
         
         with col_grafico:
@@ -159,11 +153,3 @@ if os.path.exists(NOME_ARQUIVO):
         st.code(str(e))
 else:
     st.info(f"Aguardando o upload do arquivo `{NOME_ARQUIVO}` para o repositório.")
-    st.markdown(
-        f"""
-        ### O que fazer agora:
-        1. Salve a planilha do SharePoint com o nome exato: `{NOME_ARQUIVO}`.
-        2. Coloque-a na pasta onde está seu `app.py`.
-        3. No terminal, execute: `streamlit run app.py`
-        """
-    )
