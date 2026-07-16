@@ -20,7 +20,7 @@ def carregar_e_limpar_dados(caminho):
     # Carrega a aba inteira para evitar erros de índice de coluna
     df = pd.read_excel(caminho, sheet_name="Geral")
     
-    # REMOVE ESPAÇOS EM BRANCO EXTRA (Limpando "Marca Comercial Produto 1 " para "Marca Comercial Produto 1")
+    # Remove espaços em branco extras dos nomes das colunas
     df.columns = df.columns.str.strip()
     
     # Mapeamento exato baseado na lista oficial fornecida
@@ -56,15 +56,19 @@ def carregar_e_limpar_dados(caminho):
         "Característica do produto": "caracteristica_produto"
     }
     
-    # Filtra apenas as colunas mapeadas que de fato existem no Excel (evita KeyError)
+    # Filtra apenas as colunas mapeadas que de fato existem no Excel
     colunas_existentes = [col for col in dicionario_colunas.keys() if col in df.columns]
     df_filtrado = df[colunas_existentes].rename(columns=dicionario_colunas)
     
-    # --- Tratamento de Dados (Data Cleaning) ---
+    # --- TRATAMENTO DE VALORES NULOS E ADAPTAÇÃO DE TIPOS ---
     if 'empresa' in df_filtrado.columns:
-        df_filtrado['empresa'] = df_filtrado['empresa'].astype(str).str.strip().replace('nan', 'Não Informado')
+        df_filtrado['empresa'] = df_filtrado['empresa'].fillna('Não Informado').astype(str).str.strip()
+        df_filtrado['empresa'] = df_filtrado['empresa'].replace({'nan': 'Não Informado', 'NaN': 'Não Informado'})
+        
     if 'bacia_sedimentar' in df_filtrado.columns:
-        df_filtrado['bacia_sedimentar'] = df_filtrado['bacia_sedimentar'].astype(str).str.strip().replace('nan', 'Não Informada')
+        df_filtrado['bacia_sedimentar'] = df_filtrado['bacia_sedimentar'].fillna('Não Informada').astype(str).str.strip()
+        df_filtrado['bacia_sedimentar'] = df_filtrado['bacia_sedimentar'].replace({'nan': 'Não Informada', 'NaN': 'Não Informada'})
+        
     if 'dias_encerramento' in df_filtrado.columns:
         df_filtrado['dias_encerramento'] = pd.to_numeric(df_filtrado['dias_encerramento'], errors='coerce').fillna(0).astype(int)
     
@@ -77,9 +81,8 @@ if os.path.exists(NOME_ARQUIVO):
         # Filtro de Plataformas (busca inteligente na coluna de Origem ou Instalação)
         termos_plataforma = "Plataforma|FPSO|Sonda|FSO|Semi-submersível"
         
-        # Garante que as colunas existam antes de aplicar o filtro de texto
-        coluna_origem = df_bruto['origem_acidente'].astype(str) if 'origem_acidente' in df_bruto.columns else pd.Series()
-        coluna_instalacao = df_bruto['instalacao'].astype(str) if 'instalacao' in df_bruto.columns else pd.Series()
+        coluna_origem = df_bruto['origem_acidente'].astype(str) if 'origem_acidente' in df_bruto.columns else pd.Series(dtype=str)
+        coluna_instalacao = df_bruto['instalacao'].astype(str) if 'instalacao' in df_bruto.columns else pd.Series(dtype=str)
         
         df_plataformas = df_bruto[
             coluna_origem.str.contains(termos_plataforma, case=False, na=False) |
@@ -89,16 +92,25 @@ if os.path.exists(NOME_ARQUIVO):
         # --- PAINEL LATERAL (Filtros) ---
         st.sidebar.header("Filtros do Painel")
         
-        # Filtro de Bacias
-        bacias_disponiveis = sorted(df_plataformas['bacia_sedimentar'].unique()) if 'bacia_sedimentar' in df_plataformas.columns else []
+        # Correção do erro '<' entre str e float: forçamos a conversão para string de todos os itens e removemos nulos antes do sorted
+        if 'bacia_sedimentar' in df_plataformas.columns:
+            bacias_unicas = df_plataformas['bacia_sedimentar'].dropna().unique()
+            bacias_disponiveis = sorted([str(x) for x in bacias_unicas])
+        else:
+            bacias_disponiveis = []
+            
         bacias_selecionadas = st.sidebar.multiselect(
             "Selecione as Bacias Sedimentares:",
             options=bacias_disponiveis,
             default=bacias_disponiveis
         )
         
-        # Filtro de Empresas
-        empresas_disponiveis = sorted(df_plataformas['empresa'].unique()) if 'empresa' in df_plataformas.columns else []
+        if 'empresa' in df_plataformas.columns:
+            empresas_unicas = df_plataformas['empresa'].dropna().unique()
+            empresas_disponiveis = sorted([str(x) for x in empresas_unicas])
+        else:
+            empresas_disponiveis = []
+            
         empresas_selecionadas = st.sidebar.multiselect(
             "Selecione as Empresas:",
             options=empresas_disponiveis,
@@ -117,13 +129,11 @@ if os.path.exists(NOME_ARQUIVO):
         
         total_acidentes = len(df_filtrado)
         
-        # Média de dias para encerramento de forma segura
         if 'dias_encerramento' in df_filtrado.columns and total_acidentes > 0:
             media_dias_fechamento = df_filtrado['dias_encerramento'].mean()
         else:
             media_dias_fechamento = 0
             
-        # Taxa de acionamento do PEI
         if 'acionamento_pei' in df_filtrado.columns and total_acidentes > 0:
             total_pei = df_filtrado['acionamento_pei'].astype(str).str.strip().str.upper().isin(['SIM', 'S']).sum()
             percentual_pei = (total_pei / total_acidentes * 100)
@@ -163,7 +173,6 @@ if os.path.exists(NOME_ARQUIVO):
                 
         with col_tabela:
             st.subheader("Base Filtrada")
-            # Exibe as colunas principais na tabela se elas existirem
             colunas_exibicao = [c for c in ['num_processo', 'instalacao', 'bacia_sedimentar', 'empresa', 'dias_encerramento'] if c in df_filtrado.columns]
             st.dataframe(
                 df_filtrado[colunas_exibicao], 
