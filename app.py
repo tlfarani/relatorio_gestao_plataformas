@@ -12,6 +12,48 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
+# --- ESTILIZAÇÃO DO TEMA DO IBAMA (CSS INJETADO) ---
+st.markdown("""
+<style>
+    /* Cor de fundo principal da página (Cinza Claro) */
+    .stApp {
+        background-color: #F4F6F4;
+    }
+    /* Estilo dos títulos e subtítulos (Verde Musgo) */
+    h1, h2, h3 {
+        color: #1E4620 !important;
+        font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    }
+    /* Customização do painel lateral (Sidebar) */
+    [data-testid="stSidebar"] {
+        background-color: #E2E8E2 !important;
+        border-right: 1px solid #C2CDC2;
+    }
+    /* Textos na barra lateral */
+    [data-testid="stSidebar"] .stMarkdown, [data-testid="stSidebar"] label {
+        color: #1E4620 !important;
+        font-weight: bold;
+    }
+    /* Customização das abas (Tabs) */
+    button[data-baseweb="tab"] {
+        color: #6E8B75 !important;
+    }
+    button[data-baseweb="tab"][aria-selected="true"] {
+        color: #1E4620 !important;
+        border-bottom-color: #1E4620 !important;
+        font-weight: bold;
+    }
+    /* Cartões de Métricas (KPIs) */
+    div[data-testid="stMetricValue"] > div {
+        color: #1E4620 !important;
+        font-weight: bold;
+    }
+    div[data-testid="stMetricLabel"] > label {
+        color: #4A5D4E !important;
+    }
+</style>
+""", unsafe_allow_html=True)
+
 st.title("⚓ Consolidação de Acidentes em Plataformas de Petróleo")
 st.markdown("Análise interativa e monitoramento de emergências ambientais baseadas em dados consolidados.")
 
@@ -95,18 +137,13 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO):
             df_plataformas_2025 = pd.DataFrame(columns=df_2025_bruto.columns)
             
         # --- ENGENHARIA DE DADOS: Cruzando 2025 com o Histórico de Produção ---
-        
-        # 1. Totalizador de acidentes em 2025
         acid_total_2025 = len(df_plataformas_2025)
         
-        # 2. Contagem de acidentes por Bacia em 2025
         df_plataformas_2025['bacia_clean'] = df_plataformas_2025['bacia_sedimentar'].astype(str).str.strip().str.lower()
         counts_2025_dict = df_plataformas_2025['bacia_clean'].value_counts().to_dict()
         
-        # Atualiza a tabela histórica com os dados calculados de 2025
         df_bacias_prod['bacia_clean'] = df_bacias_prod['Bacia Sedimentar'].astype(str).str.strip().str.lower()
         df_bacias_prod['Acid_2025'] = df_bacias_prod['bacia_clean'].map(counts_2025_dict).fillna(0).astype(int)
-        
         
         # --- CONFIGURAÇÃO DA INTERFACE EM ABAS ---
         tab_operacional, tab_comparativa = st.tabs([
@@ -119,7 +156,6 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO):
         # ==========================================
         with tab_operacional:
             st.subheader("Filtros do Dashboard")
-            
             col_f1, col_f2 = st.columns(2)
             
             with col_f1:
@@ -142,7 +178,6 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO):
                     key="multiselect_empresas_aba1"
                 )
                 
-            # Filtra os dados com base na seleção
             df_filtrado = df_plataformas_2025.copy()
             if 'bacia_sedimentar' in df_filtrado.columns:
                 df_filtrado = df_filtrado[df_filtrado['bacia_sedimentar'].isin(bacias_selecionadas)]
@@ -153,7 +188,6 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO):
             
             # Indicadores (KPIs)
             col1, col2, col3 = st.columns(3)
-            
             total_acidentes_filtrados = len(df_filtrado)
             
             if 'dias_encerramento' in df_filtrado.columns and total_acidentes_filtrados > 0:
@@ -190,10 +224,20 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO):
                         y='Empresa', 
                         orientation='h',
                         labels={'Quantidade': 'Número de Acidentes', 'Empresa': ''},
-                        color='Quantidade',
-                        color_continuous_scale='Reds'
+                        color_discrete_sequence=['#2E5A27'] # Verde musgo sólido
                     )
-                    fig.update_layout(yaxis={'categoryorder':'total ascending'}, showlegend=False)
+                    
+                    # Formatações do gráfico (Sem grade, textos em preto)
+                    fig.update_layout(
+                        plot_bgcolor='white',
+                        paper_bgcolor='white',
+                        font=dict(color='black'),
+                        yaxis={'categoryorder':'total ascending'}, 
+                        showlegend=False
+                    )
+                    fig.update_xaxes(showgrid=False, zeroline=False, linecolor='black')
+                    fig.update_yaxes(showgrid=False, zeroline=False, linecolor='black')
+                    fig.update_traces(textfont=dict(color='black'))
                     st.plotly_chart(fig, use_container_width=True)
                 else:
                     st.info("Filtros muito restritivos para gerar gráfico.")
@@ -215,7 +259,6 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO):
             
             # --- GRÁFICO 1: Histórico de Acidentes vs. Taxa por Produção (2021-2025) ---
             with col_linha1_esq:
-                # Estruturação dos vetores históricos e atual
                 anos_g1 = [2021, 2022, 2023, 2024, 2025]
                 acid_vals_g1 = [
                     df_total_prod['Acid_2021'].iloc[0],
@@ -235,13 +278,13 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO):
                 
                 df_g1 = pd.DataFrame({'Ano': [str(x) for x in anos_g1], 'Acidentes': acid_vals_g1, 'Taxa': taxas_g1})
                 
-                # Plotly Dual Axis
                 fig1 = make_subplots(specs=[[{"secondary_y": True}]])
                 fig1.add_trace(
                     go.Bar(
                         x=df_g1['Ano'], y=df_g1['Acidentes'], 
-                        name="Nº de Acidentes", marker_color='#3498db',
-                        text=df_g1['Acidentes'], textposition='outside'
+                        name="Nº de Acidentes", marker_color='#6E8B75', # Verde Sálvia Médio
+                        text=df_g1['Acidentes'], textposition='outside',
+                        textfont=dict(color='black') # Fonte dos valores em preto
                     ),
                     secondary_y=False
                 )
@@ -249,8 +292,9 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO):
                     go.Scatter(
                         x=df_g1['Ano'], y=df_g1['Taxa'], 
                         name="Acidentes / Mboe/d", mode='lines+markers+text',
-                        line=dict(color='#2c3e50', width=3), marker=dict(size=8, symbol='circle'),
-                        text=df_g1['Taxa'], textposition='top center'
+                        line=dict(color='#1E4620', width=3), marker=dict(size=8, symbol='circle'), # Verde Musgo Escuro
+                        text=df_g1['Taxa'], textposition='top center',
+                        textfont=dict(color='black') # Fonte dos valores em preto
                     ),
                     secondary_y=True
                 )
@@ -259,16 +303,19 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO):
                     title="<b>Total de Acidentes por Ano e Taxa por Produção (2021-2025)</b>",
                     xaxis_title="Ano",
                     plot_bgcolor='white',
+                    paper_bgcolor='white',
+                    font=dict(color='black'),
                     legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
                     margin=dict(t=80, b=40, l=40, r=40)
                 )
-                fig1.update_yaxes(title_text="Nº de Acidentes por Ano (Barras)", secondary_y=False, range=[0, max(acid_vals_g1)*1.2])
-                fig1.update_yaxes(title_text="Acidentes / Mboe/d (Linha)", secondary_y=True, range=[0, max(taxas_g1)*1.2])
+                # Removendo grades
+                fig1.update_xaxes(showgrid=False, zeroline=False, linecolor='black')
+                fig1.update_yaxes(title_text="Nº de Acidentes por Ano (Barras)", secondary_y=False, range=[0, max(acid_vals_g1)*1.2], showgrid=False, zeroline=False, linecolor='black')
+                fig1.update_yaxes(title_text="Acidentes / Mboe/d (Linha)", secondary_y=True, range=[0, max(taxas_g1)*1.2], showgrid=False, zeroline=False, linecolor='black')
                 st.plotly_chart(fig1, use_container_width=True)
                 
             # --- GRÁFICO 2: Acidentes por Bacia Sedimentar (2023-2025) ---
             with col_linha1_dir:
-                # Filtrando bacias com atividades registradas
                 df_g2_clean = df_bacias_prod[
                     (df_bacias_prod['Acid_2023'] > 0) | 
                     (df_bacias_prod['Acid_2024'].fillna(0) > 0) | 
@@ -282,7 +329,6 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO):
                 )
                 df_g2_melted['Ano'] = df_g2_melted['Ano'].str.replace('Acid_', '')
                 
-                # Ordena pelo volume total agregado de acidentes
                 bacia_ranking = df_g2_clean.set_index('Bacia Sedimentar')[['Acid_2023', 'Acid_2024', 'Acid_2025']].sum(axis=1).sort_values(ascending=False).index.tolist()
                 df_g2_melted['Bacia Sedimentar'] = pd.Categorical(df_g2_melted['Bacia Sedimentar'], categories=bacia_ranking, ordered=True)
                 df_g2_melted = df_g2_melted.sort_values('Bacia Sedimentar')
@@ -290,16 +336,20 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO):
                 fig2 = px.bar(
                     df_g2_melted, x='Bacia Sedimentar', y='Acidentes', color='Ano', barmode='group',
                     text='Acidentes',
-                    color_discrete_sequence=['#2ecc71', '#3498db', '#f39c12'] # Verde, Azul e Laranja
+                    color_discrete_sequence=['#A3C1AD', '#6E8B75', '#2E5A27'] # Degradê verde
                 )
-                fig2.update_traces(textposition='outside')
+                fig2.update_traces(textposition='outside', textfont=dict(color='black'))
                 fig2.update_layout(
                     title="<b>Distribuição de Ocorrências por Bacia Sedimentar (2023-2025)</b>",
                     xaxis_title="", yaxis_title="Nº de Acidentes",
                     plot_bgcolor='white',
+                    paper_bgcolor='white',
+                    font=dict(color='black'),
                     legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
                     margin=dict(t=80, b=40, l=40, r=40)
                 )
+                fig2.update_xaxes(showgrid=False, zeroline=False, linecolor='black')
+                fig2.update_yaxes(showgrid=False, zeroline=False, linecolor='black')
                 st.plotly_chart(fig2, use_container_width=True)
                 
             st.write("---")
@@ -315,25 +365,28 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO):
                 else:
                     df_g3['Percentual'] = 0
                     
-                df_g3 = df_g3.sort_values(by='Percentual', ascending=True) # Ascendente para a barra horizontal ficar no topo com o maior valor
+                df_g3 = df_g3.sort_values(by='Percentual', ascending=True)
                 
                 fig3 = px.bar(
                     df_g3, x='Percentual', y='Bacia Sedimentar', orientation='h',
-                    text='Percentual', color_discrete_sequence=['#3498db']
+                    text='Percentual', color_discrete_sequence=['#2E5A27'] # Sólido verde musgo
                 )
-                fig3.update_traces(texttemplate='%{text:.2f}%', textposition='outside')
+                fig3.update_traces(texttemplate='%{text:.2f}%', textposition='outside', textfont=dict(color='black'))
                 fig3.update_layout(
                     title="<b>Percentual de Comunicados por Bacia Sedimentar (2025)</b>",
                     xaxis_title="Percentual de Ocorrências (%)", yaxis_title="",
                     plot_bgcolor='white',
-                    xaxis=dict(range=[0, 115]), # Limite confortável para os rótulos de texto
+                    paper_bgcolor='white',
+                    font=dict(color='black'),
+                    xaxis=dict(range=[0, 115]),
                     margin=dict(t=80, b=40, l=40, r=40)
                 )
+                fig3.update_xaxes(showgrid=False, zeroline=False, linecolor='black')
+                fig3.update_yaxes(showgrid=False, zeroline=False, linecolor='black')
                 st.plotly_chart(fig3, use_container_width=True)
                 
             # --- GRÁFICO 4: Acidentes por Produção por Bacia (Santos e Campos - 2023-2025) ---
             with col_linha2_dir:
-                # Filtrando apenas Santos e Campos conforme solicitado para focar na produção real
                 df_g4 = df_bacias_prod[df_bacias_prod['Bacia Sedimentar'].isin(['Campos', 'Santos'])].copy()
                 
                 df_g4['Rate_2023'] = df_g4['Acid_2023'] / df_g4['Prod_2023']
@@ -349,16 +402,20 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO):
                 
                 fig4 = px.bar(
                     df_g4_melted, x='Bacia Sedimentar', y='Taxa', color='Ano', barmode='group',
-                    text='Taxa', color_discrete_sequence=['#2ecc71', '#3498db', '#f39c12']
+                    text='Taxa', color_discrete_sequence=['#A3C1AD', '#6E8B75', '#2E5A27'] # Degradê verde
                 )
-                fig4.update_traces(texttemplate='%{text:.1f}', textposition='outside')
+                fig4.update_traces(texttemplate='%{text:.1f}', textposition='outside', textfont=dict(color='black'))
                 fig4.update_layout(
                     title="<b>Taxa de Acidentes por Produção Média Diária (2023-2025)</b>",
                     xaxis_title="", yaxis_title="Acidentes a cada Mboe/d",
                     plot_bgcolor='white',
+                    paper_bgcolor='white',
+                    font=dict(color='black'),
                     legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
                     margin=dict(t=80, b=40, l=40, r=40)
                 )
+                fig4.update_xaxes(showgrid=False, zeroline=False, linecolor='black')
+                fig4.update_yaxes(showgrid=False, zeroline=False, linecolor='black')
                 st.plotly_chart(fig4, use_container_width=True)
                 
     except Exception as e:
