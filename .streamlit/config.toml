@@ -1,0 +1,7 @@
+[theme]
+primaryColor = "#1E4620"          # Verde Musgo do Ibama
+backgroundColor = "#F4F6F4"      # Fundo Cinza Claro do Painel
+secondaryBackgroundColor = "#E2E8E2" # Fundo das Tabelas e Barra Lateral
+textColor = "#2E3E2F"             # Texto Cinza Escuro (Excelente contraste)
+font = "sans serif"
+base = "light"                   # FORÇA O TEMA CLARO GLOBAL (Resolve a tabela escura!)
