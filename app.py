@@ -555,12 +555,15 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                 df_g9 = df_g9.sort_values('Bacia').dropna(subset=['Bacia'])
                 
                 fig9 = go.Figure()
-                fig9.add_trace(go.Bar(name='Até 180 dias (6 meses)', x=df_g9['Bacia'], y=df_g9['<=180'], marker_color='#1FA1DD', text=df_g9['<=180'], textposition='inside', textfont=dict(color='black', size=11), showlegend=False))
-                fig9.add_trace(go.Bar(name='Mais de 180 dias', x=df_g9['Bacia'], y=df_g9['>180'], marker_color='#FDBB2F', text=df_g9['>180'], textposition='inside', textfont=dict(color='black', size=11), showlegend=False))
-                fig9.add_trace(go.Bar(name='Em Andamento', x=df_g9['Bacia'], y=df_g9['Investigação em Andamento'], marker_color='#8BC53F', text=df_g9['Investigação em Andamento'], textposition='inside', textfont=dict(color='black', size=11), showlegend=False))
+                # showlegend alterado para True para ativar os rótulos das classes de prazos
+                fig9.add_trace(go.Bar(name='Até 180 dias (6 meses)', x=df_g9['Bacia'], y=df_g9['<=180'], marker_color='#1FA1DD', text=df_g9['<=180'], textposition='inside', textfont=dict(color='black', size=11), showlegend=True))
+                fig9.add_trace(go.Bar(name='Mais de 180 dias', x=df_g9['Bacia'], y=df_g9['>180'], marker_color='#FDBB2F', text=df_g9['>180'], textposition='inside', textfont=dict(color='black', size=11), showlegend=True))
+                fig9.add_trace(go.Bar(name='Em Andamento', x=df_g9['Bacia'], y=df_g9['Investigação em Andamento'], marker_color='#8BC53F', text=df_g9['Investigação em Andamento'], textposition='inside', textfont=dict(color='black', size=11), showlegend=True))
                 
+                # Adicionada a configuração de legenda horizontal centralizada no topo
                 fig9.update_layout(
                     barmode='stack', plot_bgcolor='white', paper_bgcolor='white', font=dict(color='black', size=13),
+                    legend_title_text='', legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="center", x=0.5),
                     margin=dict(t=50, b=50, l=50, r=50)
                 )
                 fig9.update_xaxes(showgrid=False, zeroline=False, linecolor='black', tickangle=45, tickfont=dict(size=12))
