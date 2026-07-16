@@ -493,8 +493,8 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
             col_enc_1, col_enc_2 = st.columns(2)
             
             # --- CLASSIFICAÇÃO DOS DADOS DE 2025 ---
-            # Identifica processos em andamento (0 ou menores) e os faixas de dias
-            df_25['cat_enc'] = df_25['dias_encerramento'].apply(
+            # Identifica processos em andamento (0 ou menores) e as faixas de dias de encerramento
+            df_plataformas_2025['cat_enc'] = df_plataformas_2025['dias_encerramento'].apply(
                 lambda x: 'Investigação em Andamento' if x <= 0 else ('<=180' if x <= 180 else '>180')
             )
             
@@ -503,9 +503,9 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                 # Filtra anos de 2023 e 2024 do histórico e adiciona o consolidado de 2025
                 df_g8 = df_enc_hist[df_enc_hist['Ano'].isin([2023, 2024])].copy()
                 
-                enc_ate180_25 = (df_25['cat_enc'] == '<=180').sum()
-                enc_mais180_25 = (df_25['cat_enc'] == '>180').sum()
-                enc_andamento_25 = (df_25['cat_enc'] == 'Investigação em Andamento').sum()
+                enc_ate180_25 = (df_plataformas_2025['cat_enc'] == '<=180').sum()
+                enc_mais180_25 = (df_plataformas_2025['cat_enc'] == '>180').sum()
+                enc_andamento_25 = (df_plataformas_2025['cat_enc'] == 'Investigação em Andamento').sum()
                 
                 linha_25 = {
                     'Ano': 2025, 
@@ -540,7 +540,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                     'Investigação em Andamento': enc_andamento_25
                 }]
                 
-                for bacia, grupo in df_25.groupby('bacia_sedimentar'):
+                for bacia, grupo in df_plataformas_2025.groupby('bacia_sedimentar'):
                     bacia_stats_9.append({
                         'Bacia': bacia.strip(),
                         '<=180': (grupo['cat_enc'] == '<=180').sum(),
