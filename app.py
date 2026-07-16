@@ -15,31 +15,91 @@ st.set_page_config(
 # --- ESTILIZAÇÃO DO TEMA DO IBAMA (CSS PREMIUM AJUSTADO) ---
 st.markdown("""
 <style>
-    /* Fundo da página e textos globais */
-    .stApp { background-color: #F4F6F4 !important; }
-    .stApp p, .stApp span, .stApp label { color: #2E3E2F !important; }
-    h1, h2, h3, h4, h5, h6 { color: #1E4620 !important; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif !important; font-weight: bold !important; }
+    /* 1. Cor de fundo principal da página (Cinza Claro) */
+    .stApp {
+        background-color: #F4F6F4 !important;
+    }
     
-    /* Filtros e Rótulos */
-    div[data-testid="stWidgetLabel"] p { color: #1E4620 !important; font-weight: bold !important; font-size: 16px !important; }
-    div[data-baseweb="select"] > div { background-color: #FFFFFF !important; color: #2E3E2F !important; border-color: #C2CDC2 !important; }
+    /* 2. Garante contraste escuro para textos normais e rótulos */
+    .stApp p, .stApp span, .stApp label {
+        color: #2E3E2F !important;
+    }
+
+    /* 3. Estilo dos títulos e subtítulos (Verde Musgo Institucional) */
+    h1, h2, h3, h4, h5, h6 {
+        color: #1E4620 !important;
+        font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif !important;
+        font-weight: bold !important;
+    }
     
-    /* Tags selecionadas (chips) */
-    [data-baseweb="tag"] { background-color: #D1E2D3 !important; border: 1px solid #1E4620 !important; border-radius: 4px !important; }
-    [data-baseweb="tag"] * { color: #1E4620 !important; font-weight: bold !important; }
+    /* 4. Rótulos de todos os widgets e filtros */
+    div[data-testid="stWidgetLabel"] p {
+        color: #1E4620 !important;
+        font-weight: bold !important;
+        font-size: 16px !important;
+    }
     
-    /* Cards de métricas */
-    div[data-testid="stMetric"] { background-color: #FFFFFF !important; border-radius: 12px !important; padding: 20px !important; border: 1px solid #E2E8E2 !important; box-shadow: 0 4px 6px rgba(0,0,0,0.03) !important; }
-    div[data-testid="stMetricLabel"] p { color: #4A5D4E !important; font-weight: bold !important; font-size: 16px !important; }
-    div[data-testid="stMetricValue"] > div { color: #1E4620 !important; font-weight: bold !important; }
+    /* 5. Customização das caixas de seleção (Multiselect) */
+    div[data-baseweb="select"] > div {
+        background-color: #FFFFFF !important;
+        color: #2E3E2F !important;
+        border-color: #C2CDC2 !important;
+    }
     
-    /* Arredondamento dos Gráficos */
-    .stPlotlyChart { background-color: #FFFFFF !important; border-radius: 14px !important; border: 1px solid #E2E8E2 !important; box-shadow: 0 4px 10px rgba(0,0,0,0.04) !important; overflow: hidden !important; }
+    /* 6. Estilo geral das tags selecionadas (chips) */
+    [data-baseweb="tag"] {
+        background-color: #D1E2D3 !important; 
+        border: 1px solid #1E4620 !important; 
+        border-radius: 4px !important;
+    }
+    [data-baseweb="tag"] * {
+        color: #1E4620 !important;
+        font-weight: bold !important;
+    }
     
-    /* Sidebar e Abas */
-    [data-testid="stSidebar"] { background-color: #E2E8E2 !important; border-right: 1px solid #C2CDC2; }
-    button[data-baseweb="tab"] { color: #6E8B75 !important; font-size: 15px !important; }
-    button[data-baseweb="tab"][aria-selected="true"] { color: #1E4620 !important; border-bottom-color: #1E4620 !important; font-weight: bold !important; }
+    /* 7. Arredondamento e estilo dos cards de métricas (KPIs no topo) */
+    div[data-testid="stMetric"] {
+        background-color: #FFFFFF !important;
+        border-radius: 12px !important;
+        padding: 20px !important;
+        border: 1px solid #E2E8E2 !important;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.03) !important;
+    }
+    div[data-testid="stMetricLabel"] p {
+        color: #4A5D4E !important;
+        font-weight: bold !important;
+        font-size: 16px !important;
+    }
+    div[data-testid="stMetricValue"] > div {
+        color: #1E4620 !important;
+        font-weight: bold !important;
+    }
+    
+    /* 8. ARREDONDAMENTO DAS BORDAS DAS FIGURAS */
+    .stPlotlyChart {
+        background-color: #FFFFFF !important;
+        border-radius: 14px !important;
+        border: 1px solid #E2E8E2 !important;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.04) !important;
+        overflow: hidden !important; 
+    }
+    
+    /* 9. Customização do painel lateral de filtros (Sidebar) */
+    [data-testid="stSidebar"] {
+        background-color: #E2E8E2 !important;
+        border-right: 1px solid #C2CDC2;
+    }
+
+    /* 10. Customização das abas de navegação (Tabs) */
+    button[data-baseweb="tab"] {
+        color: #6E8B75 !important;
+        font-size: 15px !important;
+    }
+    button[data-baseweb="tab"][aria-selected="true"] {
+        color: #1E4620 !important;
+        border-bottom-color: #1E4620 !important;
+        font-weight: bold !important;
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -48,7 +108,7 @@ st.markdown("Análise interativa e monitoramento de emergências ambientais base
 
 NOME_ACIDENTES = "acidentes_2025.xlsx"
 NOME_PRODUCAO = "Producao.xlsx"
-NOME_ATENDIMENTO = "Tempo_Atendimento.xlsx"
+NOME_ATENDIMENTO = "Temo_Atendimento.xlsx"
 
 # --- FUNÇÕES DE LEITURA E LIMPEZA DE DADOS (COM CACHE) ---
 
@@ -101,7 +161,6 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
         df_total_prod, df_bacias_prod = carregar_producao(NOME_PRODUCAO)
         df_atend_tot, df_atend_b24 = carregar_atendimento(NOME_ATENDIMENTO)
         
-        # Filtro estrito de Plataformas para 2025
         if 'origem_acidente' in df_2025_bruto.columns:
             df_25 = df_2025_bruto[df_2025_bruto['origem_acidente'].astype(str).str.strip().str.lower() == 'plataforma'].copy()
         else:
@@ -109,7 +168,6 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
             
         acid_total_2025 = len(df_25)
         
-        # Consolidação de Bacias (Produção)
         df_25['bacia_clean'] = df_25['bacia_sedimentar'].astype(str).str.strip().str.lower()
         counts_2025_dict = df_25['bacia_clean'].value_counts().to_dict()
         df_bacias_prod['bacia_clean'] = df_bacias_prod['Bacia Sedimentar'].astype(str).str.strip().str.lower()
@@ -123,13 +181,11 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
             
         df_25['cat_atendimento'] = df_25['tempo_atendimento'].apply(cat_tempo) if 'tempo_atendimento' in df_25.columns else 'Não Atendidos'
         
-        # Total 2025 (Para Fig 3.3.5 e 3.3.6 Total)
         t_ate30 = (df_25['cat_atendimento'] == 'Até 30 dias').sum()
         t_mais30 = (df_25['cat_atendimento'] == 'Mais de 30 dias').sum()
         t_nao = (df_25['cat_atendimento'] == 'Não Atendidos').sum()
         t_med = df_25['tempo_atendimento'].mean() if 'tempo_atendimento' in df_25.columns else 0
         
-        # Construindo DF agregado de Bacias 2025 (Para Fig 3.3.6)
         bacia_stats_2025 = [{'Bacia': 'Total', 'Até 30 dias': t_ate30, 'Mais de 30 dias': t_mais30, 'Não Atendidos': t_nao, 'Tempo Médio': t_med}]
         for bacia, group in df_25.groupby('bacia_sedimentar'):
             ate = (group['cat_atendimento'] == 'Até 30 dias').sum()
@@ -201,7 +257,6 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
             st.markdown("### 📈 Histórico e Performance (Produção x Acidentes)")
             st.write("---")
             
-            # Gráfico 1 (Produção)
             anos_g1 = [2021, 2022, 2023, 2024, 2025]
             acid_vals_g1 = [df_total_prod[f'Acid_{a}'].iloc[0] for a in anos_g1[:-1]] + [acid_total_2025]
             prod_vals_g1 = [df_total_prod[f'Prod_{a}'].iloc[0] for a in anos_g1]
@@ -214,7 +269,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
             fig1.add_trace(go.Scatter(x=df_g1['Ano'], y=df_g1['Taxa'], name="Taxa (Mboe/d)", mode='lines+markers+text', line=dict(color='#2c3e50', width=3), marker=dict(size=8), text=df_g1['Taxa'], textposition='top center', textfont=dict(color='black', size=13)), secondary_y=True)
             
             fig1.update_layout(
-                title=dict(text="<b>Fig 3.3.1: Acidentes por Ano e Taxa (2021-2025)</b>", x=0.5, font=dict(size=18, color='#1E4620')),
+                title=dict(text="<b>Acidentes por Ano e Taxa (2021-2025)</b>", x=0.5, font=dict(size=18, color='#1E4620')),
                 plot_bgcolor='white', paper_bgcolor='white', font=dict(color='black', size=13),
                 legend_title_text='', legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="center", x=0.5, font=dict(color='black', size=13)),
                 margin=dict(t=100, b=50, l=50, r=50)
@@ -225,24 +280,21 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
             st.plotly_chart(fig1, use_container_width=True)
 
         # ==========================================
-        # ABA 3: ATENDIMENTO A EMERGÊNCIAS (NOVOS GRÁFICOS)
+        # ABA 3: ATENDIMENTO A EMERGÊNCIAS
         # ==========================================
         with tab_atend:
             st.markdown("### ⏱️ Eficácia e Tempo de Resposta (Nupaem)")
-            st.write("Visão detalhada sobre os prazos e metodologias de primeiro atendimento às ocorrências.")
             st.write("---")
             
             col_atend_1, col_atend_2 = st.columns(2)
             
             # --- FIGURA 3.3.5: Evolução Temporal do Atendimento (2021-2025) ---
             with col_atend_1:
-                # Filtrando 2021 a 2024 e adicionando 2025 calculado
                 df_g5 = df_atend_tot[df_atend_tot['Ano'].isin([2021, 2022, 2023, 2024])].copy()
                 nova_linha_25 = {'Ano': 2025, 'Até 30 dias': t_ate30, 'Mais de 30 dias': t_mais30, 'Não Atendidos': t_nao, 'Tempo Médio até 1º Atendimento': t_med}
                 df_g5 = pd.concat([df_g5, pd.DataFrame([nova_linha_25])], ignore_index=True)
                 df_g5['Ano'] = df_g5['Ano'].astype(str)
                 
-                # Para evitar conflito visual, vamos fixar o eixo Y esquerdo e direito num mesmo limite estendido
                 max_bar_height = (df_g5['Até 30 dias'] + df_g5['Mais de 30 dias'] + df_g5['Não Atendidos']).max()
                 max_line_height = df_g5['Tempo Médio até 1º Atendimento'].max()
                 limite_y_atend = max(max_bar_height, max_line_height) * 1.15
@@ -251,18 +303,16 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                 fig5.add_trace(go.Bar(name='Até 30 dias', x=df_g5['Ano'], y=df_g5['Até 30 dias'], marker_color='#1FA1DD', text=df_g5['Até 30 dias'], textposition='inside', textfont=dict(color='black', size=13)), secondary_y=False)
                 fig5.add_trace(go.Bar(name='Mais de 30 dias', x=df_g5['Ano'], y=df_g5['Mais de 30 dias'], marker_color='#FDBB2F', text=df_g5['Mais de 30 dias'], textposition='inside', textfont=dict(color='black', size=13)), secondary_y=False)
                 fig5.add_trace(go.Bar(name='Não Atendidos', x=df_g5['Ano'], y=df_g5['Não Atendidos'], marker_color='#8BC53F', text=df_g5['Não Atendidos'], textposition='inside', textfont=dict(color='black', size=13)), secondary_y=False)
-                
                 fig5.add_trace(go.Scatter(name='Tempo Médio', x=df_g5['Ano'], y=df_g5['Tempo Médio até 1º Atendimento'], mode='lines+markers+text', line=dict(color='#727272', width=3), marker=dict(size=9, color='#727272'), text=df_g5['Tempo Médio até 1º Atendimento'].round(0), textposition='top center', textfont=dict(color='black', size=13)), secondary_y=True)
                 
+                # TITULO PRINCIPAL REMOVIDO CONFORME SOLICITADO
                 fig5.update_layout(
-                    title=dict(text="<b>Fig 3.3.5: Desempenho de Atendimento (2021-2025)</b>", x=0.5, font=dict(size=18, color='#1E4620')),
                     barmode='stack', plot_bgcolor='white', paper_bgcolor='white', font=dict(color='black', size=13),
-                    legend_title_text='', legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="center", x=0.5), margin=dict(t=100, b=50, l=50, r=50)
+                    legend_title_text='', legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="center", x=0.5), margin=dict(t=50, b=50, l=50, r=50)
                 )
-                fig5.update_xaxes(showgrid=False, zeroline=False, linecolor='black')
-                # A mágica do eixo igual: a linha cinza vai bater visualmente na proporção exata da barra
-                fig5.update_yaxes(title_text="Número de Acidentes Atendidos", secondary_y=False, range=[0, limite_y_atend], showgrid=False, zeroline=False, linecolor='black')
-                fig5.update_yaxes(title_text="Tempo Médio (Dias)", secondary_y=True, range=[0, limite_y_atend], showgrid=False, zeroline=False, linecolor='black')
+                fig5.update_xaxes(showgrid=False, zeroline=False, linecolor='black', tickfont=dict(size=12))
+                fig5.update_yaxes(title_text="Número de Acidentes Atendidos", secondary_y=False, range=[0, limite_y_atend], showgrid=False, zeroline=False, linecolor='black', tickfont=dict(size=12), title_font=dict(size=14))
+                fig5.update_yaxes(title_text="Tempo Médio (Dias)", secondary_y=True, range=[0, limite_y_atend], showgrid=False, zeroline=False, linecolor='black', tickfont=dict(size=12), title_font=dict(size=14))
                 st.plotly_chart(fig5, use_container_width=True)
                 
             # --- FIGURA 3.3.7: Forma de Atendimento (2025) ---
@@ -275,37 +325,40 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                     
                     fig7 = px.bar(df_formas, x='Forma', y='Quantidade', text='Texto', color_discrete_sequence=['#1FA1DD'])
                     fig7.update_traces(textposition='outside', textfont=dict(color='black', size=12))
+                    
+                    # TITULO PRINCIPAL REMOVIDO CONFORME SOLICITADO
                     fig7.update_layout(
-                        title=dict(text="<b>Fig 3.3.7: Forma de 1º Atendimento (2025)</b>", x=0.5, font=dict(size=18, color='#1E4620')),
-                        plot_bgcolor='white', paper_bgcolor='white', font=dict(color='black', size=13), margin=dict(t=100, b=120, l=50, r=50)
+                        plot_bgcolor='white', paper_bgcolor='white', font=dict(color='black', size=13), margin=dict(t=50, b=120, l=50, r=50)
                     )
-                    fig7.update_xaxes(title="", showgrid=False, zeroline=False, linecolor='black')
-                    fig7.update_yaxes(title="Volume de Documentos/Ações", showgrid=False, zeroline=False, linecolor='black', range=[0, df_formas['Quantidade'].max()*1.2])
+                    fig7.update_xaxes(title="", showgrid=False, zeroline=False, linecolor='black', tickfont=dict(size=12))
+                    fig7.update_yaxes(title="Volume de Documentos/Ações", showgrid=False, zeroline=False, linecolor='black', range=[0, df_formas['Quantidade'].max()*1.2], tickfont=dict(size=12), title_font=dict(size=14))
                     st.plotly_chart(fig7, use_container_width=True)
                 else:
-                    st.info("Dados sobre 'Forma de atendimento' insuficientes ou ausentes na planilha de 2025.")
+                    st.info("Dados sobre 'Forma de atendimento' insuficientes na planilha de 2025.")
             
             st.write("---")
             
-            # --- FIGURA 3.3.6: Atendimento por Bacias (Comparativo 2024-2025 Lado a Lado) ---
+            # --- FIGURA 3.3.6: Atendimento por Bacias (FUSÃO DOS ANOS LADO A LADO) ---
             ordem_bacias = ["Total", "Campos", "Santos", "Sergipe-Alagoas", "Espírito Santo", "Potiguar", "Ceará", "Camamu-Almada"]
             
-            # Processa 2024
             df_b24_c = df_atend_b24.rename(columns={'Tempo Médio até 1º Atendimento': 'Tempo Médio'})
-            # Cria a linha "Total" de 2024
             tot24 = df_g5[df_g5['Ano'] == '2024'].iloc[0]
             linha_tot24 = {'Bacia': 'Total', 'Até 30 dias': tot24['Até 30 dias'], 'Mais de 30 dias': tot24['Mais de 30 dias'], 'Não Atendidos': tot24['Não Atendidos'], 'Tempo Médio': tot24['Tempo Médio até 1º Atendimento']}
             df_b24_c = pd.concat([pd.DataFrame([linha_tot24]), df_b24_c], ignore_index=True)
             df_b24_c['Bacia'] = pd.Categorical(df_b24_c['Bacia'], categories=ordem_bacias, ordered=True)
             df_b24_c = df_b24_c.sort_values('Bacia')
             
-            # Processa 2025
             df_b25_c = df_atend_b25.copy()
             df_b25_c['Bacia'] = pd.Categorical(df_b25_c['Bacia'], categories=ordem_bacias, ordered=True)
             df_b25_c = df_b25_c.sort_values('Bacia').dropna(subset=['Bacia'])
             
-            # Subplots Lado a Lado (1 linha, 2 colunas)
-            fig6 = make_subplots(rows=1, cols=2, subplot_titles=("<b>2024</b>", "<b>2025</b>"), specs=[[{"secondary_y": True}, {"secondary_y": True}]], horizontal_spacing=0.1)
+            # CORREÇÃO CRÍTICA DE DESIGN: horizontal_spacing=0.0 "gruda" fisicamente as duas colunas
+            fig6 = make_subplots(
+                rows=1, cols=2, 
+                subplot_titles=("<b>2024</b>", "<b>2025</b>"), 
+                specs=[[{"secondary_y": True}, {"secondary_y": True}]], 
+                horizontal_spacing=0.00
+            )
             
             max_b_h = max(
                 (df_b24_c['Até 30 dias'] + df_b24_c['Mais de 30 dias'] + df_b24_c['Não Atendidos']).max(),
@@ -315,33 +368,37 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
             limite_y_facets = max(max_b_h, max_l_h) * 1.15
             
             def add_bars_dots(fig, df_data, col_idx):
-                # Barras empilhadas
                 fig.add_trace(go.Bar(name='Até 30 dias', x=df_data['Bacia'], y=df_data['Até 30 dias'], marker_color='#1FA1DD', text=df_data['Até 30 dias'], textposition='inside', textfont=dict(color='black', size=11), showlegend=(col_idx==1)), row=1, col=col_idx, secondary_y=False)
                 fig.add_trace(go.Bar(name='Mais de 30 dias', x=df_data['Bacia'], y=df_data['Mais de 30 dias'], marker_color='#FDBB2F', text=df_data['Mais de 30 dias'], textposition='inside', textfont=dict(color='black', size=11), showlegend=(col_idx==1)), row=1, col=col_idx, secondary_y=False)
                 fig.add_trace(go.Bar(name='Não Atendidos', x=df_data['Bacia'], y=df_data['Não Atendidos'], marker_color='#8BC53F', text=df_data['Não Atendidos'], textposition='inside', textfont=dict(color='black', size=11), showlegend=(col_idx==1)), row=1, col=col_idx, secondary_y=False)
-                # Pontos Pretos
                 fig.add_trace(go.Scatter(name='Tempo Médio por Bacia', x=df_data['Bacia'], y=df_data['Tempo Médio'], mode='markers', marker=dict(size=8, color='black'), showlegend=(col_idx==1)), row=1, col=col_idx, secondary_y=True)
             
             add_bars_dots(fig6, df_b24_c, 1)
             add_bars_dots(fig6, df_b25_c, 2)
             
-            # Linha Média Global (Tracejada Preta)
             media_total_2024 = df_b24_c[df_b24_c['Bacia'] == 'Total']['Tempo Médio'].values[0] if not df_b24_c.empty else 0
             media_total_2025 = df_b25_c[df_b25_c['Bacia'] == 'Total']['Tempo Médio'].values[0] if not df_b25_c.empty else 0
             
             fig6.add_hline(y=media_total_2024, line_dash="dash", line_color="black", row=1, col=1, secondary_y=True)
             fig6.add_hline(y=media_total_2025, line_dash="dash", line_color="black", row=1, col=2, secondary_y=True)
             
+            # LAYOUT GERAL DA FIGURA 6 (TITULO REMOVIDO CONFORME PEDIDO)
             fig6.update_layout(
-                title=dict(text="<b>Fig 3.3.6: Ocorrências Atendidas por Bacia Sedimentar</b>", x=0.5, font=dict(size=18, color='#1E4620')),
                 barmode='stack', plot_bgcolor='white', paper_bgcolor='white', font=dict(color='black', size=13),
-                legend_title_text='', legend=dict(orientation="h", yanchor="bottom", y=1.1, xanchor="center", x=0.5), margin=dict(t=120, b=50, l=50, r=50)
+                legend_title_text='', legend=dict(orientation="h", yanchor="bottom", y=1.08, xanchor="center", x=0.5, font=dict(size=13)), 
+                margin=dict(t=80, b=60, l=60, r=60)
             )
             
-            for col_idx in [1, 2]:
-                fig6.update_xaxes(showgrid=False, zeroline=False, linecolor='black', tickangle=45, row=1, col=col_idx)
-                fig6.update_yaxes(title_text="Nº de Acidentes Atendidos", secondary_y=False, range=[0, limite_y_facets], showgrid=False, zeroline=False, linecolor='black', row=1, col=col_idx)
-                fig6.update_yaxes(title_text="Tempo Médio (Dias)", secondary_y=True, range=[0, limite_y_facets], showgrid=False, zeroline=False, linecolor='black', row=1, col=col_idx)
+            # --- SOLUÇÃO CIRÚRGICA DE EIXOS PARA GRUDAR ---
+            # COLUNA 1 (2024): Mantém o Eixo Principal (Esquerdo), REMOVE o Eixo Secundário (Direito)
+            fig6.update_xaxes(showgrid=False, zeroline=False, linecolor='black', tickangle=45, row=1, col=1, tickfont=dict(size=12))
+            fig6.update_yaxes(title_text="Número de Acidentes Atendidos", secondary_y=False, range=[0, limite_y_facets], showgrid=False, zeroline=False, linecolor='black', row=1, col=1, tickfont=dict(size=12), title_font=dict(size=14))
+            fig6.update_yaxes(visible=False, secondary_y=True, row=1, col=1) # Oculta o centro-esquerda
+            
+            # COLUNA 2 (2025): REMOVE o Eixo Principal (Esquerdo), Mantém o Eixo Secundário (Direito)
+            fig6.update_xaxes(showgrid=False, zeroline=False, linecolor='black', tickangle=45, row=1, col=2, tickfont=dict(size=12))
+            fig6.update_yaxes(visible=False, secondary_y=False, row=1, col=2) # Oculta o centro-direita
+            fig6.update_yaxes(title_text="Tempo Médio até 1º Atendimento (Dias)", secondary_y=True, range=[0, limite_y_facets], showgrid=False, zeroline=False, linecolor='black', row=1, col=2, tickfont=dict(size=12), title_font=dict(size=14))
 
             st.plotly_chart(fig6, use_container_width=True)
 
