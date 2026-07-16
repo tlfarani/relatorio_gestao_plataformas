@@ -109,6 +109,7 @@ st.markdown("Análise interativa e monitoramento de emergências ambientais base
 NOME_ACIDENTES = "acidentes_2025.xlsx"
 NOME_PRODUCAO = "Producao.xlsx"
 NOME_ATENDIMENTO = "Tempo_Atendimento.xlsx"
+NOME_ENCERRAMENTO = "Tempo_Encerramento.xlsx"
 
 # --- FUNÇÕES DE LEITURA E LIMPEZA DE DADOS (COM CACHE) ---
 
@@ -176,14 +177,19 @@ def carregar_atendimento_historico(caminho):
     df_b24 = pd.read_excel(caminho, sheet_name="Bacias_2024")
     return df_tot, df_b24
 
+@st.cache_data(ttl=1800)
+def carregar_encerramento_historico(caminho):
+    # Carrega a aba Total da planilha de encerramentos históricos
+    return pd.read_excel(caminho, sheet_name="Total")
 
 # --- VERIFICAÇÃO DE CONFIGURAÇÃO DE ARQUIVOS ---
-if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.exists(NOME_ATENDIMENTO):
+if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.exists(NOME_ATENDIMENTO) and os.path.exists(NOME_ENCERRAMENTO):
     try:
         # Carga dos bancos de dados
         df_2025_bruto = carregar_dados_2025(NOME_ACIDENTES)
         df_total_prod, df_bacias_prod = carregar_producao_historica(NOME_PRODUCAO)
         df_atend_tot, df_atend_b24 = carregar_atendimento_historico(NOME_ATENDIMENTO)
+        df_enc_hist = carregar_encerramento_historico(NOME_ENCERRAMENTO)
         
         # Filtro de Plataformas para 2025
         if 'origem_acidente' in df_2025_bruto.columns:
@@ -479,6 +485,87 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
             fig6.update_yaxes(visible=False, secondary_y=False, row=1, col=2) 
             fig6.update_yaxes(title_text="Tempo Médio até 1º Atendimento (Dias)", secondary_y=True, range=[0, limite_y_facets], showgrid=False, zeroline=False, linecolor='black', row=1, col=2, tickfont=dict(size=12))
             st.plotly_chart(fig6, use_container_width=True)
+            
+            # =========================================================================
+            # NOVAS VISUALIZAÇÕES: PRAZOS DE ENCERRAMENTO DA INVESTIGAÇÃO (FIG 3.3.8 e 3.3.9)
+            # =========================================================================
+            st.write("---")
+            col_enc_1, col_enc_2 = st.columns(2)
+            
+            # --- CLASSIFICAÇÃO DOS DADOS DE 2025 ---
+            # Identifica processos em andamento (0 ou menores) e os faixas de dias
+            df_25['cat_enc'] = df_25['dias_encerramento'].apply(
+                lambda x: 'Investigação em Andamento' if x <= 0 else ('<=180' if x <= 180 else '>180')
+            )
+            
+            # --- FIGURA 3.3.8: Evolução Temporal de Encerramento (2023-2025) ---
+            with col_enc_1:
+                # Filtra anos de 2023 e 2024 do histórico e adiciona o consolidado de 2025
+                df_g8 = df_enc_hist[df_enc_hist['Ano'].isin([2023, 2024])].copy()
+                
+                enc_ate180_25 = (df_25['cat_enc'] == '<=180').sum()
+                enc_mais180_25 = (df_25['cat_enc'] == '>180').sum()
+                enc_andamento_25 = (df_25['cat_enc'] == 'Investigação em Andamento').sum()
+                
+                linha_25 = {
+                    'Ano': 2025, 
+                    '<=180': enc_ate180_25, 
+                    '>180': enc_mais180_25, 
+                    'Investigação em Andamento': enc_andamento_25
+                }
+                df_g8 = pd.concat([df_g8, pd.DataFrame([linha_25])], ignore_index=True)
+                df_g8['Ano'] = df_g8['Ano'].astype(str)
+                
+                fig8 = go.Figure()
+                fig8.add_trace(go.Bar(name='Até 180 dias (6 meses)', x=df_g8['Ano'], y=df_g8['<=180'], marker_color='#1FA1DD', text=df_g8['<=180'], textposition='inside', textfont=dict(color='black', size=13)))
+                fig8.add_trace(go.Bar(name='Mais de 180 dias', x=df_g8['Ano'], y=df_g8['>180'], marker_color='#FDBB2F', text=df_g8['>180'], textposition='inside', textfont=dict(color='black', size=13)))
+                fig8.add_trace(go.Bar(name='Em Andamento', x=df_g8['Ano'], y=df_g8['Investigação em Andamento'], marker_color='#8BC53F', text=df_g8['Investigação em Andamento'], textposition='inside', textfont=dict(color='black', size=13)))
+                
+                fig8.update_layout(
+                    barmode='stack', plot_bgcolor='white', paper_bgcolor='white', font=dict(color='black', size=13),
+                    legend_title_text='', legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="center", x=0.5),
+                    margin=dict(t=50, b=50, l=50, r=50)
+                )
+                fig8.update_xaxes(showgrid=False, zeroline=False, linecolor='black', tickfont=dict(size=12))
+                fig8.update_yaxes(title_text="Número de Processos", showgrid=False, zeroline=False, linecolor='black', tickfont=dict(size=12), title_font=dict(size=14))
+                st.plotly_chart(fig8, use_container_width=True)
+                
+            # --- FIGURA 3.3.9: Encerramento por Bacia Sedimentar (2025) ---
+            with col_enc_2:
+                # Agrupa dados de 2025 por Bacia montando a mesma estrutura empilhada
+                bacia_stats_9 = [{
+                    'Bacia': 'Total', 
+                    '<=180': enc_ate180_25, 
+                    '>180': enc_mais180_25, 
+                    'Investigação em Andamento': enc_andamento_25
+                }]
+                
+                for bacia, grupo in df_25.groupby('bacia_sedimentar'):
+                    bacia_stats_9.append({
+                        'Bacia': bacia.strip(),
+                        '<=180': (grupo['cat_enc'] == '<=180').sum(),
+                        '>180': (grupo['cat_enc'] == '>180').sum(),
+                        'Investigação em Andamento': (grupo['cat_enc'] == 'Investigação em Andamento').sum()
+                    })
+                df_g9 = pd.DataFrame(bacia_stats_9)
+                
+                # Alinha rigorosamente a ordem de exibição das Bacias no eixo X
+                ordem_bacias_enc = ["Total", "Campos", "Santos", "Sergipe-Alagoas", "Espírito Santo", "Potiguar", "Ceará", "Camamu-Almada"]
+                df_g9['Bacia'] = pd.Categorical(df_g9['Bacia'], categories=ordem_bacias_enc, ordered=True)
+                df_g9 = df_g9.sort_values('Bacia').dropna(subset=['Bacia'])
+                
+                fig9 = go.Figure()
+                fig9.add_trace(go.Bar(name='Até 180 dias (6 meses)', x=df_g9['Bacia'], y=df_g9['<=180'], marker_color='#1FA1DD', text=df_g9['<=180'], textposition='inside', textfont=dict(color='black', size=11), showlegend=False))
+                fig9.add_trace(go.Bar(name='Mais de 180 dias', x=df_g9['Bacia'], y=df_g9['>180'], marker_color='#FDBB2F', text=df_g9['>180'], textposition='inside', textfont=dict(color='black', size=11), showlegend=False))
+                fig9.add_trace(go.Bar(name='Em Andamento', x=df_g9['Bacia'], y=df_g9['Investigação em Andamento'], marker_color='#8BC53F', text=df_g9['Investigação em Andamento'], textposition='inside', textfont=dict(color='black', size=11), showlegend=False))
+                
+                fig9.update_layout(
+                    barmode='stack', plot_bgcolor='white', paper_bgcolor='white', font=dict(color='black', size=13),
+                    margin=dict(t=50, b=50, l=50, r=50)
+                )
+                fig9.update_xaxes(showgrid=False, zeroline=False, linecolor='black', tickangle=45, tickfont=dict(size=12))
+                fig9.update_yaxes(showgrid=False, zeroline=False, linecolor='black', tickfont=dict(size=12))
+                st.plotly_chart(fig9, use_container_width=True)
 
     except Exception as e:
         st.error("Erro interno ao consolidar os dados das abas.")
