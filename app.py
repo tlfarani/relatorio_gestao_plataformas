@@ -108,7 +108,7 @@ st.markdown("Análise interativa e monitoramento de emergências ambientais base
 
 NOME_ACIDENTES = "acidentes_2025.xlsx"
 NOME_PRODUCAO = "Producao.xlsx"
-NOME_ATENDIMENTO = "Temo_Atendimento.xlsx"
+NOME_ATENDIMENTO = "Tempo_Atendimento.xlsx"
 
 # --- FUNÇÕES DE LEITURA E LIMPEZA DE DADOS (COM CACHE) ---
 
