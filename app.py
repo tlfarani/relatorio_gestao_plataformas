@@ -13,28 +13,29 @@ st.set_page_config(
 )
 
 # --- ESTILIZAÇÃO DO TEMA DO IBAMA (CSS INJETADO) ---
+# Aplica a identidade visual da instituição apenas no "esqueleto" do app
 st.markdown("""
 <style>
     /* Cor de fundo principal da página (Cinza Claro) */
     .stApp {
         background-color: #F4F6F4;
     }
-    /* Estilo dos títulos e subtítulos (Verde Musgo) */
+    /* Estilo dos títulos e subtítulos (Verde Musgo Institucional) */
     h1, h2, h3 {
         color: #1E4620 !important;
         font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
     }
-    /* Customização do painel lateral (Sidebar) */
+    /* Customização do painel lateral de filtros (Sidebar) */
     [data-testid="stSidebar"] {
         background-color: #E2E8E2 !important;
         border-right: 1px solid #C2CDC2;
     }
-    /* Textos na barra lateral */
+    /* Textos e labels na barra lateral */
     [data-testid="stSidebar"] .stMarkdown, [data-testid="stSidebar"] label {
         color: #1E4620 !important;
         font-weight: bold;
     }
-    /* Customização das abas (Tabs) */
+    /* Customização das abas de navegação (Tabs) */
     button[data-baseweb="tab"] {
         color: #6E8B75 !important;
     }
@@ -43,7 +44,7 @@ st.markdown("""
         border-bottom-color: #1E4620 !important;
         font-weight: bold;
     }
-    /* Cartões de Métricas (KPIs) */
+    /* Cartões de Métricas (KPIs no topo) */
     div[data-testid="stMetricValue"] > div {
         color: #1E4620 !important;
         font-weight: bold;
@@ -218,16 +219,18 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO):
                     df_grafico = df_filtrado['empresa'].value_counts().reset_index()
                     df_grafico.columns = ['Empresa', 'Quantidade']
                     
+                    # Mantém a paleta clássica de intensidade vermelha para o gráfico de barras operacionais
                     fig = px.bar(
                         df_grafico, 
                         x='Quantidade', 
                         y='Empresa', 
                         orientation='h',
                         labels={'Quantidade': 'Número de Acidentes', 'Empresa': ''},
-                        color_discrete_sequence=['#2E5A27'] # Verde musgo sólido
+                        color='Quantidade',
+                        color_continuous_scale='Reds'
                     )
                     
-                    # Formatações do gráfico (Sem grade, textos em preto)
+                    # Formatações (Sem grade de fundo, textos em preto puro)
                     fig.update_layout(
                         plot_bgcolor='white',
                         paper_bgcolor='white',
@@ -282,9 +285,9 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO):
                 fig1.add_trace(
                     go.Bar(
                         x=df_g1['Ano'], y=df_g1['Acidentes'], 
-                        name="Nº de Acidentes", marker_color='#6E8B75', # Verde Sálvia Médio
+                        name="Nº de Acidentes", marker_color='#3498db', # Azul Claro Clássico do Siema
                         text=df_g1['Acidentes'], textposition='outside',
-                        textfont=dict(color='black') # Fonte dos valores em preto
+                        textfont=dict(color='black') # Texto em preto
                     ),
                     secondary_y=False
                 )
@@ -292,9 +295,9 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO):
                     go.Scatter(
                         x=df_g1['Ano'], y=df_g1['Taxa'], 
                         name="Acidentes / Mboe/d", mode='lines+markers+text',
-                        line=dict(color='#1E4620', width=3), marker=dict(size=8, symbol='circle'), # Verde Musgo Escuro
+                        line=dict(color='#2c3e50', width=3), marker=dict(size=8, symbol='circle'), # Linha Escura de Destaque
                         text=df_g1['Taxa'], textposition='top center',
-                        textfont=dict(color='black') # Fonte dos valores em preto
+                        textfont=dict(color='black') # Texto em preto
                     ),
                     secondary_y=True
                 )
@@ -308,7 +311,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO):
                     legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
                     margin=dict(t=80, b=40, l=40, r=40)
                 )
-                # Removendo grades
+                # Sem as linhas de grade de fundo
                 fig1.update_xaxes(showgrid=False, zeroline=False, linecolor='black')
                 fig1.update_yaxes(title_text="Nº de Acidentes por Ano (Barras)", secondary_y=False, range=[0, max(acid_vals_g1)*1.2], showgrid=False, zeroline=False, linecolor='black')
                 fig1.update_yaxes(title_text="Acidentes / Mboe/d (Linha)", secondary_y=True, range=[0, max(taxas_g1)*1.2], showgrid=False, zeroline=False, linecolor='black')
@@ -336,7 +339,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO):
                 fig2 = px.bar(
                     df_g2_melted, x='Bacia Sedimentar', y='Acidentes', color='Ano', barmode='group',
                     text='Acidentes',
-                    color_discrete_sequence=['#A3C1AD', '#6E8B75', '#2E5A27'] # Degradê verde
+                    color_discrete_sequence=['#2ecc71', '#3498db', '#f39c12'] # Paleta Original: Verde, Azul e Laranja
                 )
                 fig2.update_traces(textposition='outside', textfont=dict(color='black'))
                 fig2.update_layout(
@@ -369,7 +372,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO):
                 
                 fig3 = px.bar(
                     df_g3, x='Percentual', y='Bacia Sedimentar', orientation='h',
-                    text='Percentual', color_discrete_sequence=['#2E5A27'] # Sólido verde musgo
+                    text='Percentual', color_discrete_sequence=['#3498db'] # Azul clássico de barras horizontais
                 )
                 fig3.update_traces(texttemplate='%{text:.2f}%', textposition='outside', textfont=dict(color='black'))
                 fig3.update_layout(
@@ -402,7 +405,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO):
                 
                 fig4 = px.bar(
                     df_g4_melted, x='Bacia Sedimentar', y='Taxa', color='Ano', barmode='group',
-                    text='Taxa', color_discrete_sequence=['#A3C1AD', '#6E8B75', '#2E5A27'] # Degradê verde
+                    text='Taxa', color_discrete_sequence=['#2ecc71', '#3498db', '#f39c12'] # Paleta Original: Verde, Azul e Laranja
                 )
                 fig4.update_traces(texttemplate='%{text:.1f}', textposition='outside', textfont=dict(color='black'))
                 fig4.update_layout(
