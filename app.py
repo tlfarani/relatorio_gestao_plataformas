@@ -17,7 +17,6 @@ NOME_ARQUIVO = "acidentes_2025.xlsx"
 
 @st.cache_data(ttl=1800)  # Mantém o cache por 30 minutos para performance
 def carregar_e_limpar_dados(caminho):
-    # Carrega a aba inteira para evitar erros de índice de coluna
     df = pd.read_excel(caminho, sheet_name="Geral")
     
     # Remove espaços em branco extras dos nomes das colunas
@@ -78,21 +77,19 @@ if os.path.exists(NOME_ARQUIVO):
     try:
         df_bruto = carregar_e_limpar_dados(NOME_ARQUIVO)
         
-        # Filtro de Plataformas (busca inteligente na coluna de Origem ou Instalação)
-        termos_plataforma = "Plataforma|FPSO|Sonda|FSO|Semi-submersível"
-        
-        coluna_origem = df_bruto['origem_acidente'].astype(str) if 'origem_acidente' in df_bruto.columns else pd.Series(dtype=str)
-        coluna_instalacao = df_bruto['instalacao'].astype(str) if 'instalacao' in df_bruto.columns else pd.Series(dtype=str)
-        
-        df_plataformas = df_bruto[
-            coluna_origem.str.contains(termos_plataforma, case=False, na=False) |
-            coluna_instalacao.str.contains(termos_plataforma, case=False, na=False)
-        ].copy()
+        # --- FILTRO ESTRITO POR ORIGEM DO ACIDENTE ("Plataforma") ---
+        if 'origem_acidente' in df_bruto.columns:
+            # Seleciona apenas linhas onde a origem é exatamente "Plataforma" (ignorando caixa e espaços)
+            df_plataformas = df_bruto[
+                df_bruto['origem_acidente'].astype(str).str.strip().str.lower() == 'plataforma'
+            ].copy()
+        else:
+            df_plataformas = pd.DataFrame(columns=df_bruto.columns)
         
         # --- PAINEL LATERAL (Filtros) ---
         st.sidebar.header("Filtros do Painel")
         
-        # Correção do erro '<' entre str e float: forçamos a conversão para string de todos os itens e removemos nulos antes do sorted
+        # Bacias disponíveis (baseadas apenas nos dados filtrados de Plataforma)
         if 'bacia_sedimentar' in df_plataformas.columns:
             bacias_unicas = df_plataformas['bacia_sedimentar'].dropna().unique()
             bacias_disponiveis = sorted([str(x) for x in bacias_unicas])
@@ -105,6 +102,7 @@ if os.path.exists(NOME_ARQUIVO):
             default=bacias_disponiveis
         )
         
+        # Empresas disponíveis (baseadas apenas nos dados filtrados de Plataforma)
         if 'empresa' in df_plataformas.columns:
             empresas_unicas = df_plataformas['empresa'].dropna().unique()
             empresas_disponiveis = sorted([str(x) for x in empresas_unicas])
@@ -117,7 +115,7 @@ if os.path.exists(NOME_ARQUIVO):
             default=empresas_disponiveis
         )
         
-        # Filtra os dados com base na seleção do usuário
+        # Filtragem final reativa baseada nas escolhas do usuário na barra lateral
         df_filtrado = df_plataformas.copy()
         if 'bacia_sedimentar' in df_filtrado.columns:
             df_filtrado = df_filtrado[df_filtrado['bacia_sedimentar'].isin(bacias_selecionadas)]
@@ -172,7 +170,7 @@ if os.path.exists(NOME_ARQUIVO):
                 st.info("Sem dados suficientes para gerar o gráfico.")
                 
         with col_tabela:
-            st.subheader("Base Filtrada")
+            st.subheader("Base Filtrada (Dados Consolidados)")
             colunas_exibicao = [c for c in ['num_processo', 'instalacao', 'bacia_sedimentar', 'empresa', 'dias_encerramento'] if c in df_filtrado.columns]
             st.dataframe(
                 df_filtrado[colunas_exibicao], 
