@@ -567,46 +567,86 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                 st.plotly_chart(fig9, use_container_width=True)
 
         # =========================================================================
-        # ABA 4: CONSOLIDAÇÃO DE DADOS POR PRODUTO (MARCAS 1, 2 E 3) - CORRIGIDA
+        # ABA 4: CONSOLIDAÇÃO DE DADOS POR PRODUTO (HIGIENIZADA E FORMATAÇÃO BR)
         # =========================================================================
         with tab_produtos:
             st.markdown("### 🛢️ Inventário Consolidado de Produtos e Marcas Comerciais")
-            st.write("Agregação unificada de todos os produtos com vazamento registrado em plataformas (2025).")
+            st.write("Agregação unificada e higienizada de todos os produtos com vazamento registrado em plataformas (2025).")
             st.write("---")
             
+            # --- FUNÇÃO INTERNA DE TRATAMENTO DE TEXTO PARA NÚMERO ---
+            def limpar_volume_safely(val):
+                if pd.isna(val):
+                    return 0.0
+                if isinstance(val, (int, float)):
+                    return float(val)
+                
+                val_str = str(val).strip()
+                if val_str.upper() == 'PREENCHER' or val_str == '':
+                    return 0.0
+                
+                # 1. Trata Notação Científica (Ex: 1.23e+02 ou 1,23E+02)
+                if 'E' in val_str.upper():
+                    val_str = val_str.replace(',', '.')
+                    try:
+                        return float(val_str)
+                    except ValueError:
+                        pass
+                
+                # 2. Trata misturas de ponto e vírgula comuns no Excel
+                if '.' in val_str and ',' in val_str:
+                    # Ex: 1.234,56 -> vira 1234.56
+                    val_str = val_str.replace('.', '').replace(',', '.')
+                elif ',' in val_str:
+                    # Ex: 12,34 (Preenchimento manual) -> vira 12.34
+                    val_str = val_str.replace(',', '.')
+                # Se tiver apenas o ponto (Ex: 12.34 do Siema), mantém o ponto
+                
+                try:
+                    return float(val_str)
+                except ValueError:
+                    return 0.0
+
             registros_produtos = []
             
+            # Varre as linhas aplicando os filtros e higienizações solicitadas
             for _, row in df_plataformas_2025.iterrows():
                 equipamento_atual = str(row.get('equipment', 'Não Informado')).strip()
                 id_processo = str(row.get('num_processo', 'S/N'))
                 
-                if pd.notna(row.get('marca_p1')) and str(row.get('marca_p1')).strip().lower() != 'nan':
-                    marca = str(row['marca_p1']).strip()
-                    vol = pd.to_numeric(row.get('qtd_p1'), errors='coerce')
-                    registros_produtos.append({'Produto': marca, 'Volume': vol, 'Equipamento': equipamento_atual, 'Processo': id_processo})
+                # Filtro e higienização do Grupo Produto 1
+                marca_1 = str(row.get('marca_p1')).strip() if pd.notna(row.get('marca_p1')) else ''
+                if marca_1 != '' and marca_1.upper() != 'PREENCHER' and marca_1.lower() != 'nan':
+                    vol_1 = limpar_volume_safely(row.get('qtd_p1'))
+                    registros_produtos.append({'Produto': marca_1, 'Volume': vol_1, 'Equipamento': equipamento_atual, 'Processo': id_processo})
                     
-                if pd.notna(row.get('marca_p2')) and str(row.get('marca_p2')).strip().lower() != 'nan':
-                    marca = str(row['marca_p2']).strip()
-                    vol = pd.to_numeric(row.get('qtd_p2'), errors='coerce')
-                    registros_produtos.append({'Produto': marca, 'Volume': vol, 'Equipamento': equipamento_atual, 'Processo': id_processo})
+                # Filtro e higienização do Grupo Produto 2
+                marca_2 = str(row.get('marca_p2')).strip() if pd.notna(row.get('marca_p2')) else ''
+                if marca_2 != '' and marca_2.upper() != 'PREENCHER' and marca_2.lower() != 'nan':
+                    vol_2 = limpar_volume_safely(row.get('qtd_p2'))
+                    registros_produtos.append({'Produto': marca_2, 'Volume': vol_2, 'Equipamento': equipamento_atual, 'Processo': id_processo})
                     
-                if pd.notna(row.get('marca_p3')) and str(row.get('marca_p3')).strip().lower() != 'nan':
-                    marca = str(row['marca_p3']).strip()
-                    vol = pd.to_numeric(row.get('qtd_p3'), errors='coerce')
-                    registros_produtos.append({'Produto': marca, 'Volume': vol, 'Equipamento': equipamento_atual, 'Processo': id_processo})
+                # Filtro e higienização do Grupo Produto 3
+                marca_3 = str(row.get('marca_p3')).strip() if pd.notna(row.get('marca_p3')) else ''
+                if marca_3 != '' and marca_3.upper() != 'PREENCHER' and marca_3.lower() != 'nan':
+                    vol_3 = limpar_volume_safely(row.get('qtd_p3'))
+                    registros_produtos.append({'Produto': marca_3, 'Volume': vol_3, 'Equipamento': equipamento_atual, 'Processo': id_processo})
             
             if registros_produtos:
                 df_prod_bruto = pd.DataFrame(registros_produtos)
                 
+                # Agrupamento consolidado das ocorrências e volumes
                 df_prod_summary = df_prod_bruto.groupby('Produto').agg(
                     Qtd_Acidentes=('Processo', 'nunique'),
                     Vol_Total=('Volume', 'sum'),
                     Equipamentos_Lista=('Equipamento', lambda x: ", ".join(sorted(set(x) - {'nan', 'Não Informado', ''})))
                 ).reset_index()
                 
+                # Colunas auxiliares para preenchimento posterior
                 df_prod_summary['Classe de Risco'] = "A obter"
                 df_prod_summary['Tipo'] = "A obter"
                 
+                # Ordenação estrutural das colunas
                 df_prod_summary = df_prod_summary[[
                     'Produto', 'Qtd_Acidentes', 'Vol_Total', 'Classe de Risco', 'Tipo', 'Equipamentos_Lista'
                 ]]
@@ -615,11 +655,19 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                     'Nome do Produto', 'Quantidade de Acidentes', 'Soma dos Volumes', 'Classe de Risco', 'Tipo', 'Equipamentos Envolvidos'
                 ]
                 
-                # Exibe a tabela correta: Produtos como Linhas, Variáveis como Colunas
-                st.dataframe(df_prod_summary, use_container_width=True)
+                # --- FORMATADOR PARA PALETA E LOCALIDADE BRASILEIRA (DECIMAL COM VÍRGULA) ---
+                # O Pandas Styler intercepta a exibição e injeta o formato regional (ponto para milhar, vírgula para decimal)
+                df_formatado_ibama = df_prod_summary.style.format(
+                    {'Soma dos Volumes': '{:,.2f}'}, 
+                    decimal=',', 
+                    thousands='.'
+                )
+                
+                # Renderização limpa e padronizada na tela
+                st.dataframe(df_formatado_ibama, use_container_width=True)
                 
             else:
-                st.info("Nenhum registro de vazamento de produto comercial detalhado foi encontrado para os filtros ativos.")
+                st.info("Nenhum registro de vazamento de produto comercial válido foi encontrado para os filtros ativos.")
                 
     except Exception as e:
         st.error("Erro interno ao consolidar os dados das abas.")
