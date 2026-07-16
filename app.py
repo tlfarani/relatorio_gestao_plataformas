@@ -567,7 +567,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                 st.plotly_chart(fig9, use_container_width=True)
 
         # =========================================================================
-        # ABA 4: CONSOLIDAÇÃO DE DADOS POR PRODUTO (MARCAS 1, 2 E 3)
+        # ABA 4: CONSOLIDAÇÃO DE DADOS POR PRODUTO (MARCAS 1, 2 E 3) - CORRIGIDA
         # =========================================================================
         with tab_produtos:
             st.markdown("### 🛢️ Inventário Consolidado de Produtos e Marcas Comerciais")
@@ -615,8 +615,8 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                     'Nome do Produto', 'Quantidade de Acidentes', 'Soma dos Volumes', 'Classe de Risco', 'Tipo', 'Equipamentos Envolvidos'
                 ]
                 
-                df_prod_transposto = df_prod_summary.set_index('Nome do Produto').T
-                st.dataframe(df_prod_transposto, use_container_width=True)
+                # Exibe a tabela correta: Produtos como Linhas, Variáveis como Colunas
+                st.dataframe(df_prod_summary, use_container_width=True)
                 
             else:
                 st.info("Nenhum registro de vazamento de produto comercial detalhado foi encontrado para os filtros ativos.")
