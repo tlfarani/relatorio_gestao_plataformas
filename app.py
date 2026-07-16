@@ -12,87 +12,31 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# --- ESTILIZAÇÃO DO TEMA DO IBAMA (CSS INJETADO ULTRA-ROBUSTO) ---
+# --- ESTILIZAÇÃO COMPLEMENTAR DO TEMA DO IBAMA (CSS) ---
 st.markdown("""
 <style>
-    /* 1. Cor de fundo principal da página (Cinza Claro) */
+    /* Forçar a página e as tabelas a seguirem uma paleta clara */
     .stApp {
         background-color: #F4F6F4 !important;
     }
-    
-    /* 2. Forçar todos os textos normais e parágrafos a serem escuros */
-    .stApp p, .stApp span, .stApp label {
-        color: #2E3E2F !important;
-    }
-    
-    /* 3. Estilo dos títulos e subtítulos (Verde Musgo Institucional) */
     h1, h2, h3, h4, h5, h6 {
         color: #1E4620 !important;
         font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif !important;
         font-weight: bold !important;
     }
     
-    /* 4. Rótulos de todos os widgets/filtros (Força cor escura) */
-    div[data-testid="stWidgetLabel"] p {
-        color: #1E4620 !important;
-        font-weight: bold !important;
-        font-size: 15px !important;
-    }
-    
-    /* 5. Customização das caixas de seleção (Multiselect) para tema claro */
-    div[data-baseweb="select"] > div {
-        background-color: #FFFFFF !important;
+    /* Garante contraste escuro para textos normais */
+    .stApp p, .stApp span, .stApp label {
         color: #2E3E2F !important;
-        border-color: #C2CDC2 !important;
     }
-    
-    /* Customização das tags selecionadas dentro do campo de filtro */
-    span[data-baseweb="tag"] {
-        background-color: #E2E8E2 !important;
-        border: 1px solid #C2CDC2 !important;
-        border-radius: 4px !important;
-    }
-    span[data-baseweb="tag"] span {
-        color: #1E4620 !important;
-        font-weight: bold !important;
-    }
-    /* Botão de fechar (X) das tags */
-    span[data-baseweb="tag"] role[button] {
-        color: #1E4620 !important;
-    }
-    
-    /* 6. Rótulos específicos das métricas (KPIs no topo) */
-    div[data-testid="stMetricLabel"] p {
-        color: #4A5D4E !important;
-        font-weight: bold !important;
-        font-size: 15px !important;
-    }
+
+    /* Customização dos cartões de métricas */
     div[data-testid="stMetricValue"] > div {
         color: #1E4620 !important;
         font-weight: bold !important;
     }
-    
-    /* 7. Customização do painel lateral de filtros (Sidebar) */
-    [data-testid="stSidebar"] {
-        background-color: #E2E8E2 !important;
-        border-right: 1px solid #C2CDC2;
-    }
-    [data-testid="stSidebar"] h1, [data-testid="stSidebar"] h2, [data-testid="stSidebar"] h3 {
-        color: #1E4620 !important;
-    }
-    [data-testid="stSidebar"] div[data-testid="stWidgetLabel"] p {
-        color: #1E4620 !important;
-        font-weight: bold !important;
-    }
-
-    /* 8. Customização das abas de navegação (Tabs) */
-    button[data-baseweb="tab"] {
-        color: #6E8B75 !important;
-    }
-    button[data-baseweb="tab"][aria-selected="true"] {
-        color: #1E4620 !important;
-        border-bottom-color: #1E4620 !important;
-        font-weight: bold !important;
+    div[data-testid="stMetricLabel"] > label {
+        color: #4A5D4E !important;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -271,17 +215,23 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO):
                         color_continuous_scale='Reds'
                     )
                     
-                    # Formatações (Sem grade de fundo, textos em preto puro)
+                    # Formatações dos gráficos com textos em preto puro e sem grades de fundo
                     fig.update_layout(
                         plot_bgcolor='white',
                         paper_bgcolor='white',
-                        font=dict(color='black'),
+                        font=dict(color='black', size=11), # Força texto em preto
                         yaxis={'categoryorder':'total ascending'}, 
                         showlegend=False
                     )
-                    fig.update_xaxes(showgrid=False, zeroline=False, linecolor='black')
-                    fig.update_yaxes(showgrid=False, zeroline=False, linecolor='black')
+                    fig.update_xaxes(showgrid=False, zeroline=False, linecolor='black', tickfont=dict(color='black'), title_font=dict(color='black'))
+                    fig.update_yaxes(showgrid=False, zeroline=False, linecolor='black', tickfont=dict(color='black'), title_font=dict(color='black'))
                     fig.update_traces(textfont=dict(color='black'))
+                    fig.update_coloraxes(
+                        colorbar=dict(
+                            tickfont=dict(color='black'),
+                            title_font=dict(color='black')
+                        )
+                    )
                     st.plotly_chart(fig, use_container_width=True)
                 else:
                     st.info("Filtros muito restritivos para gerar gráfico.")
@@ -326,9 +276,9 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO):
                 fig1.add_trace(
                     go.Bar(
                         x=df_g1['Ano'], y=df_g1['Acidentes'], 
-                        name="Nº de Acidentes", marker_color='#3498db', # Azul Claro Clássico do Siema
+                        name="Nº de Acidentes", marker_color='#3498db',
                         text=df_g1['Acidentes'], textposition='outside',
-                        textfont=dict(color='black') # Texto em preto
+                        textfont=dict(color='black') 
                     ),
                     secondary_y=False
                 )
@@ -336,9 +286,9 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO):
                     go.Scatter(
                         x=df_g1['Ano'], y=df_g1['Taxa'], 
                         name="Acidentes / Mboe/d", mode='lines+markers+text',
-                        line=dict(color='#2c3e50', width=3), marker=dict(size=8, symbol='circle'), # Linha Escura de Destaque
+                        line=dict(color='#2c3e50', width=3), marker=dict(size=8, symbol='circle'),
                         text=df_g1['Taxa'], textposition='top center',
-                        textfont=dict(color='black') # Texto em preto
+                        textfont=dict(color='black') 
                     ),
                     secondary_y=True
                 )
@@ -348,14 +298,17 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO):
                     xaxis_title="Ano",
                     plot_bgcolor='white',
                     paper_bgcolor='white',
-                    font=dict(color='black'),
-                    legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+                    font=dict(color='black', size=11), # Fonte preta global do gráfico
+                    legend=dict(
+                        orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1,
+                        font=dict(color='black') # Legenda preta
+                    ),
                     margin=dict(t=80, b=40, l=40, r=40)
                 )
-                # Sem as linhas de grade de fundo
-                fig1.update_xaxes(showgrid=False, zeroline=False, linecolor='black')
-                fig1.update_yaxes(title_text="Nº de Acidentes por Ano (Barras)", secondary_y=False, range=[0, max(acid_vals_g1)*1.2], showgrid=False, zeroline=False, linecolor='black')
-                fig1.update_yaxes(title_text="Acidentes / Mboe/d (Linha)", secondary_y=True, range=[0, max(taxas_g1)*1.2], showgrid=False, zeroline=False, linecolor='black')
+                # Removendo grades e forçando texto escuro nos eixos
+                fig1.update_xaxes(showgrid=False, zeroline=False, linecolor='black', tickfont=dict(color='black'), title_font=dict(color='black'))
+                fig1.update_yaxes(title_text="Nº de Acidentes por Ano (Barras)", secondary_y=False, range=[0, max(acid_vals_g1)*1.2], showgrid=False, zeroline=False, linecolor='black', tickfont=dict(color='black'), title_font=dict(color='black'))
+                fig1.update_yaxes(title_text="Acidentes / Mboe/d (Linha)", secondary_y=True, range=[0, max(taxas_g1)*1.2], showgrid=False, zeroline=False, linecolor='black', tickfont=dict(color='black'), title_font=dict(color='black'))
                 st.plotly_chart(fig1, use_container_width=True)
                 
             # --- GRÁFICO 2: Acidentes por Bacia Sedimentar (2023-2025) ---
@@ -380,7 +333,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO):
                 fig2 = px.bar(
                     df_g2_melted, x='Bacia Sedimentar', y='Acidentes', color='Ano', barmode='group',
                     text='Acidentes',
-                    color_discrete_sequence=['#2ecc71', '#3498db', '#f39c12'] # Paleta Original: Verde, Azul e Laranja
+                    color_discrete_sequence=['#2ecc71', '#3498db', '#f39c12'] 
                 )
                 fig2.update_traces(textposition='outside', textfont=dict(color='black'))
                 fig2.update_layout(
@@ -388,12 +341,15 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO):
                     xaxis_title="", yaxis_title="Nº de Acidentes",
                     plot_bgcolor='white',
                     paper_bgcolor='white',
-                    font=dict(color='black'),
-                    legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+                    font=dict(color='black', size=11),
+                    legend=dict(
+                        orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1,
+                        font=dict(color='black')
+                    ),
                     margin=dict(t=80, b=40, l=40, r=40)
                 )
-                fig2.update_xaxes(showgrid=False, zeroline=False, linecolor='black')
-                fig2.update_yaxes(showgrid=False, zeroline=False, linecolor='black')
+                fig2.update_xaxes(showgrid=False, zeroline=False, linecolor='black', tickfont=dict(color='black'), title_font=dict(color='black'))
+                fig2.update_yaxes(showgrid=False, zeroline=False, linecolor='black', tickfont=dict(color='black'), title_font=dict(color='black'))
                 st.plotly_chart(fig2, use_container_width=True)
                 
             st.write("---")
@@ -413,7 +369,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO):
                 
                 fig3 = px.bar(
                     df_g3, x='Percentual', y='Bacia Sedimentar', orientation='h',
-                    text='Percentual', color_discrete_sequence=['#3498db'] # Azul clássico de barras horizontais
+                    text='Percentual', color_discrete_sequence=['#3498db'] 
                 )
                 fig3.update_traces(texttemplate='%{text:.2f}%', textposition='outside', textfont=dict(color='black'))
                 fig3.update_layout(
@@ -421,12 +377,11 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO):
                     xaxis_title="Percentual de Ocorrências (%)", yaxis_title="",
                     plot_bgcolor='white',
                     paper_bgcolor='white',
-                    font=dict(color='black'),
-                    xaxis=dict(range=[0, 115]),
+                    font=dict(color='black', size=11),
                     margin=dict(t=80, b=40, l=40, r=40)
                 )
-                fig3.update_xaxes(showgrid=False, zeroline=False, linecolor='black')
-                fig3.update_yaxes(showgrid=False, zeroline=False, linecolor='black')
+                fig3.update_xaxes(showgrid=False, zeroline=False, linecolor='black', tickfont=dict(color='black'), title_font=dict(color='black'))
+                fig3.update_yaxes(showgrid=False, zeroline=False, linecolor='black', tickfont=dict(color='black'), title_font=dict(color='black'))
                 st.plotly_chart(fig3, use_container_width=True)
                 
             # --- GRÁFICO 4: Acidentes por Produção por Bacia (Santos e Campos - 2023-2025) ---
@@ -446,7 +401,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO):
                 
                 fig4 = px.bar(
                     df_g4_melted, x='Bacia Sedimentar', y='Taxa', color='Ano', barmode='group',
-                    text='Taxa', color_discrete_sequence=['#2ecc71', '#3498db', '#f39c12'] # Paleta Original: Verde, Azul e Laranja
+                    text='Taxa', color_discrete_sequence=['#2ecc71', '#3498db', '#f39c12'] 
                 )
                 fig4.update_traces(texttemplate='%{text:.1f}', textposition='outside', textfont=dict(color='black'))
                 fig4.update_layout(
@@ -454,12 +409,15 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO):
                     xaxis_title="", yaxis_title="Acidentes a cada Mboe/d",
                     plot_bgcolor='white',
                     paper_bgcolor='white',
-                    font=dict(color='black'),
-                    legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+                    font=dict(color='black', size=11),
+                    legend=dict(
+                        orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1,
+                        font=dict(color='black')
+                    ),
                     margin=dict(t=80, b=40, l=40, r=40)
                 )
-                fig4.update_xaxes(showgrid=False, zeroline=False, linecolor='black')
-                fig4.update_yaxes(showgrid=False, zeroline=False, linecolor='black')
+                fig4.update_xaxes(showgrid=False, zeroline=False, linecolor='black', tickfont=dict(color='black'), title_font=dict(color='black'))
+                fig4.update_yaxes(showgrid=False, zeroline=False, linecolor='black', tickfont=dict(color='black'), title_font=dict(color='black'))
                 st.plotly_chart(fig4, use_container_width=True)
                 
     except Exception as e:
