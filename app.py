@@ -12,45 +12,87 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# --- ESTILIZAÇÃO DO TEMA DO IBAMA (CSS INJETADO) ---
-# Aplica a identidade visual da instituição apenas no "esqueleto" do app
+# --- ESTILIZAÇÃO DO TEMA DO IBAMA (CSS INJETADO ULTRA-ROBUSTO) ---
 st.markdown("""
 <style>
-    /* Cor de fundo principal da página (Cinza Claro) */
+    /* 1. Cor de fundo principal da página (Cinza Claro) */
     .stApp {
-        background-color: #F4F6F4;
+        background-color: #F4F6F4 !important;
     }
-    /* Estilo dos títulos e subtítulos (Verde Musgo Institucional) */
-    h1, h2, h3 {
+    
+    /* 2. Forçar todos os textos normais e parágrafos a serem escuros */
+    .stApp p, .stApp span, .stApp label {
+        color: #2E3E2F !important;
+    }
+    
+    /* 3. Estilo dos títulos e subtítulos (Verde Musgo Institucional) */
+    h1, h2, h3, h4, h5, h6 {
         color: #1E4620 !important;
-        font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+        font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif !important;
+        font-weight: bold !important;
     }
-    /* Customização do painel lateral de filtros (Sidebar) */
+    
+    /* 4. Rótulos de todos os widgets/filtros (Força cor escura) */
+    div[data-testid="stWidgetLabel"] p {
+        color: #1E4620 !important;
+        font-weight: bold !important;
+        font-size: 15px !important;
+    }
+    
+    /* 5. Customização das caixas de seleção (Multiselect) para tema claro */
+    div[data-baseweb="select"] > div {
+        background-color: #FFFFFF !important;
+        color: #2E3E2F !important;
+        border-color: #C2CDC2 !important;
+    }
+    
+    /* Customização das tags selecionadas dentro do campo de filtro */
+    span[data-baseweb="tag"] {
+        background-color: #E2E8E2 !important;
+        border: 1px solid #C2CDC2 !important;
+        border-radius: 4px !important;
+    }
+    span[data-baseweb="tag"] span {
+        color: #1E4620 !important;
+        font-weight: bold !important;
+    }
+    /* Botão de fechar (X) das tags */
+    span[data-baseweb="tag"] role[button] {
+        color: #1E4620 !important;
+    }
+    
+    /* 6. Rótulos específicos das métricas (KPIs no topo) */
+    div[data-testid="stMetricLabel"] p {
+        color: #4A5D4E !important;
+        font-weight: bold !important;
+        font-size: 15px !important;
+    }
+    div[data-testid="stMetricValue"] > div {
+        color: #1E4620 !important;
+        font-weight: bold !important;
+    }
+    
+    /* 7. Customização do painel lateral de filtros (Sidebar) */
     [data-testid="stSidebar"] {
         background-color: #E2E8E2 !important;
         border-right: 1px solid #C2CDC2;
     }
-    /* Textos e labels na barra lateral */
-    [data-testid="stSidebar"] .stMarkdown, [data-testid="stSidebar"] label {
+    [data-testid="stSidebar"] h1, [data-testid="stSidebar"] h2, [data-testid="stSidebar"] h3 {
         color: #1E4620 !important;
-        font-weight: bold;
     }
-    /* Customização das abas de navegação (Tabs) */
+    [data-testid="stSidebar"] div[data-testid="stWidgetLabel"] p {
+        color: #1E4620 !important;
+        font-weight: bold !important;
+    }
+
+    /* 8. Customização das abas de navegação (Tabs) */
     button[data-baseweb="tab"] {
         color: #6E8B75 !important;
     }
     button[data-baseweb="tab"][aria-selected="true"] {
         color: #1E4620 !important;
         border-bottom-color: #1E4620 !important;
-        font-weight: bold;
-    }
-    /* Cartões de Métricas (KPIs no topo) */
-    div[data-testid="stMetricValue"] > div {
-        color: #1E4620 !important;
-        font-weight: bold;
-    }
-    div[data-testid="stMetricLabel"] > label {
-        color: #4A5D4E !important;
+        font-weight: bold !important;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -219,7 +261,6 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO):
                     df_grafico = df_filtrado['empresa'].value_counts().reset_index()
                     df_grafico.columns = ['Empresa', 'Quantidade']
                     
-                    # Mantém a paleta clássica de intensidade vermelha para o gráfico de barras operacionais
                     fig = px.bar(
                         df_grafico, 
                         x='Quantidade', 
