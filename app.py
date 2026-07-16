@@ -179,8 +179,8 @@ def carregar_atendimento_historico(caminho):
 
 @st.cache_data(ttl=1800)
 def carregar_encerramento_historico(caminho):
-    # Carrega a aba Total da planilha de encerramentos históricos
     return pd.read_excel(caminho, sheet_name="Total")
+
 
 # --- VERIFICAÇÃO DE CONFIGURAÇÃO DE ARQUIVOS ---
 if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.exists(NOME_ATENDIMENTO) and os.path.exists(NOME_ENCERRAMENTO):
@@ -229,12 +229,14 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
             stats_bacias_2025.append({'Bacia': bacia.strip(), 'Até 30 dias': ate, 'Mais de 30 dias': mais, 'Não Atendidos': nao, 'Tempo Médio': med})
         df_atend_b25 = pd.DataFrame(stats_bacias_2025)
         
-        # --- DEFINIÇÃO DA INTERFACE EM 3 ABAS COMISSIONADAS ---
-        tab_operacional, tab_comparativa, tab_atendimento = st.tabs([
+        # --- INTERFACE EM ABAS (Variáveis Padronizadas para Evitar NameError) ---
+        sidebar_abas = [
             "📊 Painel Operacional (2025)", 
-            "📈 Relatório Comparativo & Produção (2021-2025)",
-            "⏱️ Atendimento a Emergências"
-        ])
+            "📈 Produção (2021-2025)",
+            "⏱️ Atendimento a Emergências",
+            "🛢️ Consolidação por Produtos"
+        ]
+        tab_operacional, tab_comparativa, tab_atendimento, tab_produtos = st.tabs(sidebar_abas)
         
         # =========================================================================
         # ABA 1: PAINEL OPERACIONAL DETALHADO (2025)
@@ -360,7 +362,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                 fig3.update_yaxes(showgrid=False, zeroline=False, linecolor='black', tickfont=dict(size=12))
                 st.plotly_chart(fig3, use_container_width=True)
                 
-            # --- GRÁFICO 4: Taxa de Acidentes por Produção (Santos e Campos - 2023-2025) ---
+            # --- GRÁFICO 4: Taxa de Acidentes por Production (Santos e Campos - 2023-2025) ---
             with col_linha2_dir:
                 df_g4 = df_bacias_prod[df_bacias_prod['Bacia Sedimentar'].isin(['Campos', 'Santos'])].copy()
                 df_g4['Rate_2023'] = df_g4['Acid_2023'] / df_g4['Prod_2023']
@@ -382,7 +384,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                 st.plotly_chart(fig4, use_container_width=True)
 
         # =========================================================================
-        # ABA 3: ATENDIMENTO A EMERGÊNCIAS (CRÍTICO: TOTALMENTE PRESERVADO)
+        # ABA 3: ATENDIMENTO A EMERGÊNCIAS (TRAMITAÇÃO + ENCERRAMENTOS)
         # =========================================================================
         with tab_atendimento:
             st.markdown("### ⏱️ Eficácia e Tempo de Resposta (Nupaem)")
@@ -478,7 +480,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
             )
             
             fig6.update_xaxes(showgrid=False, zeroline=False, linecolor='black', tickangle=45, row=1, col=1, tickfont=dict(size=12))
-            fig6.update_yaxes(title_text="Número de Acidentes Atendidos", secondary_y=False, range=[0, limite_y_facets], showgrid=False, zeroline=False, linecolor='black', row=1, col=1, tickfont=dict(size=12))
+            fig6.update_yaxes(title_text="Número de Acidentes Atendidos", secondary_y=False, range=[0, limite_y_facets], showgrid=False, zeroline=False, linecolor='black', tickfont=dict(size=12))
             fig6.update_yaxes(visible=False, secondary_y=True, row=1, col=1) 
             
             fig6.update_xaxes(showgrid=False, zeroline=False, linecolor='black', tickangle=45, row=1, col=2, tickfont=dict(size=12))
@@ -493,14 +495,12 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
             col_enc_1, col_enc_2 = st.columns(2)
             
             # --- CLASSIFICAÇÃO DOS DADOS DE 2025 ---
-            # Identifica processos em andamento (0 ou menores) e as faixas de dias de encerramento
             df_plataformas_2025['cat_enc'] = df_plataformas_2025['dias_encerramento'].apply(
                 lambda x: 'Investigação em Andamento' if x <= 0 else ('<=180' if x <= 180 else '>180')
             )
             
             # --- FIGURA 3.3.8: Evolução Temporal de Encerramento (2023-2025) ---
             with col_enc_1:
-                # Filtra anos de 2023 e 2024 do histórico e adiciona o consolidado de 2025
                 df_g8 = df_enc_hist[df_enc_hist['Ano'].isin([2023, 2024])].copy()
                 
                 enc_ate180_25 = (df_plataformas_2025['cat_enc'] == '<=180').sum()
@@ -532,7 +532,6 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                 
             # --- FIGURA 3.3.9: Encerramento por Bacia Sedimentar (2025) ---
             with col_enc_2:
-                # Agrupa dados de 2025 por Bacia montando a mesma estrutura empilhada
                 bacia_stats_9 = [{
                     'Bacia': 'Total', 
                     '<=180': enc_ate180_25, 
@@ -549,18 +548,15 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                     })
                 df_g9 = pd.DataFrame(bacia_stats_9)
                 
-                # Alinha rigorosamente a ordem de exibição das Bacias no eixo X
                 ordem_bacias_enc = ["Total", "Campos", "Santos", "Sergipe-Alagoas", "Espírito Santo", "Potiguar", "Ceará", "Camamu-Almada"]
                 df_g9['Bacia'] = pd.Categorical(df_g9['Bacia'], categories=ordem_bacias_enc, ordered=True)
                 df_g9 = df_g9.sort_values('Bacia').dropna(subset=['Bacia'])
                 
                 fig9 = go.Figure()
-                # showlegend alterado para True para ativar os rótulos das classes de prazos
                 fig9.add_trace(go.Bar(name='Até 180 dias (6 meses)', x=df_g9['Bacia'], y=df_g9['<=180'], marker_color='#1FA1DD', text=df_g9['<=180'], textposition='inside', textfont=dict(color='black', size=11), showlegend=True))
                 fig9.add_trace(go.Bar(name='Mais de 180 dias', x=df_g9['Bacia'], y=df_g9['>180'], marker_color='#FDBB2F', text=df_g9['>180'], textposition='inside', textfont=dict(color='black', size=11), showlegend=True))
                 fig9.add_trace(go.Bar(name='Em Andamento', x=df_g9['Bacia'], y=df_g9['Investigação em Andamento'], marker_color='#8BC53F', text=df_g9['Investigação em Andamento'], textposition='inside', textfont=dict(color='black', size=11), showlegend=True))
                 
-                # Adicionada a configuração de legenda horizontal centralizada no topo
                 fig9.update_layout(
                     barmode='stack', plot_bgcolor='white', paper_bgcolor='white', font=dict(color='black', size=13),
                     legend_title_text='', legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="center", x=0.5),
@@ -570,6 +566,61 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                 fig9.update_yaxes(showgrid=False, zeroline=False, linecolor='black', tickfont=dict(size=12))
                 st.plotly_chart(fig9, use_container_width=True)
 
+        # =========================================================================
+        # ABA 4: CONSOLIDAÇÃO DE DADOS POR PRODUTO (MARCAS 1, 2 E 3)
+        # =========================================================================
+        with tab_produtos:
+            st.markdown("### 🛢️ Inventário Consolidado de Produtos e Marcas Comerciais")
+            st.write("Agregação unificada de todos os produtos com vazamento registrado em plataformas (2025).")
+            st.write("---")
+            
+            registros_produtos = []
+            
+            for _, row in df_plataformas_2025.iterrows():
+                equipamento_atual = str(row.get('equipment', 'Não Informado')).strip()
+                id_processo = str(row.get('num_processo', 'S/N'))
+                
+                if pd.notna(row.get('marca_p1')) and str(row.get('marca_p1')).strip().lower() != 'nan':
+                    marca = str(row['marca_p1']).strip()
+                    vol = pd.to_numeric(row.get('qtd_p1'), errors='coerce')
+                    registros_produtos.append({'Produto': marca, 'Volume': vol, 'Equipamento': equipamento_atual, 'Processo': id_processo})
+                    
+                if pd.notna(row.get('marca_p2')) and str(row.get('marca_p2')).strip().lower() != 'nan':
+                    marca = str(row['marca_p2']).strip()
+                    vol = pd.to_numeric(row.get('qtd_p2'), errors='coerce')
+                    registros_produtos.append({'Produto': marca, 'Volume': vol, 'Equipamento': equipamento_atual, 'Processo': id_processo})
+                    
+                if pd.notna(row.get('marca_p3')) and str(row.get('marca_p3')).strip().lower() != 'nan':
+                    marca = str(row['marca_p3']).strip()
+                    vol = pd.to_numeric(row.get('qtd_p3'), errors='coerce')
+                    registros_produtos.append({'Produto': marca, 'Volume': vol, 'Equipamento': equipamento_atual, 'Processo': id_processo})
+            
+            if registros_produtos:
+                df_prod_bruto = pd.DataFrame(registros_produtos)
+                
+                df_prod_summary = df_prod_bruto.groupby('Produto').agg(
+                    Qtd_Acidentes=('Processo', 'nunique'),
+                    Vol_Total=('Volume', 'sum'),
+                    Equipamentos_Lista=('Equipamento', lambda x: ", ".join(sorted(set(x) - {'nan', 'Não Informado', ''})))
+                ).reset_index()
+                
+                df_prod_summary['Classe de Risco'] = "A obter"
+                df_prod_summary['Tipo'] = "A obter"
+                
+                df_prod_summary = df_prod_summary[[
+                    'Produto', 'Qtd_Acidentes', 'Vol_Total', 'Classe de Risco', 'Tipo', 'Equipamentos_Lista'
+                ]]
+                
+                df_prod_summary.columns = [
+                    'Nome do Produto', 'Quantidade de Acidentes', 'Soma dos Volumes', 'Classe de Risco', 'Tipo', 'Equipamentos Envolvidos'
+                ]
+                
+                df_prod_transposto = df_prod_summary.set_index('Nome do Produto').T
+                st.dataframe(df_prod_transposto, use_container_width=True)
+                
+            else:
+                st.info("Nenhum registro de vazamento de produto comercial detalhado foi encontrado para os filtros ativos.")
+                
     except Exception as e:
         st.error("Erro interno ao consolidar os dados das abas.")
         st.code(str(e))
@@ -581,5 +632,6 @@ else:
         1. **Planilha de Acidentes 2025:** `{NOME_ACIDENTES}` (Aba "Geral")
         2. **Histórico de Produção:** `{NOME_PRODUCAO}` (Abas "Total" e "Bacias")
         3. **Histórico de Tramitação:** `{NOME_ATENDIMENTO}` (Abas "Total" e "Bacias_2024")
+        4. **Histórico de Encerramentos:** `{NOME_ENCERRAMENTO}` (Aba "Total")
         """
     )
