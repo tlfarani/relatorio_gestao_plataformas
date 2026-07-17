@@ -567,7 +567,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                 st.plotly_chart(fig9, use_container_width=True)
 
         # =========================================================================
-        # ABA 4: CONSOLIDAÇÃO POR PRODUTO (COM FILTROS E INDICADORES EXECUTIVOS)
+        # ABA 4: CONSOLIDAÇÃO POR PRODUTO (MÉTRICA DE LIBERAÇÕES TOTAIS CORRIGIDA)
         # =========================================================================
         with tab_produtos:
             st.markdown("### 🛢️ Inventário Consolidado de Produtos e Marcas Comerciais")
@@ -694,7 +694,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                 
                 st.write("---")
                 
-                # --- 6. PAINEL DE INDICADORES EXECUTIVOS (3 COLUNAS ALINHADAS LADO A LADO) ---
+                # --- 6. PAINEL DE INDICADORES EXECUTIVOS ATUALIZADO ---
                 col_m1, col_m2, col_m3 = st.columns(3)
                 
                 with col_m1:
@@ -702,12 +702,11 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                     st.metric("Total de Produtos Distintos", f"{produtos_distintos}")
                     
                 with col_m2:
-                    # Conta os eventos/processos únicos (reagirá aos filtros amanhã quando inserirmos as classes reais)
-                    total_eventos = df_prod_filtrado['Processo'].nunique()
-                    st.metric("Soma de Eventos com Produtos Perigosos", f"{total_eventos}")
+                    # CORREÇÃO: Conta o total de registros de liberações de produtos (linhas do dataframe expandido)
+                    total_liberacoes = len(df_prod_filtrado)
+                    st.metric("Total de Liberações de Produtos", f"{total_liberacoes}")
                     
                 with col_m3:
-                    # Sumariza o volume total liberado aplicando a formatação brasileira de 8 casas
                     volume_total = df_prod_filtrado['Volume'].sum()
                     st.metric("Soma do Volume Total Liberado", f"{formatar_volume_br(volume_total)}")
                     
