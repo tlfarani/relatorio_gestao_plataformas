@@ -567,7 +567,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                 st.plotly_chart(fig9, use_container_width=True)
 
        # =========================================================================
-        # ABA 4: CONSOLIDAÇÃO DE DADOS POR PRODUTO (PADRONIZADA E HIGIENIZADA)
+        # ABA 4: CONSOLIDAÇÃO DE DADOS POR PRODUTO (REGRAS EXPANDIDAS)
         # =========================================================================
         with tab_produtos:
             st.markdown("### 🛢️ Inventário Consolidado de Produtos e Marcas Comerciais")
@@ -596,20 +596,28 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                 except ValueError:
                     return 0.0
 
-            # --- FUNÇÃO DE PADRONIZAÇÃO DE NOMES INSTITUCIONAIS ---
+            # --- FUNÇÃO DE PADRONIZAÇÃO DE NOMES INSTITUCIONAIS EXPANDIDA ---
             def padronizar_nome_produto(nome):
                 if pd.isna(nome):
                     return "Não Informado"
                 n = str(nome).strip()
                 n_lower = n.lower()
                 
-                # Regras de início de string (Prefixos)
+                # 1. Regras de início de string (Prefixos)
                 if n_lower.startswith('erifon'):
                     return "Erifon HD 603 HP > 1,89%"
                 if n_lower.startswith('stack'):
                     return "Stack Magic Eco F ≥ 1%"
                     
-                # Regras de agrupamento por palavras-chave contidas
+                # 2. Regras de agrupamento por palavras-chave (Novas adições no topo)
+                if 'panolin' in n_lower:
+                    return "Panolin"
+                if 'monoetilenoglicol' in n_lower or 'meg' in n_lower:
+                    return "Monoetilenoglicol"
+                if 'br-mul' in n_lower or 'br_mul' in n_lower or 'brmul' in n_lower:
+                    return "BR-Mul"
+                    
+                # 3. Regras de agrupamento clássicas
                 if 'água oleosa' in n_lower or 'agua oleosa' in n_lower:
                     return "Água Oleosa"
                 if 'petroleo' in n_lower or 'petróleo' in n_lower:
@@ -639,30 +647,30 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                 if 'produto oleoso' in n_lower or n_lower in ['óleo lubrificante', 'oleo lubrificante']:
                     return "Produto Oleoso Genérico"
                     
-                return n # Mantém o nome original se não casar com nenhuma regra
+                return n
 
             registros_produtos = []
             
-            # Varre as linhas processando marcas e aplicando as agregações
+            # Laço de varredura e extração
             for _, row in df_plataformas_2025.iterrows():
                 equipamento_atual = str(row.get('equipment', 'Não Informado')).strip()
                 id_processo = str(row.get('num_processo', 'S/N'))
                 
-                # Processamento do Produto 1
+                # Produto 1
                 marca_1 = str(row.get('marca_p1')).strip() if pd.notna(row.get('marca_p1')) else ''
                 if marca_1 != '' and marca_1.upper() != 'PREENCHER' and marca_1.lower() != 'nan':
                     marca_1_padrao = padronizar_nome_produto(marca_1)
                     vol_1 = limpar_volume_safely(row.get('qtd_p1'))
                     registros_produtos.append({'Produto': marca_1_padrao, 'Volume': vol_1, 'Equipamento': equipamento_atual, 'Processo': id_processo})
                     
-                # Processamento do Produto 2
+                # Produto 2
                 marca_2 = str(row.get('marca_p2')).strip() if pd.notna(row.get('marca_p2')) else ''
                 if marca_2 != '' and marca_2.upper() != 'PREENCHER' and marca_2.lower() != 'nan':
                     marca_2_padrao = padronizar_nome_produto(marca_2)
                     vol_2 = limpar_volume_safely(row.get('qtd_p2'))
                     registros_produtos.append({'Produto': marca_2_padrao, 'Volume': vol_2, 'Equipamento': equipamento_atual, 'Processo': id_processo})
                     
-                # Processamento do Produto 3
+                # Produto 3
                 marca_3 = str(row.get('marca_p3')).strip() if pd.notna(row.get('marca_p3')) else ''
                 if marca_3 != '' and marca_3.upper() != 'PREENCHER' and marca_3.lower() != 'nan':
                     marca_3_padrao = padronizar_nome_produto(marca_3)
@@ -672,7 +680,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
             if registros_produtos:
                 df_prod_bruto = pd.DataFrame(registros_produtos)
                 
-                # Agrupamento consolidado pós-padronização (Soma os volumes reais de nomes unificados)
+                # Agrupamento unificado
                 df_prod_summary = df_prod_bruto.groupby('Produto').agg(
                     Qtd_Acidentes=('Processo', 'nunique'),
                     Vol_Total=('Volume', 'sum'),
@@ -690,10 +698,9 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                     'Nome do Produto', 'Quantidade de Acidentes', 'Soma dos Volumes', 'Classe de Risco', 'Tipo', 'Equipamentos Envolvidos'
                 ]
                 
-                # Ordena a tabela alfabeticamente pelo nome do produto padronizado
                 df_prod_summary = df_prod_summary.sort_values(by='Nome do Produto')
                 
-                # Formatação final de localidade para 8 casas decimais
+                # Formatação brasileira final com 8 casas decimais
                 df_formatado_ibama = df_prod_summary.style.format(
                     {'Soma dos Volumes': '{:,.8f}'}, 
                     decimal=',', 
