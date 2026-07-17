@@ -777,19 +777,23 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                         fig11.update_yaxes(title_text="Número de Acidentes", secondary_y=True, showgrid=False, linecolor='black')
                         st.plotly_chart(fig11, use_container_width=True)
 
-                    # FIGURA 3.3.12: Top 20 por Ocorrência (Barras Horizontais)
+                    # FIGURA 3.3.12: Top 20 por Ocorrência (Barras Horizontais) - ORDENAÇÃO CORRIGIDA
                     df_g12 = df_prod_filtrado.groupby(['Produto', 'Classe de Risco']).agg(Acid=('Processo','nunique')).reset_index()
-                    df_g12 = df_g12.sort_values(by='Acid', ascending=False).head(20).sort_values(by='Acid', ascending=True)
-                    df_g12['Rank'] = [f"{i}. {p}" for i, p in zip(range(len(df_g12), 0, -1), df_g12['Produto'])]
+                    df_g12 = df_g12.sort_values(by='Acid', ascending=False).head(20)
+                    df_g12['Rank'] = [f"{i}. {p}" for i, p in enumerate(df_g12['Produto'], 1)]
                     
                     fig12 = go.Figure()
                     for c in ordem_11:
                         d = df_g12[df_g12['Classe de Risco'] == c]
                         if not d.empty:
                             fig12.add_trace(go.Bar(name=f'Risco {c}' if c in ['A','B','D'] else c, y=d['Rank'], x=d['Acid'], orientation='h', marker_color=get_cor_risco(c, 12), text=d['Acid'], textposition='outside'))
+                    
+                    # Inverte a lista de ranking. Como o Plotly desenha de baixo para cima, o index 0 (maior) vai para o topo
+                    lista_rank_eixo_y = df_g12['Rank'].tolist()[::-1]
+                    
                     fig12.update_layout(barmode='stack', plot_bgcolor='white', margin=dict(t=30, b=30, l=40, r=40), legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="center", x=0.5))
-                    fig12.update_xaxes(showgrid=False, linecolor='black')
-                    fig12.update_yaxes(showgrid=False, linecolor='black')
+                    fig12.update_xaxes(showgrid=False, zeroline=False, linecolor='black')
+                    fig12.update_yaxes(showgrid=False, zeroline=False, linecolor='black', categoryorder='array', categoryarray=lista_rank_eixo_y)
                     st.plotly_chart(fig12, use_container_width=True)
 
                     # FIGURA 3.3.13: Acidentes por Faixa de Volume (BINS)
@@ -812,7 +816,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                     fig13.update_yaxes(showgrid=False, linecolor='black')
                     st.plotly_chart(fig13, use_container_width=True)
 
-                    # FIGURA 3.3.14: Top 20 por Volume + Demais
+                    # FIGURA 3.3.14: Top 20 por Volume + Demais - EXPANDIDA E INCLINADA
                     df_g14 = df_prod_filtrado.groupby(['Produto', 'Classe de Risco']).agg(Vol=('Volume','sum'), Acid=('Processo','nunique')).reset_index().sort_values(by='Vol', ascending=False)
                     top20 = df_g14.head(20).copy()
                     demais = df_g14.iloc[20:].copy()
@@ -829,8 +833,14 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                             fig14.add_trace(go.Bar(name=f'Risco {c}' if c in ['A','B','D'] else c, x=d['Rank'], y=d['Vol'], marker_color=get_cor_risco(c, 14), text=d['Vol'].apply(lambda x: f"{x:,.2f}".replace('.',',')), textposition='outside'), secondary_y=False)
                     
                     fig14.add_trace(go.Scatter(name='Volume Médio', x=top20['Rank'], y=top20['Vol_Medio'], mode='markers+text', marker=dict(color='grey', size=8), text=top20['Vol_Medio'].apply(lambda x: f"{x:,.2f}".replace('.',',')), textposition='top center', textfont=dict(color='grey'), showlegend=False), secondary_y=True)
-                    fig14.update_layout(plot_bgcolor='white', margin=dict(t=50, b=100, l=40, r=40), legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="center", x=0.5))
-                    fig14.update_xaxes(tickangle=90, showgrid=False, linecolor='black')
+                    
+                    fig14.update_layout(
+                        plot_bgcolor='white', 
+                        height=650,  # <-- Estica a figura verticalmente eliminando o efeito espremido
+                        margin=dict(t=50, b=180, l=40, r=40),  # <-- Amplia o respiro inferior para acomodar os textos longos
+                        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="center", x=0.5)
+                    )
+                    fig14.update_xaxes(tickangle=45, showgrid=False, linecolor='black')  # <-- Inclina os rótulos perfeitamente em 45°
                     fig14.update_yaxes(title_text="Volume Total Liberado (m3)", secondary_y=False, showgrid=False, linecolor='black')
                     fig14.update_yaxes(title_text="Volume Médio", secondary_y=True, showgrid=False, linecolor='black')
                     st.plotly_chart(fig14, use_container_width=True)
