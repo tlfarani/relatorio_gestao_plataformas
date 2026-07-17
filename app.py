@@ -566,15 +566,15 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                 fig9.update_yaxes(showgrid=False, zeroline=False, linecolor='black', tickfont=dict(size=12))
                 st.plotly_chart(fig9, use_container_width=True)
 
-       # =========================================================================
-        # ABA 4: CONSOLIDAÇÃO POR PRODUTO (FILTROS ATÔMICOS CORRIGIDOS)
+        # =========================================================================
+        # ABA 4: CONSOLIDAÇÃO POR PRODUTO (COM FILTROS E INDICADORES EXECUTIVOS)
         # =========================================================================
         with tab_produtos:
             st.markdown("### 🛢️ Inventário Consolidado de Produtos e Marcas Comerciais")
             st.write("Agregação unificada, padronizada e higienizada de produtos com vazamento em plataformas (2025).")
             st.write("---")
             
-            # --- 1. FUNÇÕES INTERNAS DE HIGIENIZAÇÃO E PADRONIZAÇÃO ---
+            # --- 1. FUNÇÕES INTERNAS DE HIGIENIZAÇÃO, PADRONIZAÇÃO E FORMATAÇÃO ---
             def limpar_volume_safely(val):
                 if pd.isna(val): return 0.0
                 if isinstance(val, (int, float)): return float(val)
@@ -619,6 +619,13 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                     return "Produto Oleoso Genérico"
                 return n
 
+            def formatar_volume_br(val):
+                s = f"{val:,.8f}"
+                parts = s.split('.')
+                thousands = parts[0].replace(',', '.')
+                decimal = parts[1]
+                return f"{thousands},{decimal}"
+
             # --- 2. MAPEAMENTO REAL DE EQUIPAMENTOS ATÔMICOS (ÚNICOS) ---
             equipamentos_unicos_filtro = set()
             if 'equipment' in df_plataformas_2025.columns:
@@ -627,7 +634,6 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                     if pd.isna(eq_row) or eq_str == '' or eq_str.lower() == 'nan' or eq_str.lower() == 'não informado':
                         equipamentos_unicos_filtro.add('Não Informado')
                     else:
-                        # Quebra as strings compostas por vírgula em itens atômicos separados
                         for item in eq_str.split(','):
                             item_clean = item.strip()
                             if item_clean:
@@ -645,7 +651,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
             with col_p3:
                 tipos_selecionados = st.multiselect("Filtrar por Tipo de Produto:", options=["A obter"], default=["A obter"], key="ms_tipo_p4")
             
-            # --- 4. FILTRAGEM DOS ACIDENTES NA ORIGEM (EVITA DUPLICAR VOLUMES) ---
+            # --- 4. FILTRAGEM DOS ACIDENTES NA ORIGEM ---
             def verificar_aderencia_equipamento(eq_val, selecionados):
                 eq_str = str(eq_val).strip()
                 if pd.isna(eq_val) or eq_str == '' or eq_str.lower() == 'nan' or eq_str.lower() == 'não informado':
@@ -653,16 +659,14 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                 items_do_acidente = [item.strip() for item in eq_str.split(',') if item.strip()]
                 return any(item in selecionados for item in items_do_acidente)
 
-            # Aplica a aderência de equipamentos
             df_plataformas_filtradas_p4 = df_plataformas_2025[
                 df_plataformas_2025['equipment'].apply(lambda x: verificar_aderencia_equipamento(x, equip_selecionados))
             ].copy()
             
-            # Validação dos placeholders "A obter"
             if "A obter" not in classes_selecionadas or "A obter" not in tipos_selecionados:
                 df_plataformas_filtradas_p4 = df_plataformas_filtradas_p4.iloc[0:0]
 
-            # --- 5. EXTRAÇÃO E UNIFICAÇÃO DOS PRODUTOS DA BASE FILTRADA ---
+            # --- 5. EXTRAÇÃO E UNIFICAÇÃO DOS PRODUTOS FILTRADOS ---
             registros_produtos = []
             for _, row in df_plataformas_filtradas_p4.iterrows():
                 equipamento_atual = str(row.get('equipment', 'Não Informado')).strip()
@@ -689,14 +693,27 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                 df_prod_filtrado = pd.DataFrame(registros_produtos)
                 
                 st.write("---")
-                # --- 6. INDICADOR: CONTAGEM DE PRODUTOS DIFERENTES ---
-                col_metric, _ = st.columns([1, 2])
-                with col_metric:
+                
+                # --- 6. PAINEL DE INDICADORES EXECUTIVOS (3 COLUNAS ALINHADAS LADO A LADO) ---
+                col_m1, col_m2, col_m3 = st.columns(3)
+                
+                with col_m1:
                     produtos_distintos = df_prod_filtrado['Produto'].nunique()
-                    st.metric("Total de Produtos Distintos Filtrados", f"{produtos_distintos}")
+                    st.metric("Total de Produtos Distintos", f"{produtos_distintos}")
+                    
+                with col_m2:
+                    # Conta os eventos/processos únicos (reagirá aos filtros amanhã quando inserirmos as classes reais)
+                    total_eventos = df_prod_filtrado['Processo'].nunique()
+                    st.metric("Soma de Eventos com Produtos Perigosos", f"{total_eventos}")
+                    
+                with col_m3:
+                    # Sumariza o volume total liberado aplicando a formatação brasileira de 8 casas
+                    volume_total = df_prod_filtrado['Volume'].sum()
+                    st.metric("Soma do Volume Total Liberado", f"{formatar_volume_br(volume_total)}")
+                    
                 st.write("---")
                 
-                # --- 7. AGREGAÇÃO CONSOLIDADA SEM REPETIÇÕES DE STRINGS ---
+                # --- 7. AGREGAÇÃO CONSOLIDADA PARA A TABELA ---
                 def obter_lista_equipamentos_unicos(series):
                     set_consolidado = set()
                     for texto_celula in series:
@@ -715,7 +732,6 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                     Equipamentos_Lista=('Equipamento', obter_lista_equipamentos_unicos)
                 ).reset_index()
                 
-                # Layout final da tabela corporativa
                 df_prod_summary = df_prod_summary[[
                     'Produto', 'Qtd_Acidentes', 'Vol_Total', 'Classe de Risco', 'Tipo', 'Equipamentos_Lista'
                 ]]
