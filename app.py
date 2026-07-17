@@ -110,6 +110,7 @@ NOME_ACIDENTES = "acidentes_2025.xlsx"
 NOME_PRODUCAO = "Producao.xlsx"
 NOME_ATENDIMENTO = "Tempo_Atendimento.xlsx"
 NOME_ENCERRAMENTO = "Tempo_Encerramento.xlsx"
+NOME_MAP_PRODUTOS = "produtos_consolidados.xlsx"
 
 # --- FUNÇÕES DE LEITURA E LIMPEZA DE DADOS (COM CACHE) ---
 
@@ -181,6 +182,10 @@ def carregar_atendimento_historico(caminho):
 def carregar_encerramento_historico(caminho):
     return pd.read_excel(caminho, sheet_name="Total")
 
+@st.cache_data(ttl=1800)
+def carregar_mapeamento_produtos(caminho):
+    return pd.read_excel(caminho, sheet_name="produtos_classe")
+
 
 # --- VERIFICAÇÃO DE CONFIGURAÇÃO DE ARQUIVOS ---
 if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.exists(NOME_ATENDIMENTO) and os.path.exists(NOME_ENCERRAMENTO):
@@ -190,6 +195,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
         df_total_prod, df_bacias_prod = carregar_producao_historica(NOME_PRODUCAO)
         df_atend_tot, df_atend_b24 = carregar_atendimento_historico(NOME_ATENDIMENTO)
         df_enc_hist = carregar_encerramento_historico(NOME_ENCERRAMENTO)
+        df_map_prod = carregar_mapeamento_produtos(NOME_MAP_PRODUTOS)
         
         # Filtro de Plataformas para 2025
         if 'origem_acidente' in df_2025_bruto.columns:
@@ -567,14 +573,10 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                 st.plotly_chart(fig9, use_container_width=True)
 
         # =========================================================================
-        # ABA 4: CONSOLIDAÇÃO POR PRODUTO (MÉTRICA DE LIBERAÇÕES TOTAIS CORRIGIDA)
+        # ABA 4: CONSOLIDAÇÃO POR PRODUTO E ANÁLISE DE LÍQUIDOS NOCIVOS (FIGS 3.3.10 A 3.3.14)
         # =========================================================================
         with tab_produtos:
-            st.markdown("### 🛢️ Inventário Consolidado de Produtos e Marcas Comerciais")
-            st.write("Agregação unificada, padronizada e higienizada de produtos com vazamento em plataformas (2025).")
-            st.write("---")
-            
-            # --- 1. FUNÇÕES INTERNAS DE HIGIENIZAÇÃO, PADRONIZAÇÃO E FORMATAÇÃO ---
+            # --- 1. FUNÇÕES DE HIGIENIZAÇÃO E FORMATAÇÃO ---
             def limpar_volume_safely(val):
                 if pd.isna(val): return 0.0
                 if isinstance(val, (int, float)): return float(val)
@@ -611,144 +613,230 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                 if 'oceanic' in n_lower and '443' in n_lower: return "Oceanic HW 443"
                 if 'tellus' in n_lower: return "Shell Tellus"
                 if 'transaqua' in n_lower: return "Transaqua DW"
-                if 'fcba' in n_lower or 'completação aquoso' in n_lower or 'completação base água' in n_lower or 'completação base agua' in n_lower:
-                    return "FCBA (Fluido de Completação de Base Aquosa)"
-                if 'fpba' in n_lower or ('perfuração' in n_lower and 'base aquosa' in n_lower):
-                    return "FPBA (Fluido de Perfuração de Base Aquosa)"
-                if 'produto oleoso' in n_lower or n_lower in ['óleo lubrificante', 'oleo lubrificante']:
-                    return "Produto Oleoso Genérico"
+                if 'fcba' in n_lower or 'completação aquoso' in n_lower or 'completação base água' in n_lower or 'completação base agua' in n_lower: return "FCBA (Fluido de Completação de Base Aquosa)"
+                if 'fpba' in n_lower or ('perfuração' in n_lower and 'base aquosa' in n_lower): return "FPBA (Fluido de Perfuração de Base Aquosa)"
+                if 'produto oleoso' in n_lower or n_lower in ['óleo lubrificante', 'oleo lubrificante']: return "Produto Oleoso Genérico"
                 return n
 
             def formatar_volume_br(val):
                 s = f"{val:,.8f}"
                 parts = s.split('.')
-                thousands = parts[0].replace(',', '.')
-                decimal = parts[1]
-                return f"{thousands},{decimal}"
+                return f"{parts[0].replace(',', '.')},{parts[1]}"
 
-            # --- 2. MAPEAMENTO REAL DE EQUIPAMENTOS ATÔMICOS (ÚNICOS) ---
-            equipamentos_unicos_filtro = set()
-            if 'equipment' in df_plataformas_2025.columns:
-                for eq_row in df_plataformas_2025['equipment']:
+            def get_cor_risco(classe, fig_num):
+                c = str(classe).strip()
+                if c == 'A': return '#1FA1DD'
+                if c == 'B': return '#8BC53F'
+                if c == 'D': return '#FDBB2F'
+                if c == 'Não Classificado': return '#8e44ad'
+                if c == 'Não Avaliado': return '#F37021' if fig_num in [11, 13] else '#E74C3C'
+                return '#BDC3C7'
+
+            # --- 2. EXTRAÇÃO GLOBAL E MAPEAMENTO ANTES DOS FILTROS ---
+            registros_brutos = []
+            for _, row in df_plataformas_2025.iterrows():
+                eq_atual = str(row.get('equipment', 'Não Informado')).strip()
+                id_proc = str(row.get('num_processo', 'S/N'))
+                
+                for p in ['1', '2', '3']:
+                    marca = str(row.get(f'marca_p{p}')).strip() if pd.notna(row.get(f'marca_p{p}')) else ''
+                    if marca != '' and marca.upper() != 'PREENCHER' and marca.lower() != 'nan':
+                        vol = limpar_volume_safely(row.get(f'qtd_p{p}'))
+                        registros_brutos.append({
+                            'Produto': padronizar_nome_produto(marca),
+                            'Volume': vol,
+                            'Equipamento': eq_atual,
+                            'Processo': id_proc
+                        })
+            
+            df_todas_liberacoes = pd.DataFrame(registros_brutos) if registros_brutos else pd.DataFrame(columns=['Produto', 'Volume', 'Equipamento', 'Processo'])
+            
+            if not df_todas_liberacoes.empty:
+                # Merge com o Mapeamento da aba 'produtos_classe'
+                df_todas_liberacoes = df_todas_liberacoes.merge(df_map_prod, how='left', left_on='Produto', right_on='Nome do Produto')
+                df_todas_liberacoes['Classe de Risco'] = df_todas_liberacoes['Classe de Risco'].fillna('Não Avaliado')
+                df_todas_liberacoes['Tipo'] = df_todas_liberacoes['Tipo'].fillna('Sem Informação')
+                
+                # FILTRO CRÍTICO: Isolar apenas Líquidos Nocivos (Remove 'Não se Aplica')
+                df_liquidos = df_todas_liberacoes[
+                    (df_todas_liberacoes['Classe de Risco'] != 'Não se Aplica') & 
+                    (df_todas_liberacoes['Tipo'] != 'Não se Aplica')
+                ].copy()
+
+                # --- 3. MAPEAMENTO DE EQUIPAMENTOS ATÔMICOS (ÚNICOS) ---
+                equipamentos_unicos_filtro = set()
+                for eq_row in df_liquidos['Equipamento']:
                     eq_str = str(eq_row).strip()
-                    if pd.isna(eq_row) or eq_str == '' or eq_str.lower() == 'nan' or eq_str.lower() == 'não informado':
+                    if pd.isna(eq_row) or eq_str == '' or eq_str.lower() in ['nan', 'não informado']:
                         equipamentos_unicos_filtro.add('Não Informado')
                     else:
                         for item in eq_str.split(','):
                             item_clean = item.strip()
-                            if item_clean:
-                                equipamentos_unicos_filtro.add(item_clean)
-            list_equip_ordenada = sorted(list(equipamentos_unicos_filtro))
+                            if item_clean: equipamentos_unicos_filtro.add(item_clean)
+                list_equip_ordenada = sorted(list(equipamentos_unicos_filtro))
+                
+                list_classe = sorted(list(df_liquidos['Classe de Risco'].unique()))
+                list_tipo = sorted(list(df_liquidos['Tipo'].unique()))
 
-            # --- 3. SEÇÃO DE FILTROS AVANÇADOS DA ABA ---
-            st.subheader("Filtros Específicos de Produtos")
-            col_p1, col_p2, col_p3 = st.columns(3)
-            
-            with col_p1:
-                equip_selecionados = st.multiselect("Filtrar por Equipamento Envolvido (Itens Únicos):", options=list_equip_ordenada, default=list_equip_ordenada, key="ms_equip_p4")
-            with col_p2:
-                classes_selecionadas = st.multiselect("Filtrar por Classe de Risco:", options=["A obter"], default=["A obter"], key="ms_classe_p4")
-            with col_p3:
-                tipos_selecionados = st.multiselect("Filtrar por Tipo de Produto:", options=["A obter"], default=["A obter"], key="ms_tipo_p4")
-            
-            # --- 4. FILTRAGEM DOS ACIDENTES NA ORIGEM ---
-            def verificar_aderencia_equipamento(eq_val, selecionados):
-                eq_str = str(eq_val).strip()
-                if pd.isna(eq_val) or eq_str == '' or eq_str.lower() == 'nan' or eq_str.lower() == 'não informado':
-                    return 'Não Informado' in selecionados
-                items_do_acidente = [item.strip() for item in eq_str.split(',') if item.strip()]
-                return any(item in selecionados for item in items_do_acidente)
+                # --- 4. SEÇÃO DE FILTROS AVANÇADOS DA ABA ---
+                st.subheader("Filtros Analíticos de Líquidos Nocivos")
+                col_p1, col_p2, col_p3 = st.columns(3)
+                
+                with col_p1:
+                    equip_selecionados = st.multiselect("Filtrar por Equipamento Envolvido:", options=list_equip_ordenada, default=list_equip_ordenada, key="ms_eq_p4")
+                with col_p2:
+                    classes_selecionadas = st.multiselect("Filtrar por Classe de Risco:", options=list_classe, default=list_classe, key="ms_cl_p4")
+                with col_p3:
+                    tipos_selecionados = st.multiselect("Filtrar por Tipo de Produto:", options=list_tipo, default=list_tipo, key="ms_tp_p4")
+                
+                def verificar_aderencia(eq_val, selecionados):
+                    eq_str = str(eq_val).strip()
+                    if pd.isna(eq_val) or eq_str == '' or eq_str.lower() in ['nan', 'não informado']: return 'Não Informado' in selecionados
+                    items = [item.strip() for item in eq_str.split(',') if item.strip()]
+                    return any(item in selecionados for item in items)
 
-            df_plataformas_filtradas_p4 = df_plataformas_2025[
-                df_plataformas_2025['equipment'].apply(lambda x: verificar_aderencia_equipamento(x, equip_selecionados))
-            ].copy()
-            
-            if "A obter" not in classes_selecionadas or "A obter" not in tipos_selecionados:
-                df_plataformas_filtradas_p4 = df_plataformas_filtradas_p4.iloc[0:0]
+                # Aplicação dos Filtros Multiplos Dinâmicos
+                df_prod_filtrado = df_liquidos[
+                    (df_liquidos['Equipamento'].apply(lambda x: verificar_aderencia(x, equip_selecionados))) &
+                    (df_liquidos['Classe de Risco'].isin(classes_selecionadas)) &
+                    (df_liquidos['Tipo'].isin(tipos_selecionados))
+                ].copy()
 
-            # --- 5. EXTRAÇÃO E UNIFICAÇÃO DOS PRODUTOS FILTRADOS ---
-            registros_produtos = []
-            for _, row in df_plataformas_filtradas_p4.iterrows():
-                equipamento_atual = str(row.get('equipment', 'Não Informado')).strip()
-                id_processo = str(row.get('num_processo', 'S/N'))
-                
-                classe_risco_atual = "A obter"
-                tipo_atual = "A obter"
-                
-                for prefix in ['1', '2', '3']:
-                    marca = str(row.get(f'marca_p{prefix}')).strip() if pd.notna(row.get(f'marca_p{prefix}')) else ''
-                    if marca != '' and marca.upper() != 'PREENCHER' and marca.lower() != 'nan':
-                        marca_padrao = padronizar_nome_produto(marca)
-                        vol = limpar_volume_safely(row.get(f'qtd_p{prefix}'))
-                        registros_produtos.append({
-                            'Produto': marca_padrao, 
-                            'Volume': vol, 
-                            'Equipamento': equipamento_atual, 
-                            'Classe de Risco': classe_risco_atual,
-                            'Tipo': tipo_atual,
-                            'Processo': id_processo
-                        })
-            
-            if registros_produtos:
-                df_prod_filtrado = pd.DataFrame(registros_produtos)
-                
-                st.write("---")
-                
-                # --- 6. PAINEL DE INDICADORES EXECUTIVOS ATUALIZADO ---
-                col_m1, col_m2, col_m3 = st.columns(3)
-                
-                with col_m1:
-                    produtos_distintos = df_prod_filtrado['Produto'].nunique()
-                    st.metric("Total de Produtos Distintos", f"{produtos_distintos}")
+                if not df_prod_filtrado.empty:
+                    # --- CÁLCULOS DO TEXTO RESTRITO DA FIGURA 3.3.10 ---
+                    tot_acid_25 = len(df_plataformas_2025)
+                    df_plataformas_2025['cont_prods'] = df_plataformas_2025.apply(lambda r: sum([1 for i in ['1','2','3'] if pd.notna(r.get(f'marca_p{i}')) and str(r.get(f'marca_p{i}')).strip().upper() not in ['','PREENCHER', 'NAN']]), axis=1)
+                    acid_2_simultaneos = (df_plataformas_2025['cont_prods'] >= 2).sum()
                     
-                with col_m2:
-                    # CORREÇÃO: Conta o total de registros de liberações de produtos (linhas do dataframe expandido)
-                    total_liberacoes = len(df_prod_filtrado)
-                    st.metric("Total de Liberações de Produtos", f"{total_liberacoes}")
+                    df_gas = df_todas_liberacoes[df_todas_liberacoes['Produto'].str.contains('Gás natural', case=False, na=False)]
+                    acid_gas = df_gas['Processo'].nunique()
+                    vol_gas = df_gas['Volume'].sum()
                     
-                with col_m3:
-                    volume_total = df_prod_filtrado['Volume'].sum()
-                    st.metric("Soma do Volume Total Liberado", f"{formatar_volume_br(volume_total)}")
+                    st.write("---")
                     
-                st.write("---")
-                
-                # --- 7. AGREGAÇÃO CONSOLIDADA PARA A TABELA ---
-                def obter_lista_equipamentos_unicos(series):
-                    set_consolidado = set()
-                    for texto_celula in series:
-                        if pd.notna(texto_celula):
-                            for item in str(texto_celula).split(','):
-                                cleaned = item.strip()
-                                if cleaned and cleaned.lower() not in ['nan', 'não informado']:
-                                    set_consolidado.add(cleaned)
-                    if not set_consolidado:
-                        return "Não Informado"
-                    return ", ".join(sorted(set_consolidado))
+                    # --- 5. INDICADORES EXECUTIVOS ---
+                    col_m1, col_m2, col_m3 = st.columns(3)
+                    with col_m1: st.metric("Total de Produtos Distintos", f"{df_prod_filtrado['Produto'].nunique()}")
+                    with col_m2: st.metric("Total de Liberações (Linhas Múltiplas)", f"{len(df_prod_filtrado)}")
+                    with col_m3: st.metric("Soma do Volume Total Liberado", f"{formatar_volume_br(df_prod_filtrado['Volume'].sum())}")
+                    
+                    st.write("---")
+                    st.markdown(f"***Texto Auxiliar:** Em **{acid_2_simultaneos}** dos **{tot_acid_25}** acidentes ocorridos em 2025 houve a liberação simultânea de dois ou mais produtos distintos. Houve **{acid_gas}** acidentes envolvendo a liberação de gás natural, num volume total de aproximadamente **{vol_gas:,.2f}** m3, que foram excluídos desta análise. Desta forma, o universo amostral nos gráficos e tabela a seguir é de **{len(df_prod_filtrado)}** produtos líquidos liberados em **{df_prod_filtrado['Processo'].nunique()}** processos.*")
+                    st.write("---")
+                    
+                    # --- 6. PLOTAGEM DOS 5 GRÁFICOS (FIGURAS 3.3.10 a 3.3.14) ---
+                    col_graf1, col_graf2 = st.columns(2)
+                    
+                    # FIGURA 3.3.10: Tipo (Oleosos x Não Oleosos)
+                    with col_graf1:
+                        df_g10 = df_prod_filtrado.groupby('Tipo').agg(Vol=('Volume','sum'), Acid=('Processo','nunique')).reset_index()
+                        fig10 = make_subplots(specs=[[{"secondary_y": True}]])
+                        cores_tp = {'Não Oleoso': '#1FA1DD', 'Oleoso': '#8BC53F', 'Sem Informação': '#BDC3C7'}
+                        for tipo in df_g10['Tipo'].unique():
+                            d = df_g10[df_g10['Tipo'] == tipo]
+                            fig10.add_trace(go.Bar(name=f"Volume {tipo}", x=d['Tipo'], y=d['Vol'], marker_color=cores_tp.get(tipo, '#BDC3C7'), text=d['Vol'].apply(lambda x: f"{x:,.1f} m3".replace('.',',')), textposition='inside', showlegend=False), secondary_y=False)
+                            fig10.add_trace(go.Scatter(name=f'Acidentes {tipo}', x=d['Tipo'], y=d['Acid'], mode='markers+text', marker=dict(color='black', size=12), text=d['Acid'], textposition='top center', textfont=dict(color='black', size=13), showlegend=False), secondary_y=True)
+                        fig10.update_layout(plot_bgcolor='white', margin=dict(t=30, b=30, l=40, r=40))
+                        fig10.update_xaxes(showgrid=False, linecolor='black')
+                        fig10.update_yaxes(title_text="Volume de Produto Liberado (m3)", secondary_y=False, showgrid=False, linecolor='black')
+                        fig10.update_yaxes(title_text="Número de Acidentes", secondary_y=True, showgrid=False, linecolor='black')
+                        st.plotly_chart(fig10, use_container_width=True)
 
-                df_prod_summary = df_prod_filtrado.groupby(['Produto', 'Classe de Risco', 'Tipo']).agg(
-                    Qtd_Acidentes=('Processo', 'nunique'),
-                    Vol_Total=('Volume', 'sum'),
-                    Equipamentos_Lista=('Equipamento', obter_lista_equipamentos_unicos)
-                ).reset_index()
-                
-                df_prod_summary = df_prod_summary[[
-                    'Produto', 'Qtd_Acidentes', 'Vol_Total', 'Classe de Risco', 'Tipo', 'Equipamentos_Lista'
-                ]]
-                
-                df_prod_summary.columns = [
-                    'Nome do Produto', 'Quantidade de Acidentes', 'Soma dos Volumes', 'Classe de Risco', 'Tipo', 'Equipamentos Envolvidos'
-                ]
-                
-                df_prod_summary = df_prod_summary.sort_values(by='Nome do Produto')
-                
-                df_formatado_ibama = df_prod_summary.style.format(
-                    {'Soma dos Volumes': '{:,.8f}'}, 
-                    decimal=',', 
-                    thousands='.'
-                )
-                st.dataframe(df_formatado_ibama, use_container_width=True)
-            else:
-                st.info("Nenhum produto corresponde aos critérios dos filtros selecionados.")
+                    # FIGURA 3.3.11: Classe de Risco Geral
+                    with col_graf2:
+                        df_g11 = df_prod_filtrado.groupby('Classe de Risco').agg(Vol=('Volume','sum'), Acid=('Processo','nunique')).reset_index()
+                        ordem_11 = ['A', 'B', 'D', 'Não Classificado', 'Não Avaliado']
+                        df_g11['Classe de Risco'] = pd.Categorical(df_g11['Classe de Risco'], categories=ordem_11, ordered=True)
+                        df_g11 = df_g11.sort_values('Classe de Risco').dropna(subset=['Classe de Risco'])
+                        
+                        fig11 = make_subplots(specs=[[{"secondary_y": True}]])
+                        for _, r in df_g11.iterrows():
+                            fig11.add_trace(go.Bar(name=r['Classe de Risco'], x=[r['Classe de Risco']], y=[r['Vol']], marker_color=get_cor_risco(r['Classe de Risco'], 11), text=f"{r['Vol']:,.2f} m3".replace('.',','), textposition='inside', showlegend=False), secondary_y=False)
+                            fig11.add_trace(go.Scatter(name='Acidentes', x=[r['Classe de Risco']], y=[r['Acid']], mode='markers+text', marker=dict(color='black', size=10), text=str(r['Acid']), textposition='top center', textfont=dict(color='black', size=13), showlegend=False), secondary_y=True)
+                        fig11.update_layout(plot_bgcolor='white', margin=dict(t=30, b=30, l=40, r=40))
+                        fig11.update_xaxes(showgrid=False, linecolor='black')
+                        fig11.update_yaxes(title_text="Volume Liberado (m3)", secondary_y=False, showgrid=False, linecolor='black')
+                        fig11.update_yaxes(title_text="Número de Acidentes", secondary_y=True, showgrid=False, linecolor='black')
+                        st.plotly_chart(fig11, use_container_width=True)
+
+                    # FIGURA 3.3.12: Top 20 por Ocorrência (Barras Horizontais)
+                    df_g12 = df_prod_filtrado.groupby(['Produto', 'Classe de Risco']).agg(Acid=('Processo','nunique')).reset_index()
+                    df_g12 = df_g12.sort_values(by='Acid', ascending=False).head(20).sort_values(by='Acid', ascending=True)
+                    df_g12['Rank'] = [f"{i}. {p}" for i, p in zip(range(len(df_g12), 0, -1), df_g12['Produto'])]
+                    
+                    fig12 = go.Figure()
+                    for c in ordem_11:
+                        d = df_g12[df_g12['Classe de Risco'] == c]
+                        if not d.empty:
+                            fig12.add_trace(go.Bar(name=f'Risco {c}' if c in ['A','B','D'] else c, y=d['Rank'], x=d['Acid'], orientation='h', marker_color=get_cor_risco(c, 12), text=d['Acid'], textposition='outside'))
+                    fig12.update_layout(barmode='stack', plot_bgcolor='white', margin=dict(t=30, b=30, l=40, r=40), legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="center", x=0.5))
+                    fig12.update_xaxes(showgrid=False, linecolor='black')
+                    fig12.update_yaxes(showgrid=False, linecolor='black')
+                    st.plotly_chart(fig12, use_container_width=True)
+
+                    # FIGURA 3.3.13: Acidentes por Faixa de Volume (BINS)
+                    bins = [-float('inf'), 0.00001, 0.0001, 0.001, 0.01, 0.1, 1.0, 8.0, 200.0, float('inf')]
+                    lbls = ['<= 10 mL', '10 mL < x <= 100 mL', '100 mL < x <= 1 L', '1 L < x <= 10 L', '10 L < x <= 100 L', '100 L < x <= 1 m3', '1 m3 < x <= 8 m3', '8 m3 < x <= 200 m3', 'x > 200 m3']
+                    df_prod_filtrado['Faixa_Vol'] = pd.cut(df_prod_filtrado['Volume'], bins=bins, labels=lbls)
+                    
+                    df_g13 = df_prod_filtrado.groupby(['Faixa_Vol', 'Classe de Risco'], observed=False).agg(Acid=('Processo','nunique')).reset_index()
+                    fig13 = go.Figure()
+                    for c in ordem_11:
+                        d = df_g13[df_g13['Classe de Risco'] == c].set_index('Faixa_Vol').reindex(lbls).reset_index().fillna({'Acid':0})
+                        fig13.add_trace(go.Bar(name=f'Risco {c}' if c in ['A','B','D'] else c, x=d['Faixa_Vol'], y=d['Acid'], marker_color=get_cor_risco(c, 13), text=d['Acid'].replace(0, ''), textposition='inside'))
+                    
+                    # Totais no topo (Caixas Pretas com texto branco via annotation)
+                    df_g13_tot = df_prod_filtrado.groupby('Faixa_Vol', observed=False).agg(Acid=('Processo','nunique')).reset_index()
+                    for _, r in df_g13_tot.iterrows():
+                        fig13.add_annotation(x=r['Faixa_Vol'], y=r['Acid'], text=f"<b>{r['Acid']}</b>", showarrow=False, yshift=15, font=dict(color="white", size=12), bgcolor="black", bordercolor="black", borderpad=3)
+                    
+                    fig13.update_layout(barmode='stack', plot_bgcolor='white', margin=dict(t=30, b=30, l=40, r=40), legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="center", x=0.5))
+                    fig13.update_xaxes(tickangle=45, showgrid=False, linecolor='black')
+                    fig13.update_yaxes(showgrid=False, linecolor='black')
+                    st.plotly_chart(fig13, use_container_width=True)
+
+                    # FIGURA 3.3.14: Top 20 por Volume + Demais
+                    df_g14 = df_prod_filtrado.groupby(['Produto', 'Classe de Risco']).agg(Vol=('Volume','sum'), Acid=('Processo','nunique')).reset_index().sort_values(by='Vol', ascending=False)
+                    top20 = df_g14.head(20).copy()
+                    demais = df_g14.iloc[20:].copy()
+                    if not demais.empty:
+                        top20 = pd.concat([top20, pd.DataFrame([{'Produto':'Demais Produtos', 'Classe de Risco':'Não Avaliado', 'Vol':demais['Vol'].sum(), 'Acid':demais['Acid'].sum()}])], ignore_index=True)
+                    
+                    top20['Vol_Medio'] = top20['Vol'] / top20['Acid']
+                    top20['Rank'] = [f"{i}. {p}" if p != 'Demais Produtos' else p for i, p in enumerate(top20['Produto'], 1)]
+                    
+                    fig14 = make_subplots(specs=[[{"secondary_y": True}]])
+                    for c in ordem_11:
+                        d = top20[top20['Classe de Risco'] == c]
+                        if not d.empty:
+                            fig14.add_trace(go.Bar(name=f'Risco {c}' if c in ['A','B','D'] else c, x=d['Rank'], y=d['Vol'], marker_color=get_cor_risco(c, 14), text=d['Vol'].apply(lambda x: f"{x:,.2f}".replace('.',',')), textposition='outside'), secondary_y=False)
+                    
+                    fig14.add_trace(go.Scatter(name='Volume Médio', x=top20['Rank'], y=top20['Vol_Medio'], mode='markers+text', marker=dict(color='grey', size=8), text=top20['Vol_Medio'].apply(lambda x: f"{x:,.2f}".replace('.',',')), textposition='top center', textfont=dict(color='grey'), showlegend=False), secondary_y=True)
+                    fig14.update_layout(plot_bgcolor='white', margin=dict(t=50, b=100, l=40, r=40), legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="center", x=0.5))
+                    fig14.update_xaxes(tickangle=90, showgrid=False, linecolor='black')
+                    fig14.update_yaxes(title_text="Volume Total Liberado (m3)", secondary_y=False, showgrid=False, linecolor='black')
+                    fig14.update_yaxes(title_text="Volume Médio", secondary_y=True, showgrid=False, linecolor='black')
+                    st.plotly_chart(fig14, use_container_width=True)
+
+                    st.write("---")
+                    
+                    # --- 7. TABELA CORPORATIVA DE LÍQUIDOS NOCIVOS ---
+                    def obter_unicos(series):
+                        s = set()
+                        for v in series:
+                            if pd.notna(v):
+                                for item in str(v).split(','):
+                                    cl = item.strip()
+                                    if cl and cl.lower() not in ['nan', 'não informado']: s.add(cl)
+                        return ", ".join(sorted(s)) if s else "Não Informado"
+
+                    df_resumo = df_prod_filtrado.groupby(['Produto', 'Classe de Risco', 'Tipo']).agg(Qtd_Acidentes=('Processo', 'nunique'), Vol_Total=('Volume', 'sum'), Equipamentos_Lista=('Equipamento', obter_unicos)).reset_index()
+                    df_resumo.columns = ['Nome do Produto', 'Classe de Risco', 'Tipo', 'Quantidade de Acidentes', 'Soma dos Volumes', 'Equipamentos Envolvidos']
+                    df_resumo = df_resumo[['Nome do Produto', 'Quantidade de Acidentes', 'Soma dos Volumes', 'Classe de Risco', 'Tipo', 'Equipamentos Envolvidos']].sort_values(by='Nome do Produto')
+                    
+                    st.dataframe(df_resumo.style.format({'Soma dos Volumes': '{:,.8f}'}, decimal=',', thousands='.'), use_container_width=True)
+                else:
+                    st.info("Nenhum produto corresponde aos critérios dos filtros selecionados.")
                 
     except Exception as e:
         st.error("Erro interno ao consolidar os dados das abas.")
