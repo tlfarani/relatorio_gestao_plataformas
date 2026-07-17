@@ -566,84 +566,122 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                 fig9.update_yaxes(showgrid=False, zeroline=False, linecolor='black', tickfont=dict(size=12))
                 st.plotly_chart(fig9, use_container_width=True)
 
-        # =========================================================================
-        # ABA 4: CONSOLIDAÇÃO DE DADOS POR PRODUTO (HIGIENIZADA E 8 CASAS DECIMAIS)
+       # =========================================================================
+        # ABA 4: CONSOLIDAÇÃO DE DADOS POR PRODUTO (PADRONIZADA E HIGIENIZADA)
         # =========================================================================
         with tab_produtos:
             st.markdown("### 🛢️ Inventário Consolidado de Produtos e Marcas Comerciais")
-            st.write("Agregação unificada e higienizada de todos os produtos com vazamento registrado em plataformas (2025).")
+            st.write("Agregação unificada, padronizada e higienizada de produtos com vazamento em plataformas (2025).")
             st.write("---")
             
-            # --- FUNÇÃO INTERNA DE TRATAMENTO DE TEXTO PARA NÚMERO ---
+            # --- FUNÇÃO DE LIMPEZA DE VOLUMES ---
             def limpar_volume_safely(val):
                 if pd.isna(val):
                     return 0.0
                 if isinstance(val, (int, float)):
                     return float(val)
-                
                 val_str = str(val).strip()
                 if val_str.upper() == 'PREENCHER' or val_str == '':
                     return 0.0
-                
-                # 1. Trata Notação Científica (Ex: 1.23e+02 ou 1,23E+02)
                 if 'E' in val_str.upper():
                     val_str = val_str.replace(',', '.')
-                    try:
-                        return float(val_str)
-                    except ValueError:
-                        pass
-                
-                # 2. Trata misturas de ponto e vírgula comuns no Excel
+                    try: return float(val_str)
+                    except ValueError: pass
                 if '.' in val_str and ',' in val_str:
                     val_str = val_str.replace('.', '').replace(',', '.')
                 elif ',' in val_str:
                     val_str = val_str.replace(',', '.')
-                
                 try:
                     return float(val_str)
                 except ValueError:
                     return 0.0
 
+            # --- FUNÇÃO DE PADRONIZAÇÃO DE NOMES INSTITUCIONAIS ---
+            def padronizar_nome_produto(nome):
+                if pd.isna(nome):
+                    return "Não Informado"
+                n = str(nome).strip()
+                n_lower = n.lower()
+                
+                # Regras de início de string (Prefixos)
+                if n_lower.startswith('erifon'):
+                    return "Erifon HD 603 HP > 1,89%"
+                if n_lower.startswith('stack'):
+                    return "Stack Magic Eco F ≥ 1%"
+                    
+                # Regras de agrupamento por palavras-chave contidas
+                if 'água oleosa' in n_lower or 'agua oleosa' in n_lower:
+                    return "Água Oleosa"
+                if 'petroleo' in n_lower or 'petróleo' in n_lower:
+                    return "Petróleo"
+                if 'óleo diesel' in n_lower or 'oleo diesel' in n_lower:
+                    return "Óleo Diesel"
+                if 'mobil dte' in n_lower or 'mobildte' in n_lower:
+                    return "Mobil DTE"
+                if 'lubrax' in n_lower:
+                    return "Lubrax"
+                if 'hyspin' in n_lower:
+                    return "Hyspin"
+                if 'mobilgear' in n_lower:
+                    return "Mobilgear"
+                if 'oceanic' in n_lower and '525' in n_lower:
+                    return "Oceanic HW 525"
+                if 'oceanic' in n_lower and '443' in n_lower:
+                    return "Oceanic HW 443"
+                if 'tellus' in n_lower:
+                    return "Shell Tellus"
+                if 'transaqua' in n_lower:
+                    return "Transaqua DW"
+                if 'fcba' in n_lower or 'completação aquoso' in n_lower or 'completação base água' in n_lower or 'completação base agua' in n_lower:
+                    return "FCBA (Fluido de Completação de Base Aquosa)"
+                if 'fpba' in n_lower or ('perfuração' in n_lower and 'base aquosa' in n_lower):
+                    return "FPBA (Fluido de Perfuração de Base Aquosa)"
+                if 'produto oleoso' in n_lower or n_lower in ['óleo lubrificante', 'oleo lubrificante']:
+                    return "Produto Oleoso Genérico"
+                    
+                return n # Mantém o nome original se não casar com nenhuma regra
+
             registros_produtos = []
             
-            # Varre as linhas aplicando os filtros e higienizações
+            # Varre as linhas processando marcas e aplicando as agregações
             for _, row in df_plataformas_2025.iterrows():
                 equipamento_atual = str(row.get('equipment', 'Não Informado')).strip()
                 id_processo = str(row.get('num_processo', 'S/N'))
                 
-                # Filtro e higienização do Grupo Produto 1
+                # Processamento do Produto 1
                 marca_1 = str(row.get('marca_p1')).strip() if pd.notna(row.get('marca_p1')) else ''
                 if marca_1 != '' and marca_1.upper() != 'PREENCHER' and marca_1.lower() != 'nan':
+                    marca_1_padrao = padronizar_nome_produto(marca_1)
                     vol_1 = limpar_volume_safely(row.get('qtd_p1'))
-                    registros_produtos.append({'Produto': marca_1, 'Volume': vol_1, 'Equipamento': equipamento_atual, 'Processo': id_processo})
+                    registros_produtos.append({'Produto': marca_1_padrao, 'Volume': vol_1, 'Equipamento': equipamento_atual, 'Processo': id_processo})
                     
-                # Filtro e higienização do Grupo Produto 2
+                # Processamento do Produto 2
                 marca_2 = str(row.get('marca_p2')).strip() if pd.notna(row.get('marca_p2')) else ''
                 if marca_2 != '' and marca_2.upper() != 'PREENCHER' and marca_2.lower() != 'nan':
+                    marca_2_padrao = padronizar_nome_produto(marca_2)
                     vol_2 = limpar_volume_safely(row.get('qtd_p2'))
-                    registros_produtos.append({'Produto': marca_2, 'Volume': vol_2, 'Equipamento': equipamento_atual, 'Processo': id_processo})
+                    registros_produtos.append({'Produto': marca_2_padrao, 'Volume': vol_2, 'Equipamento': equipamento_atual, 'Processo': id_processo})
                     
-                # Filtro e higienização do Grupo Produto 3
+                # Processamento do Produto 3
                 marca_3 = str(row.get('marca_p3')).strip() if pd.notna(row.get('marca_p3')) else ''
                 if marca_3 != '' and marca_3.upper() != 'PREENCHER' and marca_3.lower() != 'nan':
+                    marca_3_padrao = padronizar_nome_produto(marca_3)
                     vol_3 = limpar_volume_safely(row.get('qtd_p3'))
-                    registros_produtos.append({'Produto': marca_3, 'Volume': vol_3, 'Equipamento': equipamento_atual, 'Processo': id_processo})
+                    registros_produtos.append({'Produto': marca_3_padrao, 'Volume': vol_3, 'Equipamento': equipamento_atual, 'Processo': id_processo})
             
             if registros_produtos:
                 df_prod_bruto = pd.DataFrame(registros_produtos)
                 
-                # Agrupamento consolidado das ocorrências e volumes
+                # Agrupamento consolidado pós-padronização (Soma os volumes reais de nomes unificados)
                 df_prod_summary = df_prod_bruto.groupby('Produto').agg(
                     Qtd_Acidentes=('Processo', 'nunique'),
                     Vol_Total=('Volume', 'sum'),
                     Equipamentos_Lista=('Equipamento', lambda x: ", ".join(sorted(set(x) - {'nan', 'Não Informado', ''})))
                 ).reset_index()
                 
-                # Colunas auxiliares para preenchimento posterior
                 df_prod_summary['Classe de Risco'] = "A obter"
                 df_prod_summary['Tipo'] = "A obter"
                 
-                # Ordenação estrutural das colunas
                 df_prod_summary = df_prod_summary[[
                     'Produto', 'Qtd_Acidentes', 'Vol_Total', 'Classe de Risco', 'Tipo', 'Equipamentos_Lista'
                 ]]
@@ -652,14 +690,16 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                     'Nome do Produto', 'Quantidade de Acidentes', 'Soma dos Volumes', 'Classe de Risco', 'Tipo', 'Equipamentos Envolvidos'
                 ]
                 
-                # --- FORMATADOR REGIONAL AJUSTADO PARA ATÉ 8 CASAS DECIMAIS ---
+                # Ordena a tabela alfabeticamente pelo nome do produto padronizado
+                df_prod_summary = df_prod_summary.sort_values(by='Nome do Produto')
+                
+                # Formatação final de localidade para 8 casas decimais
                 df_formatado_ibama = df_prod_summary.style.format(
-                    {'Soma dos Volumes': '{:,.8f}'}, # <-- Calibrado para exibir 8 zeros/casas decimais
+                    {'Soma dos Volumes': '{:,.8f}'}, 
                     decimal=',', 
                     thousands='.'
                 )
                 
-                # Renderização limpa na tela
                 st.dataframe(df_formatado_ibama, use_container_width=True)
                 
             else:
