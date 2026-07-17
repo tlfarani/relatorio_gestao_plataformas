@@ -573,10 +573,10 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                 st.plotly_chart(fig9, use_container_width=True)
 
         # =========================================================================
-        # ABA 4: CONSOLIDAÇÃO POR PRODUTO E ANÁLISE DE LÍQUIDOS NOCIVOS (FIGS 3.3.10 A 3.3.14)
+        # ABA 4: CONSOLIDAÇÃO POR PRODUTO (PIPELINE OPTIMIZADO + DOWNLOAD DE-PARA)
         # =========================================================================
         with tab_produtos:
-            # --- 1. FUNÇÕES DE HIGIENIZAÇÃO E FORMATAÇÃO ---
+            # --- 1. FUNÇÕES INTERNAS DE HIGIENIZAÇÃO, PADRONIZAÇÃO E FORMATAÇÃO ---
             def limpar_volume_safely(val):
                 if pd.isna(val): return 0.0
                 if isinstance(val, (int, float)): return float(val)
@@ -632,38 +632,39 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                 if c == 'Não Avaliado': return '#F37021' if fig_num in [11, 13] else '#E74C3C'
                 return '#BDC3C7'
 
-            # --- 2. EXTRAÇÃO GLOBAL E MAPEAMENTO ANTES DOS FILTROS ---
+            # --- 2. EXTRAÇÃO GLOBAL DA BASE UNIFICADA COM PRESERVAÇÃO DO NOME ORIGINAL ---
             registros_brutos = []
             for _, row in df_plataformas_2025.iterrows():
                 eq_atual = str(row.get('equipment', 'Não Informado')).strip()
                 id_proc = str(row.get('num_processo', 'S/N'))
                 
                 for p in ['1', '2', '3']:
-                    marca = str(row.get(f'marca_p{p}')).strip() if pd.notna(row.get(f'marca_p{p}')) else ''
-                    if marca != '' and marca.upper() != 'PREENCHER' and marca.lower() != 'nan':
+                    marca_original = str(row.get(f'marca_p{p}')).strip() if pd.notna(row.get(f'marca_p{p}')) else ''
+                    if marca_original != '' and marca_original.upper() != 'PREENCHER' and marca_original.lower() != 'nan':
                         vol = limpar_volume_safely(row.get(f'qtd_p{p}'))
                         registros_brutos.append({
-                            'Produto': padronizar_nome_produto(marca),
+                            'Produto_Original': marca_original, # Mapeia o nome original para auditoria
+                            'Produto': padronizar_nome_produto(marca_original),
                             'Volume': vol,
                             'Equipamento': eq_atual,
                             'Processo': id_proc
                         })
             
-            df_todas_liberacoes = pd.DataFrame(registros_brutos) if registros_brutos else pd.DataFrame(columns=['Produto', 'Volume', 'Equipamento', 'Processo'])
+            df_todas_liberacoes = pd.DataFrame(registros_brutos) if registros_brutos else pd.DataFrame(columns=['Produto_Original', 'Produto', 'Volume', 'Equipamento', 'Processo'])
             
             if not df_todas_liberacoes.empty:
-                # Merge com o Mapeamento da aba 'produtos_classe'
+                # Enriquecimento com as colunas reais da planilha produtos_consolidados.xlsx
                 df_todas_liberacoes = df_todas_liberacoes.merge(df_map_prod, how='left', left_on='Produto', right_on='Nome do Produto')
                 df_todas_liberacoes['Classe de Risco'] = df_todas_liberacoes['Classe de Risco'].fillna('Não Avaliado')
                 df_todas_liberacoes['Tipo'] = df_todas_liberacoes['Tipo'].fillna('Sem Informação')
                 
-                # FILTRO CRÍTICO: Isolar apenas Líquidos Nocivos (Remove 'Não se Aplica')
+                # ISOLAMENTO DE LÍQUIDOS NOCIVOS: Remove registros marcados como "Não se Aplica"
                 df_liquidos = df_todas_liberacoes[
                     (df_todas_liberacoes['Classe de Risco'] != 'Não se Aplica') & 
                     (df_todas_liberacoes['Tipo'] != 'Não se Aplica')
                 ].copy()
 
-                # --- 3. MAPEAMENTO DE EQUIPAMENTOS ATÔMICOS (ÚNICOS) ---
+                # --- 3. MAPEAMENTO REATIVO DE EQUIPAMENTOS ATÔMICOS ---
                 equipamentos_unicos_filtro = set()
                 for eq_row in df_liquidos['Equipamento']:
                     eq_str = str(eq_row).strip()
@@ -695,7 +696,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                     items = [item.strip() for item in eq_str.split(',') if item.strip()]
                     return any(item in selecionados for item in items)
 
-                # Aplicação dos Filtros Multiplos Dinâmicos
+                # Filtragem direta via Pandas preservando os metadados da planilha
                 df_prod_filtrado = df_liquidos[
                     (df_liquidos['Equipamento'].apply(lambda x: verificar_aderencia(x, equip_selecionados))) &
                     (df_liquidos['Classe de Risco'].isin(classes_selecionadas)) &
@@ -703,7 +704,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                 ].copy()
 
                 if not df_prod_filtrado.empty:
-                    # --- CÁLCULOS DO TEXTO RESTRITO DA FIGURA 3.3.10 ---
+                    # Métricas de texto para a Figura 3.3.10
                     tot_acid_25 = len(df_plataformas_2025)
                     df_plataformas_2025['cont_prods'] = df_plataformas_2025.apply(lambda r: sum([1 for i in ['1','2','3'] if pd.notna(r.get(f'marca_p{i}')) and str(r.get(f'marca_p{i}')).strip().upper() not in ['','PREENCHER', 'NAN']]), axis=1)
                     acid_2_simultaneos = (df_plataformas_2025['cont_prods'] >= 2).sum()
@@ -714,17 +715,34 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                     
                     st.write("---")
                     
-                    # --- 5. INDICADORES EXECUTIVOS ---
+                    # --- 5. INDICADORES EXECUTIVOS FLUIDOS ---
                     col_m1, col_m2, col_m3 = st.columns(3)
                     with col_m1: st.metric("Total de Produtos Distintos", f"{df_prod_filtrado['Produto'].nunique()}")
-                    with col_m2: st.metric("Total de Liberações (Linhas Múltiplas)", f"{len(df_prod_filtrado)}")
+                    with col_m2: st.metric("Total de Liberações de Produtos", f"{len(df_prod_filtrado)}")
                     with col_m3: st.metric("Soma do Volume Total Liberado", f"{formatar_volume_br(df_prod_filtrado['Volume'].sum())}")
                     
                     st.write("---")
                     st.markdown(f"***Texto Auxiliar:** Em **{acid_2_simultaneos}** dos **{tot_acid_25}** acidentes ocorridos em 2025 houve a liberação simultânea de dois ou mais produtos distintos. Houve **{acid_gas}** acidentes envolvendo a liberação de gás natural, num volume total de aproximadamente **{vol_gas:,.2f}** m3, que foram excluídos desta análise. Desta forma, o universo amostral nos gráficos e tabela a seguir é de **{len(df_prod_filtrado)}** produtos líquidos liberados em **{df_prod_filtrado['Processo'].nunique()}** processos.*")
+                    
+                    # --- NOVO REQUISITO: EXPORTADOR DE CORRELAÇÃO DE NOMES (DE-PARA) ---
+                    import io
+                    buffer_excel = io.BytesIO()
+                    with pd.ExcelWriter(buffer_excel, engine='openpyxl') as writer:
+                        # Extrai a correlação única do universo mapeado
+                        df_correlacao = df_liquidos[['Produto_Original', 'Produto']].drop_duplicates().sort_values('Produto_Original')
+                        df_correlacao.columns = ['Nome Original (Planilha)', 'Nome Harmonizado (Painel)']
+                        df_correlacao.to_excel(writer, index=False, sheet_name="De-Para_Produtos")
+                    buffer_excel.seek(0)
+                    
+                    st.download_button(
+                        label="📥 Baixar Dicionário de Correlação de Nomes (De-Para Excel)",
+                        data=buffer_excel,
+                        file_name="dicionario_correlacao_produtos.xlsx",
+                        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                    )
                     st.write("---")
                     
-                    # --- 6. PLOTAGEM DOS 5 GRÁFICOS (FIGURAS 3.3.10 a 3.3.14) ---
+                    # --- 6. PLOTAGEM DOS 5 GRÁFICOS DINÂMICOS (FIGURAS 3.3.10 a 3.3.14) ---
                     col_graf1, col_graf2 = st.columns(2)
                     
                     # FIGURA 3.3.10: Tipo (Oleosos x Não Oleosos)
@@ -785,7 +803,6 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                         d = df_g13[df_g13['Classe de Risco'] == c].set_index('Faixa_Vol').reindex(lbls).reset_index().fillna({'Acid':0})
                         fig13.add_trace(go.Bar(name=f'Risco {c}' if c in ['A','B','D'] else c, x=d['Faixa_Vol'], y=d['Acid'], marker_color=get_cor_risco(c, 13), text=d['Acid'].replace(0, ''), textposition='inside'))
                     
-                    # Totais no topo (Caixas Pretas com texto branco via annotation)
                     df_g13_tot = df_prod_filtrado.groupby('Faixa_Vol', observed=False).agg(Acid=('Processo','nunique')).reset_index()
                     for _, r in df_g13_tot.iterrows():
                         fig13.add_annotation(x=r['Faixa_Vol'], y=r['Acid'], text=f"<b>{r['Acid']}</b>", showarrow=False, yshift=15, font=dict(color="white", size=12), bgcolor="black", bordercolor="black", borderpad=3)
