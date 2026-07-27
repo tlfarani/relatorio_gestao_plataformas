@@ -447,7 +447,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                     legend_title_text='', legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="center", x=0.5), margin=dict(t=100, b=50, l=50, r=50)
                 )
                 fig4.update_xaxes(showgrid=False, zeroline=False, linecolor='black', tickfont=dict(size=15.6, color = 'black'))
-                fig4.update_yaxes(showgrid=False, zeroline=False, showline=False, tickfont=dict(size=15.6, color='black'))
+                fig4.update_yaxes(showgrid=False, showticklabels=False, zeroline=False, linecolor='black, tickfont=dict(size=15.6, color='black'))
                 st.plotly_chart(ajustar_layout_grafico(fig4), use_container_width=True, config=CONFIG_EXPORTACAO)
 
         # =========================================================================
