@@ -4,6 +4,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import os
+import unicodedata
 
 # Configuração da página
 st.set_page_config(
@@ -596,25 +597,41 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
             def padronizar_nome_produto(nome):
                 if pd.isna(nome): return "Não Informado"
                 n = str(nome).strip()
-                n_lower = n.lower()
-                if n_lower.startswith('erifon'): return "Erifon HD 603 HP > 1,89%"
-                if n_lower.startswith('stack'): return "Stack Magic Eco F ≥ 1%"
-                if 'panolin' in n_lower: return "Panolins"
-                if 'monoetilenoglicol' in n_lower or 'meg' in n_lower: return "Monoetilenoglicol"
-                if 'br-mul' in n_lower or 'br_mul' in n_lower or 'brmul' in n_lower: return "BR-Mul"
-                if 'água oleosa' in n_lower or 'agua oleosa' in n_lower: return "Água Oleosa"
-                if 'petroleo' in n_lower or 'petróleo' in n_lower: return "Petróleo"
-                if 'óleo diesel' in n_lower or 'oleo diesel' in n_lower: return "Óleo Diesel"
-                if 'mobil dte' in n_lower or 'mobildte' in n_lower or 'mobilgear' in n_lower or '"Família" Mobil' in n_lower: return "Óleos Hidráulicos Mobil"
-                if 'lubrax' in n_lower: return "Lubrax"
-                if 'hyspin' in n_lower: return "Hyspin"
-                if 'oceanic' in n_lower and '525' in n_lower: return "Oceanic HW 525"
-                if 'oceanic' in n_lower and '443' in n_lower: return "Oceanic HW 443"
-                if 'tellus' in n_lower: return "Shell Tellus"
-                if 'transaqua' in n_lower: return "Transaqua DW"
-                if 'fcba' in n_lower or 'completação aquoso' in n_lower or 'completação base água' in n_lower or 'completação base agua' in n_lower: return "FCBA (Fluido de Completação de Base Aquosa)"
-                if 'fpba' in n_lower or ('perfuração' in n_lower and 'base aquosa' in n_lower): return "FPBA (Fluido de Perfuração de Base Aquosa)"
-                if 'produto oleoso' in n_lower or n_lower in ['óleo lubrificante', 'oleo lubrificante']: return "Produto Oleoso Genérico"
+                # Normaliza texto: remove acentos e converte para minúsculas
+                # Exemplo: "Família" vira "familia"
+                n_clean = unicodedata.normalize('NFKD', n).encode('ASCII', 'ignore').decode('utf-8').lower()
+                if n_clean.startswith('erifon'): return "Erifon HD 603 HP > 1,89%"
+                if n_clean.startswith('stack'): return "Stack Magic Eco F ≥ 1%"
+                if 'panolin' in n_clean: return "Panolins"
+                if any(term in n_clean for term in ('monoetilenoglicol', 'meg')): return "Monoetilenoglicol"
+                if any(term in n_clean for term in ('br-mul', 'br_mul', 'brmul')): return "BR-Mul"
+                if 'agua oleosa' in n_clean: return "Água Oleosa"
+                if 'petroleo' in n_clean: return "Petróleo"
+                if 'oleo diesel' in n_clean:return "Óleo Diesel"
+                    
+                # Aceita "mobil dte", "mobildte", "mobilgear", "família mobil", "familia mobil", com ou sem aspas
+                if any(term in n_clean for term in ('mobil dte', 'mobildte', 'mobilgear', 'familia mobil')): 
+                    return "Óleos Hidráulicos Mobil"
+                
+                if 'lubrax' in n_clean: return "Lubrax"
+                if 'hyspin' in n_clean: return "Hyspin"
+                
+                if 'oceanic' in n_clean:
+                    if '525' in n_clean: return "Oceanic HW 525"
+                    if '443' in n_clean: return "Oceanic HW 443"
+                
+                if 'tellus' in n_clean: return "Shell Tellus"
+                if 'transaqua' in n_clean: return "Transaqua DW"
+                
+                if any(term in n_clean for term in ('fcba', 'completacao aquoso', 'completacao base agua')): 
+                    return "FCBA (Fluido de Completação de Base Aquosa)"
+                    
+                if 'fpba' in n_clean or ('perfuracao' in n_clean and 'base agua' in n_clean): 
+                    return "FPBA (Fluido de Perfuração de Base Aquosa)"
+                    
+                if 'produto oleoso' in n_clean or n_clean in ('oleo lubrificante',): 
+                    return "Produto Oleoso Genérico"
+                
                 return n
 
             def formatar_volume_br(val):
