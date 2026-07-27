@@ -605,7 +605,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                 if 'água oleosa' in n_lower or 'agua oleosa' in n_lower: return "Água Oleosa"
                 if 'petroleo' in n_lower or 'petróleo' in n_lower: return "Petróleo"
                 if 'óleo diesel' in n_lower or 'oleo diesel' in n_lower: return "Óleo Diesel"
-                if 'mobil dte' in n_lower or 'mobildte' in n_lower or 'mobilgear' in n_lower or '"Família" Mobil' in n_lower: return "Mobil DTE"
+                if 'mobil dte' in n_lower or 'mobildte' in n_lower or 'mobilgear' in n_lower or '"Família" Mobil' in n_lower: return "Óleos Hidráulicos Mobil"
                 if 'lubrax' in n_lower: return "Lubrax"
                 if 'hyspin' in n_lower: return "Hyspin"
                 if 'oceanic' in n_lower and '525' in n_lower: return "Oceanic HW 525"
