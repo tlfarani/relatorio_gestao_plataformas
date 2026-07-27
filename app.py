@@ -400,7 +400,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                 )
                 fig2.update_xaxes(showgrid=False, zeroline=False, linecolor='black', tickfont=dict(size=14.4))
                 fig2.update_yaxes(showgrid=False, zeroline=False, linecolor='black', tickfont=dict(size=14.4))
-                st.plotly_chart(ajustar_layout_grafico(fig2), use_container_width=True, config=CONFIG_EXPORTACAO)
+                st.plotly_chart(ajustar_layout_grafico(fig2, espessura_barra=0.85), use_container_width=True, config=CONFIG_EXPORTACAO)
                 
             st.write("---")
             col_linha2_esq, col_linha2_dir = st.columns(2)
