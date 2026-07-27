@@ -10,7 +10,7 @@ import io
 # =========================================================================
 # 1. CONFIGURAÇÕES DE VISUALIZAÇÃO E EXPORTAÇÃO DOS GRÁFICOS
 # =========================================================================
-MULTIPLICADOR_FONTE = 1
+MULTIPLICADOR_FONTE = 1.05
 
 # Configuração da imagem que será salva ao clicar no ícone de câmera (download)
 CONFIG_EXPORTACAO = {
