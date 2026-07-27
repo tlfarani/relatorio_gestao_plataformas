@@ -426,8 +426,8 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                     xaxis_title="", yaxis_title="", plot_bgcolor='white', paper_bgcolor='white', font=dict(color='black', size=15.6),
                     xaxis=dict(range=[0, 115]), margin=dict(t=100, b=50, l=50, r=50)
                 )
-                fig3.update_xaxes(range=[0, max_x * 1.15], showgrid=False, zeroline=False, linecolor='black', showticklabels=False)
-                fig3.update_yaxes( showgrid=False, zeroline=False, linecolor='black', tickfont=dict(size=15.6, color='black'))
+                fig3.update_xaxes(range=[0, max_x * 1.15], showgrid=False, zeroline=False, showline=False, showticklabels=False)
+                fig3.update_yaxes( showgrid=False, zeroline=False, showline=False, tickfont=dict(size=15.6, color='black'))
                 st.plotly_chart(ajustar_layout_grafico(fig3), use_container_width=True, config=CONFIG_EXPORTACAO)
                 
             # --- GRÁFICO 4: Taxa de Acidentes por Produção (Santos e Campos - 2023-2025) ---
