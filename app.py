@@ -419,13 +419,12 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                 df_g3 = df_g3.sort_values(by='Percentual', ascending=True)
                 
                 fig3 = px.bar(df_g3, x='Percentual', y='Bacia Sedimentar', orientation='h', text='Percentual', color_discrete_sequence=['#3498db'])
-                fig3.update_traces(texttemplate='%{text:.2f}%', textposition='outside', textfont=dict(color='black', size=12))
+                fig3.update_traces(texttemplate='%{text:.2f}%', textposition='outside', textfont=dict(color='black', size=15.6))
                 fig3.update_layout(
-                    title=dict(text="<b>Percentual de Comunicados por Bacia Sedimentar (2025)</b>", x=0.5, font=dict(size=18, color='#1E4620')),
-                    xaxis_title="Percentual de Ocorrências (%)", yaxis_title="", plot_bgcolor='white', paper_bgcolor='white', font=dict(color='black', size=13),
+                    xaxis_title="Percentual de Ocorrências (%)", yaxis_title="", plot_bgcolor='white', paper_bgcolor='white', font=dict(color='black', size=15.6),
                     xaxis=dict(range=[0, 115]), margin=dict(t=100, b=50, l=50, r=50)
                 )
-                fig3.update_xaxes(showgrid=False, zeroline=False, linecolor='black', tickfont=dict(size=12))
+                fig3.update_xaxes(showgrid=False, zeroline=False, linecolor='black', showticklabels=False)
                 fig3.update_yaxes(showgrid=False, zeroline=False, linecolor='black', tickfont=dict(size=12))
                 st.plotly_chart(ajustar_layout_grafico(fig3), use_container_width=True, config=CONFIG_EXPORTACAO)
                 
