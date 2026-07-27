@@ -5,6 +5,39 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import os
 import unicodedata
+import io
+
+# =========================================================================
+# CONFIGURAÇÃO DE ESCALA GLOBAL DE FONTES DOS GRÁFICOS
+# =========================================================================
+# Exemplo: 1.0 (100% original), 1.4 (+40% de aumento), 1.2 (+20%), etc.
+MULTIPLICADOR_FONTE = 2.5 
+
+def ajustar_fontes(fig, fator=MULTIPLICADOR_FONTE):
+    """
+    Percorre a estrutura da figura do Plotly e multiplica o tamanho (size)
+    de todas as fontes ativas pelo fator desejado.
+    """
+    if fator == 1.0 or fig is None:
+        return fig
+    
+    fig_dict = fig.to_dict()
+    
+    def _escalar(d):
+        if isinstance(d, dict):
+            for k, v in d.items():
+                # Captura todas as chaves de configuração de texto do Plotly
+                if k in ['font', 'textfont', 'tickfont', 'title_font', 'titlefont', 'hoverlabel'] and isinstance(v, dict):
+                    if 'size' in v and isinstance(v['size'], (int, float)):
+                        v['size'] = round(v['size'] * fator, 1)
+                _escalar(v)
+        elif isinstance(d, list):
+            for item in d:
+                _escalar(item)
+                
+    _escalar(fig_dict)
+    return go.Figure(fig_dict)
+
 
 # Configuração da página
 st.set_page_config(
@@ -236,7 +269,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
             stats_bacias_2025.append({'Bacia': bacia.strip(), 'Até 30 dias': ate, 'Mais de 30 dias': mais, 'Não Atendidos': nao, 'Tempo Médio': med})
         df_atend_b25 = pd.DataFrame(stats_bacias_2025)
         
-        # --- INTERFACE EM ABAS (Variáveis Padronizadas para Evitar NameError) ---
+        # --- INTERFACE EM ABAS ---
         sidebar_abas = [
             "📊 Painel Operacional (2025)", 
             "📈 Produção (2021-2025)",
@@ -289,13 +322,13 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                     )
                     fig.update_xaxes(showgrid=False, zeroline=False, linecolor='black', tickfont=dict(size=12))
                     fig.update_yaxes(showgrid=False, zeroline=False, linecolor='black', tickfont=dict(size=12))
-                    st.plotly_chart(fig, use_container_width=True)
+                    st.plotly_chart(ajustar_fontes(fig), use_container_width=True)
             with col_t_aba1:
                 st.subheader("Base Filtrada (Dados 2025)")
                 st.dataframe(df_filtrado[['num_processo', 'instalacao', 'bacia_sedimentar', 'empresa', 'dias_encerramento']], use_container_width=True, height=350)
 
         # =========================================================================
-        # ABA 2: RELATÓRIO COMPARATIVO E PRODUÇÃO (TODOS OS 4 GRÁFICOS RESTAURADOS)
+        # ABA 2: RELATÓRIO COMPARATIVO E PRODUÇÃO
         # =========================================================================
         with tab_comparativa:
             st.markdown("### 📈 Painel Analítico: Histórico e Performance de Incidentes Ambientais")
@@ -314,20 +347,30 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                 
                 limite_y_comum = max(acid_vals_g1) * 1.25 
                 fig1 = make_subplots(specs=[[{"secondary_y": True}]])
+                
+                # Barras (Nº de Acidentes)
                 fig1.add_trace(go.Bar(x=df_g1['Ano'], y=df_g1['Acidentes'], name="Nº de Acidentes", marker_color='#3498db', text=df_g1['Acidentes'], textposition='outside', textfont=dict(color='black', size=13)), secondary_y=False)
-                fig1.add_trace(go.Scatter(x=df_g1['Ano'], y=df_g1['Taxa'], name="Acidentes / Mboe/d", mode='lines+markers+text', line=dict(color='#2c3e50', width=3), marker=dict(size=8), text=df_g1['Taxa'], textposition='top center', textfont=dict(color='black', size=13)), secondary_y=True)
                 
+                # Linha (Taxa de Acidentes)
+                fig1.add_trace(go.Scatter(x=df_g1['Ano'], y=df_g1['Taxa'], name="Acidentes / Mboe/d", mode='lines+markers+text', line=dict(color="#2c3e50", width=3), marker=dict(size=8), text=df_g1['Taxa'], textposition='top center', textfont=dict(color="black", size=13)), secondary_y=True)
+
+                # Layout Geral e Legenda
                 fig1.update_layout(
-                    title=dict(text="<b>Total de Acidentes por Ano e Taxa por Produção (2021-2025)</b>", x=0.5, font=dict(size=18, color='#1E4620')),
-                    plot_bgcolor='white', paper_bgcolor='white', font=dict(color='black', size=13), legend_title_text='',
-                    legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="center", x=0.5), margin=dict(t=100, b=50, l=50, r=50)
+                    plot_bgcolor='white', paper_bgcolor='white', font=dict(color='black', size=11), legend_title_text='',
+                    legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="center", x=0.5, font=dict(size=12)), margin=dict(t=100, b=50, l=50, r=50)
                 )
+
+                # Eixo X (Anos)
                 fig1.update_xaxes(showgrid=False, zeroline=False, linecolor='black', tickfont=dict(size=12))
-                fig1.update_yaxes(title_text="Nº de Acidentes por Ano", secondary_y=False, range=[0, limite_y_comum], showgrid=False, zeroline=False, linecolor='black', tickfont=dict(size=12))
-                fig1.update_yaxes(title_text="Acidentes / Mboe/d", secondary_y=True, range=[0, limite_y_comum], showgrid=False, zeroline=False, linecolor='black', tickfont=dict(size=12))
-                st.plotly_chart(fig1, use_container_width=True)
+
+                # Eixo Y Principal (Nº de Acidentes)
+                fig1.update_yaxes(title_text="Nº de Acidentes por Ano", title_font=dict(size=12, color="black"), secondary_y=False, range=[0, limite_y_comum], showgrid=False, zeroline=False, linecolor='black', tickfont=dict(size=11))
+                # Eixo Y Secundário (Taxa)
+                fig1.update_yaxes(title_text="Acidentes / Mboe/d", title_font=dict(size=12, color="black"), secondary_y=True, range=[0, limite_y_comum], showgrid=False, zeroline=False, linecolor='black', tickfont=dict(size=11))
                 
-            # --- GRÁFICO 2: Distribuição Anual de Ocorrências por Bacia Sedimentar (2023-2025) ---
+                st.plotly_chart(ajustar_fontes(fig1), use_container_width=True)
+                
+            # --- GRÁFICO 2: Distribuição Anual de Ocorrências por Bacia (2023-2025) ---
             with col_linha1_dir:
                 df_g2_clean = df_bacias_prod[(df_bacias_prod['Acid_2023'] > 0) | (df_bacias_prod['Acid_2024'].fillna(0) > 0) | (df_bacias_prod['Acid_2025'] > 0)].copy()
                 df_g2_melted = df_g2_clean.melt(id_vars=['Bacia Sedimentar'], value_vars=['Acid_2023', 'Acid_2024', 'Acid_2025'], var_name='Ano', value_name='Acidentes')
@@ -346,7 +389,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                 )
                 fig2.update_xaxes(showgrid=False, zeroline=False, linecolor='black', tickfont=dict(size=12))
                 fig2.update_yaxes(showgrid=False, zeroline=False, linecolor='black', tickfont=dict(size=12))
-                st.plotly_chart(fig2, use_container_width=True)
+                st.plotly_chart(ajustar_fontes(fig2), use_container_width=True)
                 
             st.write("---")
             col_linha2_esq, col_linha2_dir = st.columns(2)
@@ -367,9 +410,9 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                 )
                 fig3.update_xaxes(showgrid=False, zeroline=False, linecolor='black', tickfont=dict(size=12))
                 fig3.update_yaxes(showgrid=False, zeroline=False, linecolor='black', tickfont=dict(size=12))
-                st.plotly_chart(fig3, use_container_width=True)
+                st.plotly_chart(ajustar_fontes(fig3), use_container_width=True)
                 
-            # --- GRÁFICO 4: Taxa de Acidentes por Production (Santos e Campos - 2023-2025) ---
+            # --- GRÁFICO 4: Taxa de Acidentes por Produção (Santos e Campos - 2023-2025) ---
             with col_linha2_dir:
                 df_g4 = df_bacias_prod[df_bacias_prod['Bacia Sedimentar'].isin(['Campos', 'Santos'])].copy()
                 df_g4['Rate_2023'] = df_g4['Acid_2023'] / df_g4['Prod_2023']
@@ -388,7 +431,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                 )
                 fig4.update_xaxes(showgrid=False, zeroline=False, linecolor='black', tickfont=dict(size=12))
                 fig4.update_yaxes(showgrid=False, zeroline=False, linecolor='black', tickfont=dict(size=12))
-                st.plotly_chart(fig4, use_container_width=True)
+                st.plotly_chart(ajustar_fontes(fig4), use_container_width=True)
 
         # =========================================================================
         # ABA 3: ATENDIMENTO A EMERGÊNCIAS (TRAMITAÇÃO + ENCERRAMENTOS)
@@ -424,7 +467,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                 fig5.update_xaxes(showgrid=False, zeroline=False, linecolor='black', tickfont=dict(size=12))
                 fig5.update_yaxes(title_text="Número de Acidentes Atendidos", secondary_y=False, range=[0, limite_y_atend], showgrid=False, zeroline=False, linecolor='black', tickfont=dict(size=12))
                 fig5.update_yaxes(title_text="Tempo Médio (Dias)", secondary_y=True, range=[0, limite_y_atend], showgrid=False, zeroline=False, linecolor='black', tickfont=dict(size=12))
-                st.plotly_chart(fig5, use_container_width=True)
+                st.plotly_chart(ajustar_fontes(fig5), use_container_width=True)
                 
             # --- FIGURA 3.3.7: Forma de Atendimento (2025) ---
             with col_atend_2:
@@ -441,7 +484,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                     )
                     fig7.update_xaxes(title="", showgrid=False, zeroline=False, linecolor='black', tickfont=dict(size=12))
                     fig7.update_yaxes(title="Volume de Documentos/Ações", showgrid=False, zeroline=False, linecolor='black', range=[0, df_formas['Quantidade'].max()*1.2], tickfont=dict(size=12))
-                    st.plotly_chart(fig7, use_container_width=True)
+                    st.plotly_chart(ajustar_fontes(fig7), use_container_width=True)
                 else:
                     st.info("Dados de 'Forma de atendimento' insuficientes na planilha de 2025.")
             
@@ -493,20 +536,17 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
             fig6.update_xaxes(showgrid=False, zeroline=False, linecolor='black', tickangle=45, row=1, col=2, tickfont=dict(size=12))
             fig6.update_yaxes(visible=False, secondary_y=False, row=1, col=2) 
             fig6.update_yaxes(title_text="Tempo Médio até 1º Atendimento (Dias)", secondary_y=True, range=[0, limite_y_facets], showgrid=False, zeroline=False, linecolor='black', row=1, col=2, tickfont=dict(size=12))
-            st.plotly_chart(fig6, use_container_width=True)
+            st.plotly_chart(ajustar_fontes(fig6), use_container_width=True)
             
-            # =========================================================================
-            # NOVAS VISUALIZAÇÕES: PRAZOS DE ENCERRAMENTO DA INVESTIGAÇÃO (FIG 3.3.8 e 3.3.9)
-            # =========================================================================
+            # --- PRAZOS DE ENCERRAMENTO DA INVESTIGAÇÃO ---
             st.write("---")
             col_enc_1, col_enc_2 = st.columns(2)
             
-            # --- CLASSIFICAÇÃO DOS DADOS DE 2025 ---
             df_plataformas_2025['cat_enc'] = df_plataformas_2025['dias_encerramento'].apply(
                 lambda x: 'Investigação em Andamento' if x <= 0 else ('<=180' if x <= 180 else '>180')
             )
             
-            # --- FIGURA 3.3.8: Evolução Temporal de Encerramento (2023-2025) ---
+            # --- FIGURA 3.3.8 ---
             with col_enc_1:
                 df_g8 = df_enc_hist[df_enc_hist['Ano'].isin([2023, 2024])].copy()
                 
@@ -535,9 +575,9 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                 )
                 fig8.update_xaxes(showgrid=False, zeroline=False, linecolor='black', tickfont=dict(size=12))
                 fig8.update_yaxes(title_text="Número de Processos", showgrid=False, zeroline=False, linecolor='black', tickfont=dict(size=12), title_font=dict(size=14))
-                st.plotly_chart(fig8, use_container_width=True)
+                st.plotly_chart(ajustar_fontes(fig8), use_container_width=True)
                 
-            # --- FIGURA 3.3.9: Encerramento por Bacia Sedimentar (2025) ---
+            # --- FIGURA 3.3.9 ---
             with col_enc_2:
                 bacia_stats_9 = [{
                     'Bacia': 'Total', 
@@ -571,13 +611,12 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                 )
                 fig9.update_xaxes(showgrid=False, zeroline=False, linecolor='black', tickangle=45, tickfont=dict(size=12))
                 fig9.update_yaxes(showgrid=False, zeroline=False, linecolor='black', tickfont=dict(size=12))
-                st.plotly_chart(fig9, use_container_width=True)
+                st.plotly_chart(ajustar_fontes(fig9), use_container_width=True)
 
         # =========================================================================
-        # ABA 4: CONSOLIDAÇÃO POR PRODUTO (PIPELINE OPTIMIZADO + DOWNLOAD DE-PARA)
+        # ABA 4: CONSOLIDAÇÃO POR PRODUTO
         # =========================================================================
         with tab_produtos:
-            # --- 1. FUNÇÕES INTERNAS DE HIGIENIZAÇÃO, PADRONIZAÇÃO E FORMATAÇÃO ---
             def limpar_volume_safely(val):
                 if pd.isna(val): return 0.0
                 if isinstance(val, (int, float)): return float(val)
@@ -597,8 +636,6 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
             def padronizar_nome_produto(nome):
                 if pd.isna(nome): return "Não Informado"
                 n = str(nome).strip()
-                # Normaliza texto: remove acentos e converte para minúsculas
-                # Exemplo: "Família" vira "familia"
                 n_clean = unicodedata.normalize('NFKD', n).encode('ASCII', 'ignore').decode('utf-8').lower()
                 if n_clean.startswith('erifon'): return "Erifon HD 603 HP > 1,89%"
                 if n_clean.startswith('stack'): return "Stack Magic Eco F ≥ 1%"
@@ -607,31 +644,18 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                 if any(term in n_clean for term in ('br-mul', 'br_mul', 'brmul')): return "BR-Mul"
                 if 'agua oleosa' in n_clean: return "Água Oleosa"
                 if 'petroleo' in n_clean: return "Petróleo"
-                if 'oleo diesel' in n_clean:return "Óleo Diesel"
-                    
-                # CAPTURA TUDO: 'mobil dte', 'mobildte', 'mobilgear', '"Família" Mobil', etc.
-                if 'mobil' in n_clean: 
-                    return "Óleos Hidráulicos Mobil"
-                
+                if 'oleo diesel' in n_clean: return "Óleo Diesel"
+                if 'mobil' in n_clean: return "Óleos Hidráulicos Mobil"
                 if 'lubrax' in n_clean: return "Lubrax"
                 if 'hyspin' in n_clean: return "Hyspin"
-                
                 if 'oceanic' in n_clean:
                     if '525' in n_clean: return "Oceanic HW 525"
                     if '443' in n_clean: return "Oceanic HW 443"
-                
                 if 'tellus' in n_clean: return "Shell Tellus"
                 if 'transaqua' in n_clean: return "Transaqua DW"
-                
-                if any(term in n_clean for term in ('fcba', 'completacao aquoso', 'completacao base agua')): 
-                    return "FCBA (Fluido de Completação de Base Aquosa)"
-                    
-                if 'fpba' in n_clean or ('perfuracao' in n_clean and 'base agua' in n_clean): 
-                    return "FPBA (Fluido de Perfuração de Base Aquosa)"
-                    
-                if 'produto oleoso' in n_clean or n_clean in ('oleo lubrificante',): 
-                    return "Produto Oleoso Genérico"
-                
+                if any(term in n_clean for term in ('fcba', 'completacao aquoso', 'completacao base agua')): return "FCBA (Fluido de Completação de Base Aquosa)"
+                if 'fpba' in n_clean or ('perfuracao' in n_clean and 'base agua' in n_clean): return "FPBA (Fluido de Perfuração de Base Aquosa)"
+                if 'produto oleoso' in n_clean or n_clean in ('oleo lubrificante',): return "Produto Oleoso Genérico"
                 return n
 
             def formatar_volume_br(val):
@@ -648,7 +672,6 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                 if c == 'Não Avaliado': return '#F37021' if fig_num in [11, 13] else '#E74C3C'
                 return '#BDC3C7'
 
-            # --- 2. EXTRAÇÃO GLOBAL DA BASE UNIFICADA COM PRESERVAÇÃO DO NOME ORIGINAL ---
             registros_brutos = []
             for _, row in df_plataformas_2025.iterrows():
                 eq_atual = str(row.get('equipment', 'Não Informado')).strip()
@@ -659,7 +682,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                     if marca_original != '' and marca_original.upper() != 'PREENCHER' and marca_original.lower() != 'nan':
                         vol = limpar_volume_safely(row.get(f'qtd_p{p}'))
                         registros_brutos.append({
-                            'Produto_Original': marca_original, # Mapeia o nome original para auditoria
+                            'Produto_Original': marca_original,
                             'Produto': padronizar_nome_produto(marca_original),
                             'Volume': vol,
                             'Equipamento': eq_atual,
@@ -669,18 +692,15 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
             df_todas_liberacoes = pd.DataFrame(registros_brutos) if registros_brutos else pd.DataFrame(columns=['Produto_Original', 'Produto', 'Volume', 'Equipamento', 'Processo'])
             
             if not df_todas_liberacoes.empty:
-                # Enriquecimento com as colunas reais da planilha produtos_consolidados.xlsx
                 df_todas_liberacoes = df_todas_liberacoes.merge(df_map_prod, how='left', left_on='Produto', right_on='Nome do Produto')
                 df_todas_liberacoes['Classe de Risco'] = df_todas_liberacoes['Classe de Risco'].fillna('Não Avaliado')
                 df_todas_liberacoes['Tipo'] = df_todas_liberacoes['Tipo'].fillna('Sem Informação')
                 
-                # ISOLAMENTO DE LÍQUIDOS NOCIVOS: Remove registros marcados como "Não se Aplica"
                 df_liquidos = df_todas_liberacoes[
                     (df_todas_liberacoes['Classe de Risco'] != 'Não se Aplica') & 
                     (df_todas_liberacoes['Tipo'] != 'Não se Aplica')
                 ].copy()
 
-                # --- 3. MAPEAMENTO REATIVO DE EQUIPAMENTOS ATÔMICOS ---
                 equipamentos_unicos_filtro = set()
                 for eq_row in df_liquidos['Equipamento']:
                     eq_str = str(eq_row).strip()
@@ -695,7 +715,6 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                 list_classe = sorted(list(df_liquidos['Classe de Risco'].unique()))
                 list_tipo = sorted(list(df_liquidos['Tipo'].unique()))
 
-                # --- 4. SEÇÃO DE FILTROS AVANÇADOS DA ABA ---
                 st.subheader("Filtros Analíticos de Líquidos Nocivos")
                 col_p1, col_p2, col_p3 = st.columns(3)
                 
@@ -712,7 +731,6 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                     items = [item.strip() for item in eq_str.split(',') if item.strip()]
                     return any(item in selecionados for item in items)
 
-                # Filtragem direta via Pandas preservando os metadados da planilha
                 df_prod_filtrado = df_liquidos[
                     (df_liquidos['Equipamento'].apply(lambda x: verificar_aderencia(x, equip_selecionados))) &
                     (df_liquidos['Classe de Risco'].isin(classes_selecionadas)) &
@@ -720,7 +738,6 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                 ].copy()
 
                 if not df_prod_filtrado.empty:
-                    # Métricas de texto para a Figura 3.3.10
                     tot_acid_25 = len(df_plataformas_2025)
                     df_plataformas_2025['cont_prods'] = df_plataformas_2025.apply(lambda r: sum([1 for i in ['1','2','3'] if pd.notna(r.get(f'marca_p{i}')) and str(r.get(f'marca_p{i}')).strip().upper() not in ['','PREENCHER', 'NAN']]), axis=1)
                     acid_2_simultaneos = (df_plataformas_2025['cont_prods'] >= 2).sum()
@@ -731,7 +748,6 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                     
                     st.write("---")
                     
-                    # --- 5. INDICADORES EXECUTIVOS FLUIDOS ---
                     col_m1, col_m2, col_m3 = st.columns(3)
                     with col_m1: st.metric("Total de Produtos Distintos", f"{df_prod_filtrado['Produto'].nunique()}")
                     with col_m2: st.metric("Total de Liberações de Produtos", f"{len(df_prod_filtrado)}")
@@ -740,11 +756,8 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                     st.write("---")
                     st.markdown(f"***Texto Auxiliar:** Em **{acid_2_simultaneos}** dos **{tot_acid_25}** acidentes ocorridos em 2025 houve a liberação simultânea de dois ou mais produtos distintos. Houve **{acid_gas}** acidentes envolvendo a liberação de gás natural, num volume total de aproximadamente **{vol_gas:,.2f}** m3, que foram excluídos desta análise. Desta forma, o universo amostral nos gráficos e tabela a seguir é de **{len(df_prod_filtrado)}** produtos líquidos liberados em **{df_prod_filtrado['Processo'].nunique()}** processos.*")
                     
-                    # --- NOVO REQUISITO: EXPORTADOR DE CORRELAÇÃO DE NOMES (DE-PARA) ---
-                    import io
                     buffer_excel = io.BytesIO()
                     with pd.ExcelWriter(buffer_excel, engine='openpyxl') as writer:
-                        # Extrai a correlação única do universo mapeado
                         df_correlacao = df_liquidos[['Produto_Original', 'Produto']].drop_duplicates().sort_values('Produto_Original')
                         df_correlacao.columns = ['Nome Original (Planilha)', 'Nome Harmonizado (Painel)']
                         df_correlacao.to_excel(writer, index=False, sheet_name="De-Para_Produtos")
@@ -758,10 +771,9 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                     )
                     st.write("---")
                     
-                    # --- 6. PLOTAGEM DOS 5 GRÁFICOS DINÂMICOS (FIGURAS 3.3.10 a 3.3.14) ---
                     col_graf1, col_graf2 = st.columns(2)
                     
-                    # FIGURA 3.3.10: Tipo (Oleosos x Não Oleosos)
+                    # FIGURA 3.3.10
                     with col_graf1:
                         df_g10 = df_prod_filtrado.groupby('Tipo').agg(Vol=('Volume','sum'), Acid=('Processo','nunique')).reset_index()
                         fig10 = make_subplots(specs=[[{"secondary_y": True}]])
@@ -774,9 +786,9 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                         fig10.update_xaxes(showgrid=False, linecolor='black')
                         fig10.update_yaxes(title_text="Volume de Produto Liberado (m3)", secondary_y=False, showgrid=False, linecolor='black')
                         fig10.update_yaxes(title_text="Número de Acidentes", secondary_y=True, showgrid=False, linecolor='black')
-                        st.plotly_chart(fig10, use_container_width=True)
+                        st.plotly_chart(ajustar_fontes(fig10), use_container_width=True)
 
-                    # FIGURA 3.3.11: Classe de Risco Geral
+                    # FIGURA 3.3.11
                     with col_graf2:
                         df_g11 = df_prod_filtrado.groupby('Classe de Risco').agg(Vol=('Volume','sum'), Acid=('Processo','nunique')).reset_index()
                         ordem_11 = ['A', 'B', 'D', 'Não Classificado', 'Não Avaliado']
@@ -791,9 +803,9 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                         fig11.update_xaxes(showgrid=False, linecolor='black')
                         fig11.update_yaxes(title_text="Volume Liberado (m3)", secondary_y=False, showgrid=False, linecolor='black')
                         fig11.update_yaxes(title_text="Número de Acidentes", secondary_y=True, showgrid=False, linecolor='black')
-                        st.plotly_chart(fig11, use_container_width=True)
+                        st.plotly_chart(ajustar_fontes(fig11), use_container_width=True)
 
-                    # FIGURA 3.3.12: Top 20 por Ocorrência (Barras Horizontais) - ORDENAÇÃO CORRIGIDA
+                    # FIGURA 3.3.12
                     df_g12 = df_prod_filtrado.groupby(['Produto', 'Classe de Risco']).agg(Acid=('Processo','nunique')).reset_index()
                     df_g12 = df_g12.sort_values(by='Acid', ascending=False).head(20)
                     df_g12['Rank'] = [f"{i}. {p}" for i, p in enumerate(df_g12['Produto'], 1)]
@@ -804,15 +816,14 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                         if not d.empty:
                             fig12.add_trace(go.Bar(name=f'Risco {c}' if c in ['A','B','D'] else c, y=d['Rank'], x=d['Acid'], orientation='h', marker_color=get_cor_risco(c, 12), text=d['Acid'], textposition='outside'))
                     
-                    # Inverte a lista de ranking. Como o Plotly desenha de baixo para cima, o index 0 (maior) vai para o topo
                     lista_rank_eixo_y = df_g12['Rank'].tolist()[::-1]
                     
                     fig12.update_layout(barmode='stack', plot_bgcolor='white', margin=dict(t=30, b=30, l=40, r=40), legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="center", x=0.5))
                     fig12.update_xaxes(showgrid=False, zeroline=False, linecolor='black')
                     fig12.update_yaxes(showgrid=False, zeroline=False, linecolor='black', categoryorder='array', categoryarray=lista_rank_eixo_y)
-                    st.plotly_chart(fig12, use_container_width=True)
+                    st.plotly_chart(ajustar_fontes(fig12), use_container_width=True)
 
-                    # FIGURA 3.3.13: Acidentes por Faixa de Volume (BINS)
+                    # FIGURA 3.3.13
                     bins = [-float('inf'), 0.00001, 0.0001, 0.001, 0.01, 0.1, 1.0, 8.0, 200.0, float('inf')]
                     lbls = ['<= 10 mL', '10 mL < x <= 100 mL', '100 mL < x <= 1 L', '1 L < x <= 10 L', '10 L < x <= 100 L', '100 L < x <= 1 m3', '1 m3 < x <= 8 m3', '8 m3 < x <= 200 m3', 'x > 200 m3']
                     df_prod_filtrado['Faixa_Vol'] = pd.cut(df_prod_filtrado['Volume'], bins=bins, labels=lbls)
@@ -830,9 +841,9 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                     fig13.update_layout(barmode='stack', plot_bgcolor='white', margin=dict(t=30, b=30, l=40, r=40), legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="center", x=0.5))
                     fig13.update_xaxes(tickangle=45, showgrid=False, linecolor='black')
                     fig13.update_yaxes(showgrid=False, linecolor='black')
-                    st.plotly_chart(fig13, use_container_width=True)
+                    st.plotly_chart(ajustar_fontes(fig13), use_container_width=True)
 
-                    # FIGURA 3.3.14: Top 20 por Volume + Demais - EXPANDIDA E INCLINADA
+                    # FIGURA 3.3.14
                     df_g14 = df_prod_filtrado.groupby(['Produto', 'Classe de Risco']).agg(Vol=('Volume','sum'), Acid=('Processo','nunique')).reset_index().sort_values(by='Vol', ascending=False)
                     top20 = df_g14.head(20).copy()
                     demais = df_g14.iloc[20:].copy()
@@ -852,18 +863,18 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                     
                     fig14.update_layout(
                         plot_bgcolor='white', 
-                        height=650,  # <-- Estica a figura verticalmente eliminando o efeito espremido
-                        margin=dict(t=50, b=180, l=40, r=40),  # <-- Amplia o respiro inferior para acomodar os textos longos
+                        height=650, 
+                        margin=dict(t=50, b=180, l=40, r=40), 
                         legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="center", x=0.5)
                     )
-                    fig14.update_xaxes(tickangle=45, showgrid=False, linecolor='black')  # <-- Inclina os rótulos perfeitamente em 45°
+                    fig14.update_xaxes(tickangle=45, showgrid=False, linecolor='black')
                     fig14.update_yaxes(title_text="Volume Total Liberado (m3)", secondary_y=False, showgrid=False, linecolor='black')
                     fig14.update_yaxes(title_text="Volume Médio", secondary_y=True, showgrid=False, linecolor='black')
-                    st.plotly_chart(fig14, use_container_width=True)
+                    st.plotly_chart(ajustar_fontes(fig14), use_container_width=True)
 
                     st.write("---")
                     
-                    # --- 7. TABELA CORPORATIVA DE LÍQUIDOS NOCIVOS ---
+                    # --- TABELA CORPORATIVA DE LÍQUIDOS NOCIVOS ---
                     def obter_unicos(series):
                         s = set()
                         for v in series:
