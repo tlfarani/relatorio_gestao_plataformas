@@ -441,14 +441,13 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                 df_g4_melted['Ano'] = df_g4_melted['Ano'].str.replace('Rate_', '')
                 
                 fig4 = px.bar(df_g4_melted, x='Bacia Sedimentar', y='Taxa', color='Ano', barmode='group', text='Taxa', color_discrete_sequence=['#2ecc71', '#3498db', '#f39c12'], category_orders={"Ano": ["2023", "2024", "2025"]})
-                fig4.update_traces(texttemplate='%{text:.1f}', textposition='outside', textfont=dict(color='black', size=12))
+                fig4.update_traces(texttemplate='%{text:.1f}', textposition='outside', textfont=dict(color='black', size=15.6))
                 fig4.update_layout(
-                    title=dict(text="<b>Taxa de Acidentes por Produção Média Diária (2023-2025)</b>", x=0.5, font=dict(size=18, color='#1E4620')),
-                    xaxis_title="", yaxis_title="Acidentes a cada Mboe/d", plot_bgcolor='white', paper_bgcolor='white', font=dict(color='black', size=13),
+                    xaxis_title="", yaxis_title="Acidentes a cada Mboe/d", plot_bgcolor='white', paper_bgcolor='white', font=dict(color='black', size=15.6),
                     legend_title_text='', legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="center", x=0.5), margin=dict(t=100, b=50, l=50, r=50)
                 )
-                fig4.update_xaxes(showgrid=False, zeroline=False, linecolor='black', tickfont=dict(size=12))
-                fig4.update_yaxes(showgrid=False, zeroline=False, linecolor='black', tickfont=dict(size=12))
+                fig4.update_xaxes(showgrid=False, zeroline=False, linecolor='black', tickfont=dict(size=15.6, color = 'black'))
+                fig4.update_yaxes(showgrid=False, zeroline=False, showline=False, tickfont=dict(size=15.6, color='black'))
                 st.plotly_chart(ajustar_layout_grafico(fig4), use_container_width=True, config=CONFIG_EXPORTACAO)
 
         # =========================================================================
