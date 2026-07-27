@@ -17,8 +17,8 @@ CONFIG_EXPORTACAO = {
     'toImageButtonOptions': {
         'format': 'jpeg',            # Pode alterar para 'svg' se quiser gráficos vetoriais no Word
         'filename': 'grafico_ibama',
-        'height': 650,               # Altura fixa para o documento
-        'width': 1200,               # Largura fixa para o documento
+        'height': 450,               # Altura fixa para o documento, padrao 650
+        'width': 800,               # Largura fixa para o documento, padrão = 1200
         'scale': 3                   # Alta resolução (300 DPI para impressão/relatórios)
     }
 }
