@@ -372,7 +372,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
 
                 fig1.update_layout(
                     plot_bgcolor='white', paper_bgcolor='white', font=dict(color='black', size=16), legend_title_text='',
-                    legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="center", x=0.5, font=dict(size=18)), margin=dict(t=100, b=50, l=50, r=50)
+                    legend=dict(orientation="h", yanchor="bottom", y=1.06, xanchor="center", x=0.5, font=dict(size=16), entrywidth=210, entrywidthmode="pixels"), margin=dict(t=100, b=50, l=50, r=50)
                 )
                 fig1.update_xaxes(showgrid=False, zeroline=False, linecolor='black', tickfont=dict(size=18))
                 fig1.update_yaxes(title_text="Nº de Acidentes por Ano", title_font=dict(size=18, color="black"), secondary_y=False, range=[0, limite_y_comum], showgrid=False, zeroline=False, linecolor='black', tickfont=dict(size=16))
