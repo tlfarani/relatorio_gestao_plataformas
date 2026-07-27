@@ -8,38 +8,57 @@ import unicodedata
 import io
 
 # =========================================================================
-# CONFIGURAÇÃO DE ESCALA GLOBAL DE FONTES DOS GRÁFICOS
+# 1. CONFIGURAÇÕES DE VISUALIZAÇÃO E EXPORTAÇÃO DOS GRÁFICOS
 # =========================================================================
-# Exemplo: 1.0 (100% original), 1.4 (+40% de aumento), 1.2 (+20%), etc.
-MULTIPLICADOR_FONTE = 2.5 
+MULTIPLICADOR_FONTE = 1.05
 
-def ajustar_fontes(fig, fator=MULTIPLICADOR_FONTE):
+# Configuração da imagem que será salva ao clicar no ícone de câmera (download)
+CONFIG_EXPORTACAO = {
+    'toImageButtonOptions': {
+        'format': 'jpeg',            # Pode alterar para 'svg' se quiser gráficos vetoriais no Word
+        'filename': 'grafico_ibama',
+        'height': 520,               # Altura fixa para o documento, padrao 650
+        'width': 960,               # Largura fixa para o documento, padrão = 1200
+        'scale': 3                   # Alta resolução (300 DPI para impressão/relatórios)
+    }
+}
+
+def ajustar_layout_grafico(fig, fator_fonte=MULTIPLICADOR_FONTE, espessura_barra=0.6):
     """
-    Percorre a estrutura da figura do Plotly e multiplica o tamanho (size)
-    de todas as fontes ativas pelo fator desejado.
+    Ajusta proporcionalmente as fontes, a espessura das barras e a folga entre elas.
+    - espessura_barra = 0.6 mantém as barras em 60% da largura do slot disponível.
     """
-    if fator == 1.0 or fig is None:
+    if fig is None:
         return fig
     
-    fig_dict = fig.to_dict()
+    # Reduz a espessura das barras ajustando a folga (bargap = 1.0 - 0.6 = 0.4)
+    folga = 1.0 - espessura_barra
+    fig.update_layout(
+        bargap=folga,
+        bargroupgap=0.1
+    )
     
-    def _escalar(d):
-        if isinstance(d, dict):
-            for k, v in d.items():
-                # Captura todas as chaves de configuração de texto do Plotly
-                if k in ['font', 'textfont', 'tickfont', 'title_font', 'titlefont', 'hoverlabel'] and isinstance(v, dict):
-                    if 'size' in v and isinstance(v['size'], (int, float)):
-                        v['size'] = round(v['size'] * fator, 1)
-                _escalar(v)
-        elif isinstance(d, list):
-            for item in d:
-                _escalar(item)
-                
-    _escalar(fig_dict)
-    return go.Figure(fig_dict)
+    # Escala proporcional de todas as fontes internas
+    if fator_fonte != 1.0:
+        fig_dict = fig.to_dict()
+        def _escalar(d):
+            if isinstance(d, dict):
+                for k, v in d.items():
+                    if k in ['font', 'textfont', 'tickfont', 'title_font', 'titlefont', 'hoverlabel'] and isinstance(v, dict):
+                        if 'size' in v and isinstance(v['size'], (int, float)):
+                            v['size'] = round(v['size'] * fator_fonte, 1)
+                    _escalar(v)
+            elif isinstance(d, list):
+                for item in d:
+                    _escalar(item)
+                    
+        _escalar(fig_dict)
+        return go.Figure(fig_dict)
+        
+    return fig
 
 
-# Configuração da página
+# Configuração da página Streamlit
 st.set_page_config(
     page_title="Painel de Acidentes - Plataformas",
     layout="wide",
@@ -322,7 +341,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                     )
                     fig.update_xaxes(showgrid=False, zeroline=False, linecolor='black', tickfont=dict(size=12))
                     fig.update_yaxes(showgrid=False, zeroline=False, linecolor='black', tickfont=dict(size=12))
-                    st.plotly_chart(ajustar_fontes(fig), use_container_width=True)
+                    st.plotly_chart(ajustar_layout_grafico(fig), use_container_width=True, config=CONFIG_EXPORTACAO)
             with col_t_aba1:
                 st.subheader("Base Filtrada (Dados 2025)")
                 st.dataframe(df_filtrado[['num_processo', 'instalacao', 'bacia_sedimentar', 'empresa', 'dias_encerramento']], use_container_width=True, height=350)
@@ -348,27 +367,18 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                 limite_y_comum = max(acid_vals_g1) * 1.25 
                 fig1 = make_subplots(specs=[[{"secondary_y": True}]])
                 
-                # Barras (Nº de Acidentes)
-                fig1.add_trace(go.Bar(x=df_g1['Ano'], y=df_g1['Acidentes'], name="Nº de Acidentes", marker_color='#3498db', text=df_g1['Acidentes'], textposition='outside', textfont=dict(color='black', size=13)), secondary_y=False)
-                
-                # Linha (Taxa de Acidentes)
-                fig1.add_trace(go.Scatter(x=df_g1['Ano'], y=df_g1['Taxa'], name="Acidentes / Mboe/d", mode='lines+markers+text', line=dict(color="#2c3e50", width=3), marker=dict(size=8), text=df_g1['Taxa'], textposition='top center', textfont=dict(color="black", size=13)), secondary_y=True)
+                fig1.add_trace(go.Bar(x=df_g1['Ano'], y=df_g1['Acidentes'], name="Nº de Acidentes", marker_color='#3498db', text=df_g1['Acidentes'], textposition='outside', textfont=dict(color='black', size=20)), secondary_y=False)
+                fig1.add_trace(go.Scatter(x=df_g1['Ano'], y=df_g1['Taxa'], name="Acidentes / Mboe/d", mode='lines+markers+text', line=dict(color="#2c3e50", width=4), marker=dict(size=12), text=df_g1['Taxa'], textposition='top center', textfont=dict(color="black", size=20)), secondary_y=True)
 
-                # Layout Geral e Legenda
                 fig1.update_layout(
-                    plot_bgcolor='white', paper_bgcolor='white', font=dict(color='black', size=11), legend_title_text='',
-                    legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="center", x=0.5, font=dict(size=12)), margin=dict(t=100, b=50, l=50, r=50)
+                    plot_bgcolor='white', paper_bgcolor='white', font=dict(color='black', size=16), legend_title_text='',
+                    legend=dict(orientation="h", yanchor="bottom", y=1.06, xanchor="center", x=0.5, font=dict(size=16), entrywidth=210, entrywidthmode="pixels"), margin=dict(t=100, b=50, l=50, r=50)
                 )
-
-                # Eixo X (Anos)
-                fig1.update_xaxes(showgrid=False, zeroline=False, linecolor='black', tickfont=dict(size=12))
-
-                # Eixo Y Principal (Nº de Acidentes)
-                fig1.update_yaxes(title_text="Nº de Acidentes por Ano", title_font=dict(size=12, color="black"), secondary_y=False, range=[0, limite_y_comum], showgrid=False, zeroline=False, linecolor='black', tickfont=dict(size=11))
-                # Eixo Y Secundário (Taxa)
-                fig1.update_yaxes(title_text="Acidentes / Mboe/d", title_font=dict(size=12, color="black"), secondary_y=True, range=[0, limite_y_comum], showgrid=False, zeroline=False, linecolor='black', tickfont=dict(size=11))
+                fig1.update_xaxes(showgrid=False, zeroline=False, linecolor='black', tickfont=dict(size=18))
+                fig1.update_yaxes(title_text="Nº de Acidentes por Ano", title_font=dict(size=18, color="black"), secondary_y=False, range=[0, limite_y_comum], showgrid=False, zeroline=False, linecolor='black', tickfont=dict(size=16))
+                fig1.update_yaxes(title_text="Acidentes / Mboe/d", title_font=dict(size=18, color="black"), secondary_y=True, range=[0, limite_y_comum], showgrid=False, zeroline=False, linecolor='black', tickfont=dict(size=16))
                 
-                st.plotly_chart(ajustar_fontes(fig1), use_container_width=True)
+                st.plotly_chart(ajustar_layout_grafico(fig1), use_container_width=True, config=CONFIG_EXPORTACAO)
                 
             # --- GRÁFICO 2: Distribuição Anual de Ocorrências por Bacia (2023-2025) ---
             with col_linha1_dir:
@@ -389,7 +399,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                 )
                 fig2.update_xaxes(showgrid=False, zeroline=False, linecolor='black', tickfont=dict(size=12))
                 fig2.update_yaxes(showgrid=False, zeroline=False, linecolor='black', tickfont=dict(size=12))
-                st.plotly_chart(ajustar_fontes(fig2), use_container_width=True)
+                st.plotly_chart(ajustar_layout_grafico(fig2), use_container_width=True, config=CONFIG_EXPORTACAO)
                 
             st.write("---")
             col_linha2_esq, col_linha2_dir = st.columns(2)
@@ -410,7 +420,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                 )
                 fig3.update_xaxes(showgrid=False, zeroline=False, linecolor='black', tickfont=dict(size=12))
                 fig3.update_yaxes(showgrid=False, zeroline=False, linecolor='black', tickfont=dict(size=12))
-                st.plotly_chart(ajustar_fontes(fig3), use_container_width=True)
+                st.plotly_chart(ajustar_layout_grafico(fig3), use_container_width=True, config=CONFIG_EXPORTACAO)
                 
             # --- GRÁFICO 4: Taxa de Acidentes por Produção (Santos e Campos - 2023-2025) ---
             with col_linha2_dir:
@@ -431,7 +441,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                 )
                 fig4.update_xaxes(showgrid=False, zeroline=False, linecolor='black', tickfont=dict(size=12))
                 fig4.update_yaxes(showgrid=False, zeroline=False, linecolor='black', tickfont=dict(size=12))
-                st.plotly_chart(ajustar_fontes(fig4), use_container_width=True)
+                st.plotly_chart(ajustar_layout_grafico(fig4), use_container_width=True, config=CONFIG_EXPORTACAO)
 
         # =========================================================================
         # ABA 3: ATENDIMENTO A EMERGÊNCIAS (TRAMITAÇÃO + ENCERRAMENTOS)
@@ -467,7 +477,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                 fig5.update_xaxes(showgrid=False, zeroline=False, linecolor='black', tickfont=dict(size=12))
                 fig5.update_yaxes(title_text="Número de Acidentes Atendidos", secondary_y=False, range=[0, limite_y_atend], showgrid=False, zeroline=False, linecolor='black', tickfont=dict(size=12))
                 fig5.update_yaxes(title_text="Tempo Médio (Dias)", secondary_y=True, range=[0, limite_y_atend], showgrid=False, zeroline=False, linecolor='black', tickfont=dict(size=12))
-                st.plotly_chart(ajustar_fontes(fig5), use_container_width=True)
+                st.plotly_chart(ajustar_layout_grafico(fig5), use_container_width=True, config=CONFIG_EXPORTACAO)
                 
             # --- FIGURA 3.3.7: Forma de Atendimento (2025) ---
             with col_atend_2:
@@ -484,7 +494,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                     )
                     fig7.update_xaxes(title="", showgrid=False, zeroline=False, linecolor='black', tickfont=dict(size=12))
                     fig7.update_yaxes(title="Volume de Documentos/Ações", showgrid=False, zeroline=False, linecolor='black', range=[0, df_formas['Quantidade'].max()*1.2], tickfont=dict(size=12))
-                    st.plotly_chart(ajustar_fontes(fig7), use_container_width=True)
+                    st.plotly_chart(ajustar_layout_grafico(fig7), use_container_width=True, config=CONFIG_EXPORTACAO)
                 else:
                     st.info("Dados de 'Forma de atendimento' insuficientes na planilha de 2025.")
             
@@ -536,7 +546,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
             fig6.update_xaxes(showgrid=False, zeroline=False, linecolor='black', tickangle=45, row=1, col=2, tickfont=dict(size=12))
             fig6.update_yaxes(visible=False, secondary_y=False, row=1, col=2) 
             fig6.update_yaxes(title_text="Tempo Médio até 1º Atendimento (Dias)", secondary_y=True, range=[0, limite_y_facets], showgrid=False, zeroline=False, linecolor='black', row=1, col=2, tickfont=dict(size=12))
-            st.plotly_chart(ajustar_fontes(fig6), use_container_width=True)
+            st.plotly_chart(ajustar_layout_grafico(fig6), use_container_width=True, config=CONFIG_EXPORTACAO)
             
             # --- PRAZOS DE ENCERRAMENTO DA INVESTIGAÇÃO ---
             st.write("---")
@@ -575,7 +585,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                 )
                 fig8.update_xaxes(showgrid=False, zeroline=False, linecolor='black', tickfont=dict(size=12))
                 fig8.update_yaxes(title_text="Número de Processos", showgrid=False, zeroline=False, linecolor='black', tickfont=dict(size=12), title_font=dict(size=14))
-                st.plotly_chart(ajustar_fontes(fig8), use_container_width=True)
+                st.plotly_chart(ajustar_layout_grafico(fig8), use_container_width=True, config=CONFIG_EXPORTACAO)
                 
             # --- FIGURA 3.3.9 ---
             with col_enc_2:
@@ -611,7 +621,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                 )
                 fig9.update_xaxes(showgrid=False, zeroline=False, linecolor='black', tickangle=45, tickfont=dict(size=12))
                 fig9.update_yaxes(showgrid=False, zeroline=False, linecolor='black', tickfont=dict(size=12))
-                st.plotly_chart(ajustar_fontes(fig9), use_container_width=True)
+                st.plotly_chart(ajustar_layout_grafico(fig9), use_container_width=True, config=CONFIG_EXPORTACAO)
 
         # =========================================================================
         # ABA 4: CONSOLIDAÇÃO POR PRODUTO
@@ -786,7 +796,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                         fig10.update_xaxes(showgrid=False, linecolor='black')
                         fig10.update_yaxes(title_text="Volume de Produto Liberado (m3)", secondary_y=False, showgrid=False, linecolor='black')
                         fig10.update_yaxes(title_text="Número de Acidentes", secondary_y=True, showgrid=False, linecolor='black')
-                        st.plotly_chart(ajustar_fontes(fig10), use_container_width=True)
+                        st.plotly_chart(ajustar_layout_grafico(fig10), use_container_width=True, config=CONFIG_EXPORTACAO)
 
                     # FIGURA 3.3.11
                     with col_graf2:
@@ -803,7 +813,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                         fig11.update_xaxes(showgrid=False, linecolor='black')
                         fig11.update_yaxes(title_text="Volume Liberado (m3)", secondary_y=False, showgrid=False, linecolor='black')
                         fig11.update_yaxes(title_text="Número de Acidentes", secondary_y=True, showgrid=False, linecolor='black')
-                        st.plotly_chart(ajustar_fontes(fig11), use_container_width=True)
+                        st.plotly_chart(ajustar_layout_grafico(fig11), use_container_width=True, config=CONFIG_EXPORTACAO)
 
                     # FIGURA 3.3.12
                     df_g12 = df_prod_filtrado.groupby(['Produto', 'Classe de Risco']).agg(Acid=('Processo','nunique')).reset_index()
@@ -821,7 +831,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                     fig12.update_layout(barmode='stack', plot_bgcolor='white', margin=dict(t=30, b=30, l=40, r=40), legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="center", x=0.5))
                     fig12.update_xaxes(showgrid=False, zeroline=False, linecolor='black')
                     fig12.update_yaxes(showgrid=False, zeroline=False, linecolor='black', categoryorder='array', categoryarray=lista_rank_eixo_y)
-                    st.plotly_chart(ajustar_fontes(fig12), use_container_width=True)
+                    st.plotly_chart(ajustar_layout_grafico(fig12), use_container_width=True, config=CONFIG_EXPORTACAO)
 
                     # FIGURA 3.3.13
                     bins = [-float('inf'), 0.00001, 0.0001, 0.001, 0.01, 0.1, 1.0, 8.0, 200.0, float('inf')]
@@ -841,7 +851,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                     fig13.update_layout(barmode='stack', plot_bgcolor='white', margin=dict(t=30, b=30, l=40, r=40), legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="center", x=0.5))
                     fig13.update_xaxes(tickangle=45, showgrid=False, linecolor='black')
                     fig13.update_yaxes(showgrid=False, linecolor='black')
-                    st.plotly_chart(ajustar_fontes(fig13), use_container_width=True)
+                    st.plotly_chart(ajustar_layout_grafico(fig13), use_container_width=True, config=CONFIG_EXPORTACAO)
 
                     # FIGURA 3.3.14
                     df_g14 = df_prod_filtrado.groupby(['Produto', 'Classe de Risco']).agg(Vol=('Volume','sum'), Acid=('Processo','nunique')).reset_index().sort_values(by='Vol', ascending=False)
@@ -870,7 +880,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                     fig14.update_xaxes(tickangle=45, showgrid=False, linecolor='black')
                     fig14.update_yaxes(title_text="Volume Total Liberado (m3)", secondary_y=False, showgrid=False, linecolor='black')
                     fig14.update_yaxes(title_text="Volume Médio", secondary_y=True, showgrid=False, linecolor='black')
-                    st.plotly_chart(ajustar_fontes(fig14), use_container_width=True)
+                    st.plotly_chart(ajustar_layout_grafico(fig14), use_container_width=True, config=CONFIG_EXPORTACAO)
 
                     st.write("---")
                     
