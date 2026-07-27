@@ -211,6 +211,10 @@ def carregar_dados_2025(caminho):
         df_filtrado['empresa'] = df_filtrado['empresa'].fillna('Não Informado').astype(str).str.strip()
     if 'bacia_sedimentar' in df_filtrado.columns:
         df_filtrado['bacia_sedimentar'] = df_filtrado['bacia_sedimentar'].fillna('Não Informada').astype(str).str.strip()
+        df_filtrado['bacia_sedimentar'] = df_filtrado['bacia_sedimentar'].replace({
+            'Camamu': 'Camamu-Almada',
+            'camamu': 'Camamu-Almada'
+        })
     if 'dias_encerramento' in df_filtrado.columns:
         df_filtrado['dias_encerramento'] = pd.to_numeric(df_filtrado['dias_encerramento'], errors='coerce').fillna(0).astype(int)
     if 'tempo_atendimento' in df_filtrado.columns:
