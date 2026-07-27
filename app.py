@@ -318,7 +318,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                 fig1.add_trace(go.Scatter(x=df_g1['Ano'], y=df_g1['Taxa'], name="Acidentes / Mboe/d", mode='lines+markers+text', line=dict(color='#2c3e50', width=3), marker=dict(size=8), text=df_g1['Taxa'], textposition='top center', textfont=dict(color='black', size=13)), secondary_y=True)
                 
                 fig1.update_layout(
-                    title=dict(text="<b>Total de Acidentes por Ano e Taxa por Produção (2021-2025)</b>", x=0.5, font=dict(size=18, color='#1E4620')),
+                    #title=dict(text="<b>Total de Acidentes por Ano e Taxa por Produção (2021-2025)</b>", x=0.5, font=dict(size=18, color='#1E4620')),
                     plot_bgcolor='white', paper_bgcolor='white', font=dict(color='black', size=13), legend_title_text='',
                     legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="center", x=0.5), margin=dict(t=100, b=50, l=50, r=50)
                 )
