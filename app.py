@@ -609,8 +609,8 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                 if 'petroleo' in n_clean: return "Petróleo"
                 if 'oleo diesel' in n_clean:return "Óleo Diesel"
                     
-                # Aceita "mobil dte", "mobildte", "mobilgear", "família mobil", "familia mobil", com ou sem aspas
-                if any(term in n_clean for term in ('mobil dte', 'mobildte', 'mobilgear', 'familia mobil')): 
+                # CAPTURA TUDO: 'mobil dte', 'mobildte', 'mobilgear', '"Família" Mobil', etc.
+                if 'mobil' in n_clean: 
                     return "Óleos Hidráulicos Mobil"
                 
                 if 'lubrax' in n_clean: return "Lubrax"
