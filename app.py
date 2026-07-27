@@ -398,8 +398,8 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                     legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="center", x=0.5, font=dict(size=15.6), entrywidth=105, entrywidthmode="pixels"), 
                     margin=dict(t=100, b=50, l=50, r=50)
                 )
-                fig2.update_xaxes(showgrid=False, zeroline=False, linecolor='black', tickfont=dict(size=14.4))
-                fig2.update_yaxes(showgrid=False, zeroline=False, linecolor='black', tickfont=dict(size=14.4))
+                fig2.update_xaxes(showgrid=False, zeroline=False, linecolor='black', tickfont=dict(size=15.6))
+                fig2.update_yaxes(showgrid=False, zeroline=False, linecolor='black', tickfont=dict(size=15.6))
                 st.plotly_chart(ajustar_layout_grafico(fig2, espessura_barra=0.85), use_container_width=True, config=CONFIG_EXPORTACAO)
                 
             st.write("---")
