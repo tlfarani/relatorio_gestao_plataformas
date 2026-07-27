@@ -401,8 +401,8 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                     legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="center", x=0.5, font=dict(size=15), entrywidth=105, entrywidthmode="pixels"), 
                     margin=dict(t=100, b=50, l=50, r=50)
                 )
-                fig2.update_xaxes(showgrid=False, zeroline=False, linecolor='black', tickfont=dict(size=15.6))
-                fig2.update_yaxes(range=[0, max_y * 1.15], showgrid=False, zeroline=False, linecolor='black', tickfont=dict(size=15.6))
+                fig2.update_xaxes(showgrid=False, zeroline=False, linecolor='black', tickfont=dict(size=18, color='black'))
+                fig2.update_yaxes(range=[0, max_y * 1.15], showgrid=False, zeroline=False, linecolor='black', title_font=dict(size=18, color='black'), tickfont=dict(size=15.6), showticklabels=False)
                 
                 st.plotly_chart(ajustar_layout_grafico(fig2, espessura_barra=0.85), use_container_width=True, config=CONFIG_EXPORTACAO)
                 
@@ -417,16 +417,17 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                 total_2025_bacias = df_g3['Acid_2025'].sum()
                 df_g3['Percentual'] = (df_g3['Acid_2025'] / total_2025_bacias * 100) if total_2025_bacias > 0 else 0
                 df_g3 = df_g3.sort_values(by='Percentual', ascending=True)
+
+                max_x = df_g3['Percentual'].max()
                 
                 fig3 = px.bar(df_g3, x='Percentual', y='Bacia Sedimentar', orientation='h', text='Percentual', color_discrete_sequence=['#3498db'])
-                fig3.update_traces(texttemplate='%{text:.2f}%', textposition='outside', textfont=dict(color='black', size=12))
+                fig3.update_traces(texttemplate='%{text:.2f}%', textposition='outside', textfont=dict(color='black', size=15.6))
                 fig3.update_layout(
-                    title=dict(text="<b>Percentual de Comunicados por Bacia Sedimentar (2025)</b>", x=0.5, font=dict(size=18, color='#1E4620')),
-                    xaxis_title="Percentual de Ocorrências (%)", yaxis_title="", plot_bgcolor='white', paper_bgcolor='white', font=dict(color='black', size=13),
+                    xaxis_title="", yaxis_title="", plot_bgcolor='white', paper_bgcolor='white', font=dict(color='black', size=15.6),
                     xaxis=dict(range=[0, 115]), margin=dict(t=100, b=50, l=50, r=50)
                 )
-                fig3.update_xaxes(showgrid=False, zeroline=False, linecolor='black', tickfont=dict(size=12))
-                fig3.update_yaxes(showgrid=False, zeroline=False, linecolor='black', tickfont=dict(size=12))
+                fig3.update_xaxes(range=[0, max_x * 1.15], showgrid=False, zeroline=False, showline=False, showticklabels=False)
+                fig3.update_yaxes( showgrid=False, zeroline=False, showline=False, tickfont=dict(size=15.6, color='black'))
                 st.plotly_chart(ajustar_layout_grafico(fig3), use_container_width=True, config=CONFIG_EXPORTACAO)
                 
             # --- GRÁFICO 4: Taxa de Acidentes por Produção (Santos e Campos - 2023-2025) ---
