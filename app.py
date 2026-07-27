@@ -391,11 +391,11 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                 df_g2_melted = df_g2_melted.sort_values('Bacia Sedimentar')
                 
                 fig2 = px.bar(df_g2_melted, x='Bacia Sedimentar', y='Acidentes', color='Ano', barmode='group', text='Acidentes', color_discrete_sequence=['#2ecc71', '#3498db', '#f39c12'], category_orders={"Ano": ["2023", "2024", "2025"]})
-                fig2.update_traces(textposition='outside', textfont=dict(color='black', size=15.6))
+                fig2.update_traces(textposition='outside', textfont=dict(color='black', size=15))
                 fig2.update_layout(
                     xaxis_title="", yaxis_title="Nº de Acidentes", plot_bgcolor='white', paper_bgcolor='white', font=dict(color='black', size=15.6),
                     legend_title_text='', 
-                    legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="center", x=0.5, font=dict(size=15.6), entrywidth=105, entrywidthmode="pixels"), 
+                    legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="center", x=0.5, font=dict(size=15), entrywidth=105, entrywidthmode="pixels"), 
                     margin=dict(t=100, b=50, l=50, r=50)
                 )
                 fig2.update_xaxes(showgrid=False, zeroline=False, linecolor='black', tickfont=dict(size=15.6))
