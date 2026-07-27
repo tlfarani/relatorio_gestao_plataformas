@@ -402,7 +402,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                     margin=dict(t=100, b=50, l=50, r=50)
                 )
                 fig2.update_xaxes(showgrid=False, zeroline=False, linecolor='black', tickfont=dict(size=18, color='black'))
-                fig2.update_yaxes(range=[0, max_y * 1.15], showgrid=False, zeroline=False, linecolor='black', title_font=dict(size=18, color='black'), tickfont=dict(size=15.6), showticklabels=False  # <-- Remove os valores (0, 50, 100, 150...) do eixo Y)
+                fig2.update_yaxes(range=[0, max_y * 1.15], showgrid=False, zeroline=False, linecolor='black', title_font=dict(size=18, color='black'), tickfont=dict(size=15.6), showticklabels=False)
                 
                 st.plotly_chart(ajustar_layout_grafico(fig2, espessura_barra=0.85), use_container_width=True, config=CONFIG_EXPORTACAO)
                 
