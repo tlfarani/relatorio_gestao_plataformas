@@ -417,6 +417,8 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                 total_2025_bacias = df_g3['Acid_2025'].sum()
                 df_g3['Percentual'] = (df_g3['Acid_2025'] / total_2025_bacias * 100) if total_2025_bacias > 0 else 0
                 df_g3 = df_g3.sort_values(by='Percentual', ascending=True)
+
+                max_x = df_g3['Percentual'].max()
                 
                 fig3 = px.bar(df_g3, x='Percentual', y='Bacia Sedimentar', orientation='h', text='Percentual', color_discrete_sequence=['#3498db'])
                 fig3.update_traces(texttemplate='%{text:.2f}%', textposition='outside', textfont=dict(color='black', size=15.6))
@@ -424,7 +426,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                     xaxis_title="", yaxis_title="", plot_bgcolor='white', paper_bgcolor='white', font=dict(color='black', size=15.6),
                     xaxis=dict(range=[0, 115]), margin=dict(t=100, b=50, l=50, r=50)
                 )
-                fig3.update_xaxes(range=[0, max_y * 1.15], showgrid=False, zeroline=False, linecolor='black', showticklabels=False)
+                fig3.update_xaxes(range=[0, max_x * 1.15], showgrid=False, zeroline=False, linecolor='black', showticklabels=False)
                 fig3.update_yaxes( showgrid=False, zeroline=False, linecolor='black', tickfont=dict(size=15.6, color='black'))
                 st.plotly_chart(ajustar_layout_grafico(fig3), use_container_width=True, config=CONFIG_EXPORTACAO)
                 
