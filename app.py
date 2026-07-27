@@ -421,7 +421,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                 fig3 = px.bar(df_g3, x='Percentual', y='Bacia Sedimentar', orientation='h', text='Percentual', color_discrete_sequence=['#3498db'])
                 fig3.update_traces(texttemplate='%{text:.2f}%', textposition='outside', textfont=dict(color='black', size=15.6))
                 fig3.update_layout(
-                    xaxis_title="Percentual de Ocorrências (%)", yaxis_title="", plot_bgcolor='white', paper_bgcolor='white', font=dict(color='black', size=15.6),
+                    xaxis_title="", yaxis_title="", plot_bgcolor='white', paper_bgcolor='white', font=dict(color='black', size=15.6),
                     xaxis=dict(range=[0, 115]), margin=dict(t=100, b=50, l=50, r=50)
                 )
                 fig3.update_xaxes(showgrid=False, zeroline=False, linecolor='black', showticklabels=False)
