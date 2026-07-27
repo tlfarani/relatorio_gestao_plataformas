@@ -390,8 +390,14 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                 df_g2_melted['Bacia Sedimentar'] = pd.Categorical(df_g2_melted['Bacia Sedimentar'], categories=bacia_ranking, ordered=True)
                 df_g2_melted = df_g2_melted.sort_values('Bacia Sedimentar')
                 
+                # Maior valor para cálculo do teto dinâmico
+                max_y = df_g2_melted['Acidentes'].max()
+                
                 fig2 = px.bar(df_g2_melted, x='Bacia Sedimentar', y='Acidentes', color='Ano', barmode='group', text='Acidentes', color_discrete_sequence=['#2ecc71', '#3498db', '#f39c12'], category_orders={"Ano": ["2023", "2024", "2025"]})
-                fig2.update_traces(textposition='outside', textfont=dict(color='black', size=15))
+                
+                # ADICIONADO: cliponaxis=False (impede que o texto seja cortado)
+                fig2.update_traces(textposition='outside', textfont=dict(color='black', size=15), cliponaxis=False)
+                
                 fig2.update_layout(
                     xaxis_title="", yaxis_title="Nº de Acidentes", plot_bgcolor='white', paper_bgcolor='white', font=dict(color='black', size=15.6),
                     legend_title_text='', 
@@ -399,11 +405,11 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                     margin=dict(t=100, b=50, l=50, r=50)
                 )
                 fig2.update_xaxes(showgrid=False, zeroline=False, linecolor='black', tickfont=dict(size=15.6))
-                fig2.update_yaxes(showgrid=False, zeroline=False, linecolor='black', tickfont=dict(size=15.6))
-                st.plotly_chart(ajustar_layout_grafico(fig2, espessura_barra=0.85), use_container_width=True, config=CONFIG_EXPORTACAO)
                 
-            st.write("---")
-            col_linha2_esq, col_linha2_dir = st.columns(2)
+                # ADICIONADO: range=[0, max_y * 1.15] (cria folga de 15% acima do valor 155)
+                fig2.update_yaxes(range=[0, max_y * 1.15], showgrid=False, zeroline=False, linecolor='black', tickfont=dict(size=15.6))
+                
+                st.plotly_chart(ajustar_layout_grafico(fig2, espessura_barra=0.85), use_container_width=True, config=CONFIG_EXPORTACAO)
             
             # --- GRÁFICO 3: Percentual de Acidentes em Bacias (2025) ---
             with col_linha2_esq:
