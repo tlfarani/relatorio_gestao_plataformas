@@ -315,27 +315,27 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                 limite_y_comum = max(acid_vals_g1) * 1.25 
                 fig1 = make_subplots(specs=[[{"secondary_y": True}]])
                 
-                # Barras (Nº de Acidentes) - Fonte do valor aumentada para 20
-                fig1.add_trace(go.Bar(x=df_g1['Ano'], y=df_g1['Acidentes'], name="Nº de Acidentes", marker_color='#3498db', text=df_g1['Acidentes'], textposition='outside', textfont=dict(color='black', size=28)), secondary_y=False)
+                # Barras (Nº de Acidentes)
+                fig1.add_trace(go.Bar(x=df_g1['Ano'], y=df_g1['Acidentes'], name="Nº de Acidentes", marker_color='#3498db', text=df_g1['Acidentes'], textposition='outside', textfont=dict(color='black', size=13)), secondary_y=False)
                 
                 # Linha (Taxa de Acidentes) - Fonte aumentada para 20 e marcadores para 12
-                fig1.add_trace(go.Scatter(x=df_g1['Ano'], y=df_g1['Taxa'], name="Acidentes / Mboe/d", mode='lines+markers+text', line=dict(color="#2c3e50", width=5.6), marker=dict(size=16.8), text=df_g1['Taxa'], textposition='top center', textfont=dict(color="black", size=28)), secondary_y=True)
+                fig1.add_trace(go.Scatter(x=df_g1['Ano'], y=df_g1['Taxa'], name="Acidentes / Mboe/d", mode='lines+markers+text', line=dict(color="#2c3e50", width=3), marker=dict(size=8), text=df_g1['Taxa'], textposition='top center', textfont=dict(color="black", size=13)), secondary_y=True)
 
                 # Layout Geral e Legenda
                 fig1.update_layout(
                     #title=dict(text="<b>Total de Acidentes por Ano e Taxa por Produção (2021-2025)</b>", x=0.5, font=dict(size=25.2, color='#1E4620')),
-                    plot_bgcolor='white', paper_bgcolor='white', font=dict(color='black', size=22.4), legend_title_text='',
-                    legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="center", x=0.5, font=dict(size=25.2)), margin=dict(t=100, b=50, l=50, r=50)
+                    plot_bgcolor='white', paper_bgcolor='white', font=dict(color='black', size=12), legend_title_text='',
+                    legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="center", x=0.5, font=dict(size=12)), margin=dict(t=100, b=50, l=50, r=50)
                 )
                 
                 # Eixo X (Anos)
-                fig1.update_xaxes(showgrid=False, zeroline=False, linecolor='black', tickfont=dict(size=25.2))
+                fig1.update_xaxes(showgrid=False, zeroline=False, linecolor='black', tickfont=dict(size=12))
                 
                 # Eixo Y Principal (Nº de Acidentes)
-                fig1.update_yaxes(title_text="Nº de Acidentes por Ano", title_font=dict(size=25.2, color="black"), secondary_y=False, range=[0, limite_y_comum], showgrid=False, zeroline=False, linecolor='black', tickfont=dict(size=22.4))
+                fig1.update_yaxes(title_text="Nº de Acidentes por Ano", title_font=dict(size=12, color="black"), secondary_y=False, range=[0, limite_y_comum], showgrid=False, zeroline=False, linecolor='black', tickfont=dict(size=12))
                 
                 # Eixo Y Secundário (Taxa)
-                fig1.update_yaxes(title_text="Acidentes / Mboe/d", title_font=dict(size=25.2, color="black"), secondary_y=True, range=[0, limite_y_comum], showgrid=False, zeroline=False, linecolor='black', tickfont=dict(size=22.4))
+                fig1.update_yaxes(title_text="Acidentes / Mboe/d", title_font=dict(size=12, color="black"), secondary_y=True, range=[0, limite_y_comum], showgrid=False, zeroline=False, linecolor='black', tickfont=dict(size=12))
                 st.plotly_chart(fig1, use_container_width=True)
                 
             # --- GRÁFICO 2: Distribuição Anual de Ocorrências por Bacia Sedimentar (2023-2025) ---
