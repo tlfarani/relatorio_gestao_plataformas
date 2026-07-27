@@ -11,7 +11,7 @@ import io
 # CONFIGURAÇÃO DE ESCALA GLOBAL DE FONTES DOS GRÁFICOS
 # =========================================================================
 # Exemplo: 1.0 (100% original), 1.4 (+40% de aumento), 1.2 (+20%), etc.
-MULTIPLICADOR_FONTE = 1.4 
+MULTIPLICADOR_FONTE = 0.4 
 
 def ajustar_fontes(fig, fator=MULTIPLICADOR_FONTE):
     """
