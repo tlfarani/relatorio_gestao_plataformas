@@ -15,7 +15,7 @@ MULTIPLICADOR_FONTE = 1
 # Configuração da imagem que será salva ao clicar no ícone de câmera (download)
 CONFIG_EXPORTACAO = {
     'toImageButtonOptions': {
-        'format': 'png',            # Pode alterar para 'svg' se quiser gráficos vetoriais no Word
+        'format': 'svg',            # Pode alterar para 'svg' se quiser gráficos vetoriais no Word
         'filename': 'grafico_ibama',
         'height': 650,               # Altura fixa para o documento
         'width': 1200,               # Largura fixa para o documento
