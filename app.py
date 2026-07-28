@@ -515,10 +515,10 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                 
                 fig5.update_layout(
                     barmode='stack', plot_bgcolor='white', paper_bgcolor='white', font=dict(color='black', size=13),
-                    legend_title_text='', legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="center", x=0.5), margin=dict(t=50, b=50, l=50, r=50)
+                    legend_title_text='', legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="center", x=0.5, color= 'black', size=15), margin=dict(t=50, b=50, l=50, r=50)
                 )
                 
-                fig5.update_xaxes(showgrid=False, zeroline=False, linecolor='black', tickfont=dict(size=12))
+                fig5.update_xaxes(showgrid=False, zeroline=False, linecolor='black', tickfont=dict(color= 'black', size=15))
                 
                 # Eixo Y Primário: Esconde números com showticklabels=False
                 fig5.update_yaxes(
@@ -529,7 +529,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                     showticklabels=False, # <-- Omitir números do eixo Y primário
                     zeroline=False, 
                     linecolor='black', 
-                    tickfont=dict(size=12)
+                    tickfont=dict(size=15, color = 'black')
                 )
                 
                 # Eixo Y Secundário: Esconde números com showticklabels=False
@@ -541,7 +541,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                     showticklabels=False, # <-- Omitir números do eixo Y secundário
                     zeroline=False, 
                     linecolor='black', 
-                    tickfont=dict(size=12)
+                    tickfont=dict(size=15, color = 'black')
                 )
                 
                 st.plotly_chart(ajustar_layout_grafico(fig5), use_container_width=True, config=CONFIG_EXPORTACAO)
