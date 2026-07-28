@@ -706,10 +706,10 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                     legend_title_text='', legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="center", x=0.5, font=dict(color='black', size=15)),
                     margin=dict(t=50, b=50, l=50, r=50)
                 )
-                fig8.update_xaxes(showgrid=False, zeroline=False, linecolor='black', tickfont=dict(size=15))
+                fig8.update_xaxes(showgrid=False, zeroline=False, linecolor='black', tickfont=dict((color='black', size=15))
                 fig8.update_yaxes(title_text="Número de Processos", 
                                   showticklabels=False, showgrid=False, zeroline=False, linecolor='black', 
-                                  tickfont=dict(size=15), title_font=dict(size=15))
+                                  title_font=dict(color='black', size=15))
                 st.plotly_chart(ajustar_layout_grafico(fig8), use_container_width=True, config=CONFIG_EXPORTACAO)
                 
             # --- FIGURA 3.3.9 ---
