@@ -814,15 +814,13 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                     if '443' in n_clean: return "Oceanic HW 443"
                 if 'tellus' in n_clean: return "Shell Tellus"
                 if 'transaqua' in n_clean: return "Transaqua DW"
-                if any(term in n_clean for term in ('fcba', 'completacao aquoso', 'completacao base agua')): return "FCBA (Fluido de Completação de Base Aquosa)"
-                if 'fpba' in n_clean or ('perfuracao' in n_clean and 'base agua' in n_clean): return "FPBA (Fluido de Perfuração de Base Aquosa)"
-                
+                                
                 # 1. Fluidos de Completação (FCBA)
                 if any(term in n_clean for term in ('fcba', 'completacao aquoso', 'completacao base agua')): 
-                    return "FCBA (Fluido de Completação de Base Aquosa)"
+                    return "Fluido de Completação de Base Aquosa"
                 # 2. Fluidos de Perfuração de Base Aquosa (FPBA)
                 if 'fpba' in n_clean or ('perfuracao' in n_clean and 'base agua' in n_clean): 
-                    return "FPBA (Fluido de Perfuração de Base Aquosa)"
+                    return "Fluido de Perfuração de Base Aquosa"
                 # 3. Fluidos Parafínicos (Captura primeiro qualquer menção a parafina)
                 if 'parafini' in n_clean:
                     return "Fluido de Perfuração de Base Não Aquosa Parafínico"
