@@ -472,9 +472,9 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                 df_g5 = pd.concat([df_g5, pd.DataFrame([nova_linha_25])], ignore_index=True)
                 df_g5['Ano'] = df_g5['Ano'].astype(str)
                 
-                max_bar_height = (df_g5['Até 30 dias'] + df_g5['Mais de 30 dias'] + df_g5['Não Atendidos']).max() + 5
+                max_bar_height = (df_g5['Até 30 dias'] + df_g5['Mais de 30 dias'] + df_g5['Não Atendidos']).max()
                 max_line_height = df_g5['Tempo Médio até 1º Atendimento'].max()
-                limite_y_atend = max(max_bar_height, max_line_height) * 1.25
+                limite_y_atend = max(max_bar_height, max_line_height) * 1.2
                 
                 fig5 = make_subplots(specs=[[{"secondary_y": True}]])
                 fig5.add_trace(go.Bar(name='Até 30 dias', x=df_g5['Ano'], y=df_g5['Até 30 dias'], marker_color='#1FA1DD', text=df_g5['Até 30 dias'], textposition='inside', textfont=dict(color='black', size=13)), secondary_y=False)
