@@ -505,8 +505,8 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                         bordercolor="#727272",
                         borderwidth=1,
                         borderpad=1,                       # Reduzido de 4 para 2 (caixa mais enxuta)
-                        yshift=10,                         # Desloca a caixa 12px para CIMA da linha
-                        font=dict(color="black", size=11), # Fonte ajustada para 11pt
+                        yshift=8,                         # Desloca a caixa 12px para CIMA da linha
+                        font=dict(color="black", size=13), # Fonte ajustada para 11pt
                         yref="y2"
                     )
                 
