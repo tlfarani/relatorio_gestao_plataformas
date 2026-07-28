@@ -570,12 +570,14 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                     df_formas['Texto'] = df_formas.apply(lambda row: f"{row['Quantidade']} ({(row['Quantidade']/tot_formas)*100:.1f}%)", axis=1)
                     
                     fig7 = px.bar(df_formas, x='Forma', y='Quantidade', text='Texto', color_discrete_sequence=['#1FA1DD'])
-                    fig7.update_traces(textposition='outside', textfont=dict(color='black', size=12))
+                    fig7.update_traces(textposition='outside', textfont=dict(color='black', size=15))
                     fig7.update_layout(
-                        plot_bgcolor='white', paper_bgcolor='white', font=dict(color='black', size=13), margin=dict(t=50, b=120, l=50, r=50)
+                        plot_bgcolor='white', paper_bgcolor='white', font=dict(color='black', size=15), margin=dict(t=50, b=120, l=50, r=50)
                     )
-                    fig7.update_xaxes(title="", showgrid=False, zeroline=False, linecolor='black', tickfont=dict(size=12))
-                    fig7.update_yaxes(title="Volume de Documentos/Ações", showgrid=False, zeroline=False, linecolor='black', range=[0, df_formas['Quantidade'].max()*1.2], tickfont=dict(size=12))
+                    fig7.update_xaxes(title="", showgrid=False, zeroline=False, linecolor='black', tickfont=dict(color='black', size=15))
+                    fig7.update_yaxes(title="Número de Documentos de Atendimento",showticklabels=False, showgrid=False, zeroline=False, linecolor='black', 
+                                      range=[0, df_formas['Quantidade'].max()*1.2], 
+                                      tickfont=dict(color='black', size=15))
                     st.plotly_chart(ajustar_layout_grafico(fig7), use_container_width=True, config=CONFIG_EXPORTACAO)
                 else:
                     st.info("Dados de 'Forma de atendimento' insuficientes na planilha de 2025.")
