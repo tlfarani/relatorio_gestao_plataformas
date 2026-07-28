@@ -825,10 +825,10 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                     return "FPBA (Fluido de Perfuração de Base Aquosa)"
                 # 3. Fluidos Parafínicos (Captura primeiro qualquer menção a parafina)
                 if 'parafini' in n_clean:
-                    return "FPBNA Parafínico (Fluido de Perfuração de Base Não Aquosa)"
+                    return "Fluido de Perfuração de Base Não Aquosa Parafínico"
                 # 4. Fluidos Olefínicos / Genéricos Não Aquosos
                 if 'olefini' in n_clean or 'fpbna' in n_clean or ('perfuracao' in n_clean and 'nao aquosa' in n_clean): 
-                    return "FPBNA Olefínico (Fluido de Perfuração de Base Não Aquosa)"
+                    return "Fluido de Perfuração de Base Não Aquosa Olefínico"
                 
                 if 'produto oleoso' in n_clean or n_clean in ('oleo lubrificante',): return "Produto Oleoso Genérico"
                 return n
