@@ -465,7 +465,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
             
             col_atend_1, col_atend_2 = st.columns(2)
             
-            # --- FIGURA 3.3.5: Evolução Temporal do Atendimento (2021-2025) ---
+            # --- GRÁFICO 5: Evolução Temporal do Atendimento (2021-2025) ---
             with col_atend_1:
                 df_g5 = df_atend_tot[df_atend_tot['Ano'].isin([2021, 2022, 2023, 2024])].copy()
                 nova_linha_25 = {'Ano': 2025, 'Até 30 dias': t_ate30, 'Mais de 30 dias': t_mais30, 'Não Atendidos': t_nao, 'Tempo Médio até 1º Atendimento': t_med}
@@ -480,7 +480,32 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                 fig5.add_trace(go.Bar(name='Até 30 dias', x=df_g5['Ano'], y=df_g5['Até 30 dias'], marker_color='#1FA1DD', text=df_g5['Até 30 dias'], textposition='inside', textfont=dict(color='black', size=13)), secondary_y=False)
                 fig5.add_trace(go.Bar(name='Mais de 30 dias', x=df_g5['Ano'], y=df_g5['Mais de 30 dias'], marker_color='#FDBB2F', text=df_g5['Mais de 30 dias'], textposition='inside', textfont=dict(color='black', size=13)), secondary_y=False)
                 fig5.add_trace(go.Bar(name='Não Atendidos', x=df_g5['Ano'], y=df_g5['Não Atendidos'], marker_color='#8BC53F', text=df_g5['Não Atendidos'], textposition='inside', textfont=dict(color='black', size=13)), secondary_y=False)
-                fig5.add_trace(go.Scatter(name='Tempo Médio', x=df_g5['Ano'], y=df_g5['Tempo Médio até 1º Atendimento'], mode='lines+markers+text', line=dict(color='#727272', width=3), marker=dict(size=9, color='#727272'), text=df_g5['Tempo Médio até 1º Atendimento'].round(0), textposition='top center', textfont=dict(color='black', size=13)), secondary_y=True)
+                
+                # 1. Linha do Tempo Médio (apenas linhas + marcadores)
+                fig5.add_trace(go.Scatter(
+                    name='Tempo Médio', 
+                    x=df_g5['Ano'], 
+                    y=df_g5['Tempo Médio até 1º Atendimento'], 
+                    mode='lines+markers', 
+                    line=dict(color='#727272', width=3), 
+                    marker=dict(size=8, color='#727272')
+                ), secondary_y=True)
+                
+                # 2. Adiciona as caixas brancas com os valores sobre a linha
+                for _, row in df_g5.iterrows():
+                    val = round(row['Tempo Médio até 1º Atendimento'])
+                    fig5.add_annotation(
+                        x=row['Ano'],
+                        y=row['Tempo Médio até 1º Atendimento'],
+                        text=f"<b>{val}</b>",
+                        showarrow=False,
+                        bgcolor="white",           # Fundo branco
+                        bordercolor="#727272",     # Cor da borda
+                        borderwidth=1,             # Espessura da borda
+                        borderpad=4,               # Espaçamento interno da caixa
+                        font=dict(color="black", size=12),
+                        yref="y2"                  # Vincula a posição ao eixo Y2 (secundário)
+                    )
                 
                 fig5.update_layout(
                     barmode='stack', plot_bgcolor='white', paper_bgcolor='white', font=dict(color='black', size=13),
@@ -489,6 +514,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                 fig5.update_xaxes(showgrid=False, zeroline=False, linecolor='black', tickfont=dict(size=12))
                 fig5.update_yaxes(title_text="Número de Acidentes Atendidos", secondary_y=False, range=[0, limite_y_atend], showgrid=False, zeroline=False, linecolor='black', tickfont=dict(size=12))
                 fig5.update_yaxes(title_text="Tempo Médio (Dias)", secondary_y=True, range=[0, limite_y_atend], showgrid=False, zeroline=False, linecolor='black', tickfont=dict(size=12))
+                
                 st.plotly_chart(ajustar_layout_grafico(fig5), use_container_width=True, config=CONFIG_EXPORTACAO)
                 
             # --- FIGURA 3.3.7: Forma de Atendimento (2025) ---
