@@ -474,14 +474,20 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                 
                 max_bar_height = (df_g5['Até 30 dias'] + df_g5['Mais de 30 dias'] + df_g5['Não Atendidos']).max()
                 max_line_height = df_g5['Tempo Médio até 1º Atendimento'].max()
-                limite_y_atend = max(max_bar_height, max_line_height) * 1.15
+                
+                # Aumentado o teto para 1.22 para criar folga suficiente no topo para os números externos
+                limite_y_atend = max(max_bar_height, max_line_height) * 1.22
                 
                 fig5 = make_subplots(specs=[[{"secondary_y": True}]])
+                
+                # Barras de Atendimento
                 fig5.add_trace(go.Bar(name='Até 30 dias', x=df_g5['Ano'], y=df_g5['Até 30 dias'], marker_color='#1FA1DD', text=df_g5['Até 30 dias'], textposition='inside', textfont=dict(color='black', size=13)), secondary_y=False)
                 fig5.add_trace(go.Bar(name='Mais de 30 dias', x=df_g5['Ano'], y=df_g5['Mais de 30 dias'], marker_color='#FDBB2F', text=df_g5['Mais de 30 dias'], textposition='inside', textfont=dict(color='black', size=13)), secondary_y=False)
-                fig5.add_trace(go.Bar(name='Não Atendidos', x=df_g5['Ano'], y=df_g5['Não Atendidos'], marker_color='#8BC53F', text=df_g5['Não Atendidos'], textposition='inside', textfont=dict(color='black', size=13)), secondary_y=False)
                 
-                # 1. Linha do Tempo Médio (apenas linhas + marcadores)
+                # "Não Atendidos": textposition='outside' e cliponaxis=False posicionam o número no topo sem cortar
+                fig5.add_trace(go.Bar(name='Não Atendidos', x=df_g5['Ano'], y=df_g5['Não Atendidos'], marker_color='#8BC53F', text=df_g5['Não Atendidos'], textposition='outside', cliponaxis=False, textfont=dict(color='black', size=13)), secondary_y=False)
+                
+                # Linha do Tempo Médio
                 fig5.add_trace(go.Scatter(
                     name='Tempo Médio', 
                     x=df_g5['Ano'], 
@@ -491,7 +497,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                     marker=dict(size=8, color='#727272')
                 ), secondary_y=True)
                 
-                # 2. Adiciona as caixas brancas com os valores sobre a linha
+                # Anotações em caixas brancas sobre a linha do Tempo Médio
                 for _, row in df_g5.iterrows():
                     val = round(row['Tempo Médio até 1º Atendimento'])
                     fig5.add_annotation(
@@ -499,21 +505,44 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                         y=row['Tempo Médio até 1º Atendimento'],
                         text=f"<b>{val}</b>",
                         showarrow=False,
-                        bgcolor="white",           # Fundo branco
-                        bordercolor="#727272",     # Cor da borda
-                        borderwidth=1,             # Espessura da borda
-                        borderpad=4,               # Espaçamento interno da caixa
+                        bgcolor="white",
+                        bordercolor="#727272",
+                        borderwidth=1,
+                        borderpad=4,
                         font=dict(color="black", size=12),
-                        yref="y2"                  # Vincula a posição ao eixo Y2 (secundário)
+                        yref="y2"
                     )
                 
                 fig5.update_layout(
                     barmode='stack', plot_bgcolor='white', paper_bgcolor='white', font=dict(color='black', size=13),
                     legend_title_text='', legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="center", x=0.5), margin=dict(t=50, b=50, l=50, r=50)
                 )
+                
                 fig5.update_xaxes(showgrid=False, zeroline=False, linecolor='black', tickfont=dict(size=12))
-                fig5.update_yaxes(title_text="Número de Acidentes Atendidos", secondary_y=False, range=[0, limite_y_atend], showgrid=False, zeroline=False, linecolor='black', tickfont=dict(size=12))
-                fig5.update_yaxes(title_text="Tempo Médio (Dias)", secondary_y=True, range=[0, limite_y_atend], showgrid=False, zeroline=False, linecolor='black', tickfont=dict(size=12))
+                
+                # Eixo Y Primário: Esconde números com showticklabels=False
+                fig5.update_yaxes(
+                    title_text="Número de Acidentes Atendidos", 
+                    secondary_y=False, 
+                    range=[0, limite_y_atend], 
+                    showgrid=False, 
+                    showticklabels=False, # <-- Omitir números do eixo Y primário
+                    zeroline=False, 
+                    linecolor='black', 
+                    tickfont=dict(size=12)
+                )
+                
+                # Eixo Y Secundário: Esconde números com showticklabels=False
+                fig5.update_yaxes(
+                    title_text="Tempo Médio (Dias)", 
+                    secondary_y=True, 
+                    range=[0, limite_y_atend], 
+                    showgrid=False, 
+                    showticklabels=False, # <-- Omitir números do eixo Y secundário
+                    zeroline=False, 
+                    linecolor='black', 
+                    tickfont=dict(size=12)
+                )
                 
                 st.plotly_chart(ajustar_layout_grafico(fig5), use_container_width=True, config=CONFIG_EXPORTACAO)
                 
