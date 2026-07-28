@@ -567,7 +567,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                     df_formas = df_plataformas_2025['forma_atendimento'].value_counts().reset_index()
                     df_formas.columns = ['Forma', 'Quantidade']
                     tot_formas = df_formas['Quantidade'].sum()
-                    df_formas['Texto'] = df_formas.apply(lambda row: f"({(row['Quantidade']/tot_formas)*100:.1f}%); {row['Quantidade']}", axis=1)
+                    df_formas['Texto'] = df_formas.apply(lambda row: f"({row['Quantidade']}; {(row['Quantidade']/tot_formas)*100:.1f}%)", axis=1)
                     
                     fig7 = px.bar(df_formas, x='Forma', y='Quantidade', text='Texto', color_discrete_sequence=['#1FA1DD'])
                     fig7.update_traces(textposition='outside', textfont=dict(color='black', size=12))
