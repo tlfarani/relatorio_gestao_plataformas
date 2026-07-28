@@ -575,7 +575,9 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                         plot_bgcolor='white', paper_bgcolor='white', font=dict(color='black', size=15), margin=dict(t=50, b=120, l=50, r=50)
                     )
                     fig7.update_xaxes(title="", showgrid=False, zeroline=False, linecolor='black', tickfont=dict(color='black', size=15))
-                    fig7.update_yaxes(title="Número de Documentos de Atendimento",showticklabels=False, showgrid=False, zeroline=False, linecolor='black', 
+                    fig7.update_yaxes(title="Número de Documentos de Atendimento",
+                                      title_font=dict(size=15, color='black'),
+                                      showticklabels=False, showgrid=False, zeroline=False, linecolor='black', 
                                       range=[0, df_formas['Quantidade'].max()*1.2], 
                                       tickfont=dict(color='black', size=15))
                     st.plotly_chart(ajustar_layout_grafico(fig7), use_container_width=True, config=CONFIG_EXPORTACAO)
