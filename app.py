@@ -946,22 +946,103 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                     
                     col_graf1, col_graf2 = st.columns(2)
                     
-                    # FIGURA 3.3.10
+                    # --- GRÁFICO 10 ---
                     with col_graf1:
                         df_g10 = df_prod_filtrado.groupby('Tipo').agg(Vol=('Volume','sum'), Acid=('Processo','nunique')).reset_index()
                         fig10 = make_subplots(specs=[[{"secondary_y": True}]])
+                        
                         cores_tp = {'Não Oleoso': '#1FA1DD', 'Oleoso': '#8BC53F', 'Sem Informação': '#BDC3C7'}
+                        cores_texto_escuras = {'Não Oleoso': '#0B5383', 'Oleoso': '#3E6B15', 'Sem Informação': '#4A5559'}
+                        
+                        max_vol = df_g10['Vol'].max() if not df_g10.empty else 100
+                        max_acid = df_g10['Acid'].max() if not df_g10.empty else 10
+                        
                         for tipo in df_g10['Tipo'].unique():
                             d = df_g10[df_g10['Tipo'] == tipo]
-                            fig10.add_trace(go.Bar(name=f"Volume {tipo}", x=d['Tipo'], y=d['Vol'], marker_color=cores_tp.get(tipo, '#BDC3C7'), text=d['Vol'].apply(lambda x: f"{x:,.1f} m3".replace('.',',')), textposition='inside', showlegend=False), secondary_y=False)
-                            fig10.add_trace(go.Scatter(name=f'Acidentes {tipo}', x=d['Tipo'], y=d['Acid'], mode='markers+text', marker=dict(color='black', size=12), text=d['Acid'], textposition='top center', textfont=dict(color='black', size=13), showlegend=False), secondary_y=True)
-                        fig10.update_layout(plot_bgcolor='white', margin=dict(t=30, b=30, l=40, r=40))
-                        fig10.update_xaxes(showgrid=False, linecolor='black')
-                        fig10.update_yaxes(title_text="Volume de Produto Liberado (m3)", secondary_y=False, showgrid=False, linecolor='black')
-                        fig10.update_yaxes(title_text="Número de Acidentes", secondary_y=True, showgrid=False, linecolor='black')
+                            cor_barra = cores_tp.get(tipo, '#BDC3C7')
+                            cor_texto_barra = cores_texto_escuras.get(tipo, '#2C3E50')
+                            
+                            # Barras de Volume: valor em negrito <b>, tamanho 16, posicionado fora/acima da barra
+                            fig10.add_trace(
+                                go.Bar(
+                                    name=tipo, 
+                                    x=d['Tipo'], 
+                                    y=d['Vol'], 
+                                    marker_color=cor_barra, 
+                                    text=d['Vol'].apply(lambda x: f"<b>{x:,.1f} m3</b>".replace('.',',')), # <-- Negrito em HTML
+                                    textposition='outside',               # <-- Força o texto para FORA/ACIMA da barra
+                                    cliponaxis=False,                     # <-- Impede o corte caso o texto passe do limite
+                                    textfont=dict(color=cor_texto_barra, size=16), # <-- Fonte 16 na cor escura
+                                    showlegend=True
+                                ), 
+                                secondary_y=False
+                            )
+                            
+                            # Pontos de Acidentes
+                            fig10.add_trace(
+                                go.Scatter(
+                                    name=f'Acidentes {tipo}', 
+                                    x=d['Tipo'], 
+                                    y=d['Acid'], 
+                                    mode='markers+text', 
+                                    marker=dict(color='black', size=12), 
+                                    text=d['Acid'], 
+                                    textposition='top center', 
+                                    textfont=dict(color='black', size=15), 
+                                    showlegend=False
+                                ), 
+                                secondary_y=True
+                            )
+                        
+                        fig10.update_layout(
+                            plot_bgcolor='white', 
+                            paper_bgcolor='white', 
+                            font=dict(color='black', size=15),
+                            legend_title_text='', 
+                            legend=dict(
+                                orientation="h", 
+                                yanchor="bottom", 
+                                y=1.05, 
+                                xanchor="center", 
+                                x=0.5, 
+                                font=dict(size=15, color='black')
+                            ),
+                            margin=dict(t=60, b=40, l=40, r=40)
+                        )
+                        
+                        fig10.update_xaxes(
+                            showgrid=False, 
+                            zeroline=False, 
+                            showticklabels=False, 
+                            linecolor='black'
+                        )
+                        
+                        # Eixo Y Primário: Teto em 1.25 para dar respiro ao texto em negrito acima da barra
+                        fig10.update_yaxes(
+                            title_text="Volume de Produto Liberado (m3)", 
+                            title_font=dict(size=15, color='black'),
+                            secondary_y=False, 
+                            range=[0, max_vol * 1.25], 
+                            showgrid=False, 
+                            zeroline=False, 
+                            showticklabels=False, 
+                            linecolor='black'
+                        )
+                        
+                        fig10.update_yaxes(
+                            title_text="Número de Acidentes", 
+                            title_font=dict(size=15, color='black'),
+                            secondary_y=True, 
+                            range=[0, max_acid * 1.25],
+                            showgrid=False, 
+                            zeroline=False, 
+                            showticklabels=False, 
+                            linecolor='black'
+                        )
+                        
                         st.plotly_chart(ajustar_layout_grafico(fig10), use_container_width=True, config=CONFIG_EXPORTACAO)
 
-                    # FIGURA 3.3.11
+                    # FIGURA 3.3.11 ----
                     with col_graf2:
                         df_g11 = df_prod_filtrado.groupby('Classe de Risco').agg(Vol=('Volume','sum'), Acid=('Processo','nunique')).reset_index()
                         ordem_11 = ['A', 'B', 'D', 'Não Classificado', 'Não Avaliado']
