@@ -951,7 +951,6 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                         df_g10 = df_prod_filtrado.groupby('Tipo').agg(Vol=('Volume','sum'), Acid=('Processo','nunique')).reset_index()
                         fig10 = make_subplots(specs=[[{"secondary_y": True}]])
                         
-                        # Cores originais das barras e versões mais escuras para os textos internos
                         cores_tp = {'Não Oleoso': '#1FA1DD', 'Oleoso': '#8BC53F', 'Sem Informação': '#BDC3C7'}
                         cores_texto_escuras = {'Não Oleoso': '#0B5383', 'Oleoso': '#3E6B15', 'Sem Informação': '#4A5559'}
                         
@@ -963,17 +962,18 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                             cor_barra = cores_tp.get(tipo, '#BDC3C7')
                             cor_texto_barra = cores_texto_escuras.get(tipo, '#2C3E50')
                             
-                            # Barras de Volume com legenda no topo e texto na cor mais escura
+                            # Barras de Volume: valor em negrito <b>, tamanho 16, posicionado fora/acima da barra
                             fig10.add_trace(
                                 go.Bar(
                                     name=tipo, 
                                     x=d['Tipo'], 
                                     y=d['Vol'], 
                                     marker_color=cor_barra, 
-                                    text=d['Vol'].apply(lambda x: f"{x:,.1f} m3".replace('.',',')), 
-                                    textposition='inside', 
-                                    textfont=dict(color=cor_texto_barra, size=15), # Texto da barra em cor mais escura
-                                    showlegend=True # Ativa a legenda por categoria
+                                    text=d['Vol'].apply(lambda x: f"<b>{x:,.1f} m3</b>".replace('.',',')), # <-- Negrito em HTML
+                                    textposition='outside',               # <-- Força o texto para FORA/ACIMA da barra
+                                    cliponaxis=False,                     # <-- Impede o corte caso o texto passe do limite
+                                    textfont=dict(color=cor_texto_barra, size=16), # <-- Fonte 16 na cor escura
+                                    showlegend=True
                                 ), 
                                 secondary_y=False
                             )
@@ -994,7 +994,6 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                                 secondary_y=True
                             )
                         
-                        # Configuração de Layout e Legenda Centralizada no Topo
                         fig10.update_layout(
                             plot_bgcolor='white', 
                             paper_bgcolor='white', 
@@ -1011,41 +1010,39 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                             margin=dict(t=60, b=40, l=40, r=40)
                         )
                         
-                        # Eixo X: Remove nomes das classes
                         fig10.update_xaxes(
                             showgrid=False, 
                             zeroline=False, 
-                            showticklabels=False, # Omite os nomes das classes no eixo X
+                            showticklabels=False, 
                             linecolor='black'
                         )
                         
-                        # Eixo Y Primário (Volume): Alinha zero, remove linha transversal e oculta números
+                        # Eixo Y Primário: Teto em 1.25 para dar respiro ao texto em negrito acima da barra
                         fig10.update_yaxes(
                             title_text="Volume de Produto Liberado (m3)", 
                             title_font=dict(size=15, color='black'),
                             secondary_y=False, 
-                            range=[0, max_vol * 1.15],
+                            range=[0, max_vol * 1.25], 
                             showgrid=False, 
-                            zeroline=False, # Elimina a linha transversal inferior
-                            showticklabels=False, # Omite números do eixo Y
+                            zeroline=False, 
+                            showticklabels=False, 
                             linecolor='black'
                         )
                         
-                        # Eixo Y Secundário (Acidentes): Alinha zero e oculta números
                         fig10.update_yaxes(
                             title_text="Número de Acidentes", 
                             title_font=dict(size=15, color='black'),
                             secondary_y=True, 
-                            range=[0, max_acid * 1.15],
+                            range=[0, max_acid * 1.25],
                             showgrid=False, 
                             zeroline=False, 
-                            showticklabels=False, # Omite números do eixo Y
+                            showticklabels=False, 
                             linecolor='black'
                         )
                         
                         st.plotly_chart(ajustar_layout_grafico(fig10), use_container_width=True, config=CONFIG_EXPORTACAO)
 
-                    # FIGURA 3.3.11
+                    # FIGURA 3.3.11 ----
                     with col_graf2:
                         df_g11 = df_prod_filtrado.groupby('Classe de Risco').agg(Vol=('Volume','sum'), Acid=('Processo','nunique')).reset_index()
                         ordem_11 = ['A', 'B', 'D', 'Não Classificado', 'Não Avaliado']
