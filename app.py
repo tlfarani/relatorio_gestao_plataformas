@@ -465,7 +465,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
             
             col_atend_1, col_atend_2 = st.columns(2)
             
-            # --- FIGURA 3.3.5: Evolução Temporal do Atendimento (2021-2025) ---
+           # --- GRÁFICO 5: Evolução Temporal do Atendimento (2021-2025) ---
             with col_atend_1:
                 df_g5 = df_atend_tot[df_atend_tot['Ano'].isin([2021, 2022, 2023, 2024])].copy()
                 nova_linha_25 = {'Ano': 2025, 'Até 30 dias': t_ate30, 'Mais de 30 dias': t_mais30, 'Não Atendidos': t_nao, 'Tempo Médio até 1º Atendimento': t_med}
@@ -474,24 +474,94 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                 
                 max_bar_height = (df_g5['Até 30 dias'] + df_g5['Mais de 30 dias'] + df_g5['Não Atendidos']).max()
                 max_line_height = df_g5['Tempo Médio até 1º Atendimento'].max()
-                limite_y_atend = max(max_bar_height, max_line_height) * 1.15
+                limite_y_atend = max(max_bar_height, max_line_height) * 1.22
                 
                 fig5 = make_subplots(specs=[[{"secondary_y": True}]])
+                
+                # Barras de Atendimento
                 fig5.add_trace(go.Bar(name='Até 30 dias', x=df_g5['Ano'], y=df_g5['Até 30 dias'], marker_color='#1FA1DD', text=df_g5['Até 30 dias'], textposition='inside', textfont=dict(color='black', size=13)), secondary_y=False)
                 fig5.add_trace(go.Bar(name='Mais de 30 dias', x=df_g5['Ano'], y=df_g5['Mais de 30 dias'], marker_color='#FDBB2F', text=df_g5['Mais de 30 dias'], textposition='inside', textfont=dict(color='black', size=13)), secondary_y=False)
-                fig5.add_trace(go.Bar(name='Não Atendidos', x=df_g5['Ano'], y=df_g5['Não Atendidos'], marker_color='#8BC53F', text=df_g5['Não Atendidos'], textposition='inside', textfont=dict(color='black', size=13)), secondary_y=False)
-                fig5.add_trace(go.Scatter(name='Tempo Médio', x=df_g5['Ano'], y=df_g5['Tempo Médio até 1º Atendimento'], mode='lines+markers+text', line=dict(color='#727272', width=3), marker=dict(size=9, color='#727272'), text=df_g5['Tempo Médio até 1º Atendimento'].round(0), textposition='top center', textfont=dict(color='black', size=13)), secondary_y=True)
+                fig5.add_trace(go.Bar(name='Não Atendidos', x=df_g5['Ano'], y=df_g5['Não Atendidos'], marker_color='#8BC53F', text=df_g5['Não Atendidos'], textposition='outside', cliponaxis=False, textfont=dict(color='black', size=13)), secondary_y=False)
+                
+                # Linha do Tempo Médio
+                fig5.add_trace(go.Scatter(
+                    name='Tempo Médio', 
+                    x=df_g5['Ano'], 
+                    y=df_g5['Tempo Médio até 1º Atendimento'], 
+                    mode='lines+markers', 
+                    line=dict(color='#727272', width=3), 
+                    marker=dict(size=8, color='#727272')
+                ), secondary_y=True)
+                
+                # Anotações em caixas brancas ajustadas (com yshift e bordas menores)
+                for _, row in df_g5.iterrows():
+                    val = round(row['Tempo Médio até 1º Atendimento'])
+                    fig5.add_annotation(
+                        x=row['Ano'],
+                        y=row['Tempo Médio até 1º Atendimento'],
+                        text=f"<b>{val}</b>",
+                        showarrow=False,
+                        bgcolor="white",
+                        bordercolor="#727272",
+                        borderwidth=1,
+                        borderpad=1,                       # Reduzido de 4 para 2 (caixa mais enxuta)
+                        yshift=8,                         # Desloca a caixa 12px para CIMA da linha
+                        font=dict(color="black", size=13), # Fonte ajustada para 11pt
+                        yref="y2"
+                    )
                 
                 fig5.update_layout(
-                    barmode='stack', plot_bgcolor='white', paper_bgcolor='white', font=dict(color='black', size=13),
-                    legend_title_text='', legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="center", x=0.5), margin=dict(t=50, b=50, l=50, r=50)
+                    barmode='stack', 
+                    plot_bgcolor='white', 
+                    paper_bgcolor='white', 
+                    font=dict(color='black', size=15),
+                    legend_title_text='', 
+                    legend=dict(
+                        orientation="h", 
+                        yanchor="bottom", 
+                        y=1.02, 
+                        xanchor="center", 
+                        x=0.5,
+                        font=dict(size=15, color='black')  # Legendas em fonte 15 e cor preta
+                    ), 
+                    margin=dict(t=50, b=50, l=50, r=50)
                 )
-                fig5.update_xaxes(showgrid=False, zeroline=False, linecolor='black', tickfont=dict(size=12))
-                fig5.update_yaxes(title_text="Número de Acidentes Atendidos", secondary_y=False, range=[0, limite_y_atend], showgrid=False, zeroline=False, linecolor='black', tickfont=dict(size=12))
-                fig5.update_yaxes(title_text="Tempo Médio (Dias)", secondary_y=True, range=[0, limite_y_atend], showgrid=False, zeroline=False, linecolor='black', tickfont=dict(size=12))
+                
+                # Eixo X: Anos em fonte 15 e cor preta
+                fig5.update_xaxes(
+                    showgrid=False, 
+                    zeroline=False, 
+                    linecolor='black', 
+                    tickfont=dict(size=15, color='black')
+                )
+                
+                # Eixo Y Primário: Título em fonte 15 e cor preta (sem números)
+                fig5.update_yaxes(
+                    title_text="Número de Acidentes Atendidos", 
+                    title_font=dict(size=15, color='black'),
+                    secondary_y=False, 
+                    range=[0, limite_y_atend], 
+                    showgrid=False, 
+                    showticklabels=False, 
+                    zeroline=False, 
+                    linecolor='black'
+                )
+                
+                # Eixo Y Secundário: Título em fonte 15 e cor preta (sem números)
+                fig5.update_yaxes(
+                    title_text="Tempo Médio (Dias)", 
+                    title_font=dict(size=15, color='black'),
+                    secondary_y=True, 
+                    range=[0, limite_y_atend], 
+                    showgrid=False, 
+                    showticklabels=False, 
+                    zeroline=False, 
+                    linecolor='black'
+                )
+                
                 st.plotly_chart(ajustar_layout_grafico(fig5), use_container_width=True, config=CONFIG_EXPORTACAO)
                 
-            # --- FIGURA 3.3.7: Forma de Atendimento (2025) ---
+            # --- GRÁFICO 7: Forma de Atendimento (2025) ---
             with col_atend_2:
                 if 'forma_atendimento' in df_plataformas_2025.columns and not df_plataformas_2025['forma_atendimento'].dropna().empty:
                     df_formas = df_plataformas_2025['forma_atendimento'].value_counts().reset_index()
@@ -512,7 +582,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
             
             st.write("---")
             
-            # --- FIGURA 3.3.6: Fusão Avançada de Eixos Lado a Lado (2024-2025) ---
+            # --- GRÁFICO 6: Fusão Avançada de Eixos Lado a Lado (2024-2025) ---
             ordem_bacias = ["Total", "Campos", "Santos", "Sergipe-Alagoas", "Espírito Santo", "Potiguar", "Ceará", "Camamu-Almada"]
             
             df_b24_c = df_atend_b24.rename(columns={'Tempo Médio até 1º Atendimento': 'Tempo Médio'})
@@ -532,10 +602,11 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
             max_l_h = max(df_b24_c['Tempo Médio'].max(), df_b25_c['Tempo Médio'].max())
             limite_y_facets = max(max_b_h, max_l_h) * 1.15
             
+            # Função auxiliar atualizada com fontes internas das barras em 15pt
             def add_bars_dots(fig, df_data, col_idx):
-                fig.add_trace(go.Bar(name='Até 30 dias', x=df_data['Bacia'], y=df_data['Até 30 dias'], marker_color='#1FA1DD', text=df_data['Até 30 dias'], textposition='inside', textfont=dict(color='black', size=11), showlegend=(col_idx==1)), row=1, col=col_idx, secondary_y=False)
-                fig.add_trace(go.Bar(name='Mais de 30 dias', x=df_data['Bacia'], y=df_data['Mais de 30 dias'], marker_color='#FDBB2F', text=df_data['Mais de 30 dias'], textposition='inside', textfont=dict(color='black', size=11), showlegend=(col_idx==1)), row=1, col=col_idx, secondary_y=False)
-                fig.add_trace(go.Bar(name='Não Atendidos', x=df_data['Bacia'], y=df_data['Não Atendidos'], marker_color='#8BC53F', text=df_data['Não Atendidos'], textposition='inside', textfont=dict(color='black', size=11), showlegend=(col_idx==1)), row=1, col=col_idx, secondary_y=False)
+                fig.add_trace(go.Bar(name='Até 30 dias', x=df_data['Bacia'], y=df_data['Até 30 dias'], marker_color='#1FA1DD', text=df_data['Até 30 dias'], textposition='inside', textfont=dict(color='black', size=15), showlegend=(col_idx==1)), row=1, col=col_idx, secondary_y=False)
+                fig.add_trace(go.Bar(name='Mais de 30 dias', x=df_data['Bacia'], y=df_data['Mais de 30 dias'], marker_color='#FDBB2F', text=df_data['Mais de 30 dias'], textposition='inside', textfont=dict(color='black', size=15), showlegend=(col_idx==1)), row=1, col=col_idx, secondary_y=False)
+                fig.add_trace(go.Bar(name='Não Atendidos', x=df_data['Bacia'], y=df_data['Não Atendidos'], marker_color='#8BC53F', text=df_data['Não Atendidos'], textposition='inside', textfont=dict(color='black', size=15), showlegend=(col_idx==1)), row=1, col=col_idx, secondary_y=False)
                 fig.add_trace(go.Scatter(name='Tempo Médio por Bacia', x=df_data['Bacia'], y=df_data['Tempo Médio'], mode='markers', marker=dict(size=8, color='black'), showlegend=(col_idx==1)), row=1, col=col_idx, secondary_y=True)
             
             add_bars_dots(fig6, df_b24_c, 1)
@@ -546,19 +617,58 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
             fig6.add_hline(y=media_total_2024, line_dash="dash", line_color="black", row=1, col=1, secondary_y=True)
             fig6.add_hline(y=media_total_2025, line_dash="dash", line_color="black", row=1, col=2, secondary_y=True)
             
+            # Atualiza os subtítulos "2024" e "2025" do topo das colunas
+            fig6.for_each_annotation(lambda a: a.update(font=dict(size=15, color='black')))
+            
             fig6.update_layout(
-                barmode='stack', plot_bgcolor='white', paper_bgcolor='white', font=dict(color='black', size=13),
-                legend_title_text='', legend=dict(orientation="h", yanchor="bottom", y=1.08, xanchor="center", x=0.5), margin=dict(t=80, b=60, l=60, r=60)
+                barmode='stack', 
+                plot_bgcolor='white', 
+                paper_bgcolor='white', 
+                font=dict(color='black', size=15),
+                legend_title_text='', 
+                legend=dict(
+                    orientation="h", 
+                    yanchor="bottom", 
+                    y=1.08, 
+                    xanchor="center", 
+                    x=0.5,
+                    font=dict(size=15, color='black') # Legenda em 15pt preta
+                ), 
+                margin=dict(t=80, b=60, l=60, r=60)
             )
             
-            fig6.update_xaxes(showgrid=False, zeroline=False, linecolor='black', tickangle=45, row=1, col=1, tickfont=dict(size=12))
-            fig6.update_yaxes(title_text="Número de Acidentes Atendidos", secondary_y=False, range=[0, limite_y_facets], showgrid=False, zeroline=False, linecolor='black', tickfont=dict(size=12))
+            # Eixo X: Nomes das Bacias em 15pt e cor preta
+            fig6.update_xaxes(showgrid=False, zeroline=False, linecolor='black', tickangle=45, tickfont=dict(size=15, color='black'))
+            
+            # Eixo Y Primário (Título em 15pt | Números mantidos em 12pt)
+            fig6.update_yaxes(
+                title_text="Número de Acidentes Atendidos", 
+                title_font=dict(size=15, color='black'),
+                secondary_y=False, 
+                range=[0, limite_y_facets], 
+                showgrid=False, 
+                zeroline=False, 
+                linecolor='black', 
+                row=1, col=1, 
+                tickfont=dict(size=12)
+            )
             fig6.update_yaxes(visible=False, secondary_y=True, row=1, col=1) 
             
-            fig6.update_xaxes(showgrid=False, zeroline=False, linecolor='black', tickangle=45, row=1, col=2, tickfont=dict(size=12))
+            # Eixo Y Secundário (Título em 15pt | Números mantidos em 12pt)
             fig6.update_yaxes(visible=False, secondary_y=False, row=1, col=2) 
-            fig6.update_yaxes(title_text="Tempo Médio até 1º Atendimento (Dias)", secondary_y=True, range=[0, limite_y_facets], showgrid=False, zeroline=False, linecolor='black', row=1, col=2, tickfont=dict(size=12))
-            st.plotly_chart(ajustar_layout_grafico(fig6), use_container_width=True, config=CONFIG_EXPORTACAO)
+            fig6.update_yaxes(
+                title_text="Tempo Médio até 1º Atendimento (Dias)", 
+                title_font=dict(size=15, color='black'),
+                secondary_y=True, 
+                range=[0, limite_y_facets], 
+                showgrid=False, 
+                zeroline=False, 
+                linecolor='black', 
+                row=1, col=2, 
+                tickfont=dict(size=12)
+            )
+            
+            st.plotly_chart(ajustar_layout_grafico(fig6), use_container_width=True, config=CONFIG_EXPORTACAO)           
             
             # --- PRAZOS DE ENCERRAMENTO DA INVESTIGAÇÃO ---
             st.write("---")
