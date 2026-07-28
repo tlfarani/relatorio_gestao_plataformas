@@ -598,11 +598,11 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
             
             fig6 = make_subplots(rows=1, cols=2, subplot_titles=("<b>2024</b>", "<b>2025</b>"), specs=[[{"secondary_y": True}, {"secondary_y": True}]], horizontal_spacing=0.00)
             
+            # Cálculo da altura limite única para unificar todas as escalas
             max_b_h = max((df_b24_c['Até 30 dias'] + df_b24_c['Mais de 30 dias'] + df_b24_c['Não Atendidos']).max(), (df_b25_c['Até 30 dias'] + df_b25_c['Mais de 30 dias'] + df_b25_c['Não Atendidos']).max())
             max_l_h = max(df_b24_c['Tempo Médio'].max(), df_b25_c['Tempo Médio'].max())
             limite_y_facets = max(max_b_h, max_l_h) * 1.15
             
-            # Função auxiliar atualizada com fontes internas das barras em 15pt
             def add_bars_dots(fig, df_data, col_idx):
                 fig.add_trace(go.Bar(name='Até 30 dias', x=df_data['Bacia'], y=df_data['Até 30 dias'], marker_color='#1FA1DD', text=df_data['Até 30 dias'], textposition='inside', textfont=dict(color='black', size=15), showlegend=(col_idx==1)), row=1, col=col_idx, secondary_y=False)
                 fig.add_trace(go.Bar(name='Mais de 30 dias', x=df_data['Bacia'], y=df_data['Mais de 30 dias'], marker_color='#FDBB2F', text=df_data['Mais de 30 dias'], textposition='inside', textfont=dict(color='black', size=15), showlegend=(col_idx==1)), row=1, col=col_idx, secondary_y=False)
@@ -617,7 +617,6 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
             fig6.add_hline(y=media_total_2024, line_dash="dash", line_color="black", row=1, col=1, secondary_y=True)
             fig6.add_hline(y=media_total_2025, line_dash="dash", line_color="black", row=1, col=2, secondary_y=True)
             
-            # Atualiza os subtítulos "2024" e "2025" do topo das colunas
             fig6.for_each_annotation(lambda a: a.update(font=dict(size=15, color='black')))
             
             fig6.update_layout(
@@ -632,38 +631,33 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                     y=1.08, 
                     xanchor="center", 
                     x=0.5,
-                    font=dict(size=15, color='black') # Legenda em 15pt preta
+                    font=dict(size=15, color='black')
                 ), 
                 margin=dict(t=80, b=60, l=60, r=60)
             )
             
-            # Eixo X: Nomes das Bacias em 15pt e cor preta
             fig6.update_xaxes(showgrid=False, zeroline=False, linecolor='black', tickangle=45, tickfont=dict(size=15, color='black'))
             
-            # Eixo Y Primário (Título em 15pt | Números mantidos em 12pt)
+            # --- UNIFICAÇÃO HARMONIZADA DE TODOS OS EIXOS Y ---
+            # 1. Garante que todos os 4 eixos tenham EXATAMENTE a mesma escala [0, limite_y_facets]
+            fig6.update_yaxes(range=[0, limite_y_facets], showgrid=False, zeroline=False, linecolor='black')
+            
+            # 2. Configurações visuais do Subplot 1 (2024)
             fig6.update_yaxes(
                 title_text="Número de Acidentes Atendidos", 
                 title_font=dict(size=15, color='black'),
                 secondary_y=False, 
-                range=[0, limite_y_facets], 
-                showgrid=False, 
-                zeroline=False, 
-                linecolor='black', 
                 row=1, col=1, 
                 tickfont=dict(size=12)
             )
             fig6.update_yaxes(visible=False, secondary_y=True, row=1, col=1) 
             
-            # Eixo Y Secundário (Título em 15pt | Números mantidos em 12pt)
+            # 3. Configurações visuais do Subplot 2 (2025)
             fig6.update_yaxes(visible=False, secondary_y=False, row=1, col=2) 
             fig6.update_yaxes(
                 title_text="Tempo Médio até 1º Atendimento (Dias)", 
                 title_font=dict(size=15, color='black'),
                 secondary_y=True, 
-                range=[0, limite_y_facets], 
-                showgrid=False, 
-                zeroline=False, 
-                linecolor='black', 
                 row=1, col=2, 
                 tickfont=dict(size=12)
             )
