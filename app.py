@@ -676,7 +676,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                 lambda x: 'Investigação em Andamento' if x <= 0 else ('<=180' if x <= 180 else '>180')
             )
             
-            # --- FIGURA 3.3.8 ---
+            # --- GRÁFICO 8 ---
             with col_enc_1:
                 df_g8 = df_enc_hist[df_enc_hist['Ano'].isin([2023, 2024])].copy()
                 
@@ -693,21 +693,47 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                 df_g8 = pd.concat([df_g8, pd.DataFrame([linha_25])], ignore_index=True)
                 df_g8['Ano'] = df_g8['Ano'].astype(str)
                 
+                # 1. Calcula a soma das classes para obter o total de cada ano
+                df_g8['Total'] = df_g8['<=180'] + df_g8['>180'] + df_g8['Investigação em Andamento']
+                max_total8 = df_g8['Total'].max()
+                
                 fig8 = go.Figure()
-                fig8.add_trace(go.Bar(name='Até 180 dias (6 meses)', x=df_g8['Ano'], y=df_g8['<=180'], marker_color='#1FA1DD', text=df_g8['<=180'], textposition='inside', textfont=dict(color='black', size=13)))
-                fig8.add_trace(go.Bar(name='Mais de 180 dias', x=df_g8['Ano'], y=df_g8['>180'], marker_color='#FDBB2F', text=df_g8['>180'], textposition='inside', textfont=dict(color='black', size=13)))
-                fig8.add_trace(go.Bar(name='Em Andamento', x=df_g8['Ano'], y=df_g8['Investigação em Andamento'], marker_color='#8BC53F', text=df_g8['Investigação em Andamento'], textposition='inside', textfont=dict(color='black', size=13)))
+                fig8.add_trace(go.Bar(name='Até 180 dias (6 meses)', x=df_g8['Ano'], y=df_g8['<=180'], marker_color='#1FA1DD', 
+                                      text=df_g8['<=180'], textposition='inside', textfont=dict(color='black', size=15)))
+                fig8.add_trace(go.Bar(name='Mais de 180 dias', x=df_g8['Ano'], y=df_g8['>180'], marker_color='#FDBB2F', 
+                                      text=df_g8['>180'], textposition='inside', textfont=dict(color='black', size=15)))
+                fig8.add_trace(go.Bar(name='Em Andamento', x=df_g8['Ano'], y=df_g8['Investigação em Andamento'], marker_color='#8BC53F', 
+                                      text=df_g8['Investigação em Andamento'], textposition='inside', textfont=dict(color='black', size=15)))
+                
+                # 2. Adiciona os totais acima das barras empilhadas
+                for _, row in df_g8.iterrows():
+                    fig8.add_annotation(
+                        x=row['Ano'],
+                        y=row['Total'],
+                        text=f"<b>{row['Total']}</b>",
+                        showarrow=False,
+                        yshift=10, # Eleva o texto 10px acima do topo da barra
+                        font=dict(color='black', size=15)
+                    )
                 
                 fig8.update_layout(
-                    barmode='stack', plot_bgcolor='white', paper_bgcolor='white', font=dict(color='black', size=13),
-                    legend_title_text='', legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="center", x=0.5),
+                    barmode='stack', plot_bgcolor='white', paper_bgcolor='white', font=dict(color='black', size=15),
+                    legend_title_text='', legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="center", x=0.5, font=dict(color='black', size=15)),
                     margin=dict(t=50, b=50, l=50, r=50)
                 )
-                fig8.update_xaxes(showgrid=False, zeroline=False, linecolor='black', tickfont=dict(size=12))
-                fig8.update_yaxes(title_text="Número de Processos", showgrid=False, zeroline=False, linecolor='black', tickfont=dict(size=12), title_font=dict(size=14))
+                fig8.update_xaxes(showgrid=False, zeroline=False, linecolor='black', tickfont=dict(color='black', size=15))
+                
+                # 3. Adicionado range para criar margem no topo e evitar corte do total
+                fig8.update_yaxes(
+                    title_text="", 
+                    range=[0, max_total8 * 1.15],
+                    showticklabels=False, showgrid=False, zeroline=False, showline=False, 
+                    title_font=dict(color='black', size=15)
+                )
+                
                 st.plotly_chart(ajustar_layout_grafico(fig8), use_container_width=True, config=CONFIG_EXPORTACAO)
                 
-            # --- FIGURA 3.3.9 ---
+            # --- GRÁFICO 9 ---
             with col_enc_2:
                 bacia_stats_9 = [{
                     'Bacia': 'Total', 
@@ -730,17 +756,22 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                 df_g9 = df_g9.sort_values('Bacia').dropna(subset=['Bacia'])
                 
                 fig9 = go.Figure()
-                fig9.add_trace(go.Bar(name='Até 180 dias (6 meses)', x=df_g9['Bacia'], y=df_g9['<=180'], marker_color='#1FA1DD', text=df_g9['<=180'], textposition='inside', textfont=dict(color='black', size=11), showlegend=True))
-                fig9.add_trace(go.Bar(name='Mais de 180 dias', x=df_g9['Bacia'], y=df_g9['>180'], marker_color='#FDBB2F', text=df_g9['>180'], textposition='inside', textfont=dict(color='black', size=11), showlegend=True))
-                fig9.add_trace(go.Bar(name='Em Andamento', x=df_g9['Bacia'], y=df_g9['Investigação em Andamento'], marker_color='#8BC53F', text=df_g9['Investigação em Andamento'], textposition='inside', textfont=dict(color='black', size=11), showlegend=True))
+                fig9.add_trace(go.Bar(name='Até 180 dias (6 meses)', x=df_g9['Bacia'], y=df_g9['<=180'], marker_color='#1FA1DD', text=df_g9['<=180'], 
+                                      textposition='inside', textfont=dict(color='black', size=15), showlegend=True))
+                fig9.add_trace(go.Bar(name='Mais de 180 dias', x=df_g9['Bacia'], y=df_g9['>180'], marker_color='#FDBB2F', text=df_g9['>180'], 
+                                      textposition='inside', textfont=dict(color='black', size=15), showlegend=True))
+                fig9.add_trace(go.Bar(name='Em Andamento', x=df_g9['Bacia'], y=df_g9['Investigação em Andamento'], marker_color='#8BC53F', 
+                                      text=df_g9['Investigação em Andamento'], textposition='inside', textfont=dict(color='black', size=15), showlegend=True))
                 
                 fig9.update_layout(
-                    barmode='stack', plot_bgcolor='white', paper_bgcolor='white', font=dict(color='black', size=13),
-                    legend_title_text='', legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="center", x=0.5),
+                    barmode='stack', plot_bgcolor='white', paper_bgcolor='white', font=dict(color='black', size=15),
+                    legend_title_text='', legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="center", x=0.5, font=dict(color='black', size=15)),
                     margin=dict(t=50, b=50, l=50, r=50)
                 )
-                fig9.update_xaxes(showgrid=False, zeroline=False, linecolor='black', tickangle=45, tickfont=dict(size=12))
-                fig9.update_yaxes(showgrid=False, zeroline=False, linecolor='black', tickfont=dict(size=12))
+                fig9.update_xaxes(showgrid=False, zeroline=False, linecolor='black', tickangle=45, 
+                                  tickfont=dict(color='black', size=15))
+                fig9.update_yaxes(showticklabels=False, showgrid=False, zeroline=False, showline=False, 
+                                  title_font=dict(color='black', size=15))
                 st.plotly_chart(ajustar_layout_grafico(fig9), use_container_width=True, config=CONFIG_EXPORTACAO)
 
         # =========================================================================
