@@ -733,7 +733,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                 
                 st.plotly_chart(ajustar_layout_grafico(fig8), use_container_width=True, config=CONFIG_EXPORTACAO)
                 
-            # --- FIGURA 3.3.9 ---
+            # --- GRÁFICO 9 ---
             with col_enc_2:
                 bacia_stats_9 = [{
                     'Bacia': 'Total', 
@@ -756,17 +756,22 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                 df_g9 = df_g9.sort_values('Bacia').dropna(subset=['Bacia'])
                 
                 fig9 = go.Figure()
-                fig9.add_trace(go.Bar(name='Até 180 dias (6 meses)', x=df_g9['Bacia'], y=df_g9['<=180'], marker_color='#1FA1DD', text=df_g9['<=180'], textposition='inside', textfont=dict(color='black', size=11), showlegend=True))
-                fig9.add_trace(go.Bar(name='Mais de 180 dias', x=df_g9['Bacia'], y=df_g9['>180'], marker_color='#FDBB2F', text=df_g9['>180'], textposition='inside', textfont=dict(color='black', size=11), showlegend=True))
-                fig9.add_trace(go.Bar(name='Em Andamento', x=df_g9['Bacia'], y=df_g9['Investigação em Andamento'], marker_color='#8BC53F', text=df_g9['Investigação em Andamento'], textposition='inside', textfont=dict(color='black', size=11), showlegend=True))
+                fig9.add_trace(go.Bar(name='Até 180 dias (6 meses)', x=df_g9['Bacia'], y=df_g9['<=180'], marker_color='#1FA1DD', text=df_g9['<=180'], 
+                                      textposition='inside', textfont=dict(color='black', size=15), showlegend=True))
+                fig9.add_trace(go.Bar(name='Mais de 180 dias', x=df_g9['Bacia'], y=df_g9['>180'], marker_color='#FDBB2F', text=df_g9['>180'], 
+                                      textposition='inside', textfont=dict(color='black', size=15), showlegend=True))
+                fig9.add_trace(go.Bar(name='Em Andamento', x=df_g9['Bacia'], y=df_g9['Investigação em Andamento'], marker_color='#8BC53F', 
+                                      text=df_g9['Investigação em Andamento'], textposition='inside', textfont=dict(color='black', size=15), showlegend=True))
                 
                 fig9.update_layout(
-                    barmode='stack', plot_bgcolor='white', paper_bgcolor='white', font=dict(color='black', size=13),
-                    legend_title_text='', legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="center", x=0.5),
+                    barmode='stack', plot_bgcolor='white', paper_bgcolor='white', font=dict(color='black', size=15),
+                    legend_title_text='', legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="center", x=0.5, font=dict(color='black', size=15),
                     margin=dict(t=50, b=50, l=50, r=50)
                 )
-                fig9.update_xaxes(showgrid=False, zeroline=False, linecolor='black', tickangle=45, tickfont=dict(size=12))
-                fig9.update_yaxes(showgrid=False, zeroline=False, linecolor='black', tickfont=dict(size=12))
+                fig9.update_xaxes(showgrid=False, zeroline=False, linecolor='black', tickangle=45, 
+                                  tickfont=dict(color='black', size=15))
+                fig9.update_yaxes(showticklabels=False, showgrid=False, zeroline=False, showline=False, 
+                                  title_font=dict(color='black', size=15))
                 st.plotly_chart(ajustar_layout_grafico(fig9), use_container_width=True, config=CONFIG_EXPORTACAO)
 
         # =========================================================================
