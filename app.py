@@ -493,7 +493,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                     marker=dict(size=8, color='#727272')
                 ), secondary_y=True)
                 
-                # Caixas brancas com valores
+                # Anotações em caixas brancas ajustadas (com yshift e bordas menores)
                 for _, row in df_g5.iterrows():
                     val = round(row['Tempo Médio até 1º Atendimento'])
                     fig5.add_annotation(
@@ -504,8 +504,9 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                         bgcolor="white",
                         bordercolor="#727272",
                         borderwidth=1,
-                        borderpad=4,
-                        font=dict(color="black", size=12),
+                        borderpad=2,                       # Reduzido de 4 para 2 (caixa mais enxuta)
+                        yshift=12,                         # Desloca a caixa 12px para CIMA da linha
+                        font=dict(color="black", size=11), # Fonte ajustada para 11pt
                         yref="y2"
                     )
                 
