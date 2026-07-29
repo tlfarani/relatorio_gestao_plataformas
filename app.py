@@ -1346,7 +1346,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                         }
                     }
                     
-                    st.plotly_chart(ajustar_layout_grafico(fig12), use_container_width=True, config=config_g12)
+                    st.plotly_chart(ajustar_layout_grafico(fig12), use_container_width=True, config=CONFIG_EXPORTACAO)
 
                     # FIGURA 3.3.13
                     bins = [-float('inf'), 0.00001, 0.0001, 0.001, 0.01, 0.1, 1.0, 8.0, 200.0, float('inf')]
