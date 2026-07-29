@@ -1292,7 +1292,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                                     text=d['Acid'], 
                                     textposition='outside',
                                     cliponaxis=False,
-                                    textfont=dict(color='black', size=15) # Fonte dos valores das barras: 15 e preta
+                                    textfont=dict(color='black', size=18) # Fonte dos valores das barras: 18 e preta
                                 )
                             )
                     
@@ -1308,9 +1308,9 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                             orientation="h", 
                             yanchor="bottom", 
                             y=1.02, 
-                            xanchor="center", 
+                            xanchor="left", 
                             x=0.5,
-                            font=dict(color='black', size=13) # Fonte da legenda: 13 e preta
+                            font=dict(color='black', size=11) # Fonte da legenda: 11 e preta
                         ),
                         margin=dict(t=50, b=30, l=40, r=40)
                     )
