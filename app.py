@@ -1159,11 +1159,14 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                                 orientation="h", 
                                 yanchor="bottom", 
                                 y=1.05, 
-                                xanchor="center", 
-                                x=0.5, 
-                                font=dict(size=18, color='black')
-                            ),
-                            margin=dict(t=60, b=40, l=40, r=40)
+                                xanchor="left",  
+                                x=0, # Alinha no canto esquerdo
+                                font=dict(color='black', size=15),
+                                entrywidth=0.45,             # Cada item ocupa 45% da largura da legenda
+                                entrywidthmode="fraction"    # Força o 3º item a quebrar para a linha de baixo
+                                ),
+                            margin=dict(t=90, b=50, l=50, r=50) # Margem superior ampliada para acomodar a legenda em 2 linhas
+                            #margin=dict(t=60, b=40, l=40, r=40)
                         )
                         
                         # Eixo X: Oculta os nomes das classes
