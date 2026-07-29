@@ -1372,25 +1372,103 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                     
                     st.plotly_chart(fig12_final, use_container_width=True, config=config_g12) #CONFIG_EXPORTACAO ou config_g12
 
-                    # FIGURA 3.3.13
+                    # --- GRÁFICO 13 ---
                     bins = [-float('inf'), 0.00001, 0.0001, 0.001, 0.01, 0.1, 1.0, 8.0, 200.0, float('inf')]
-                    lbls = ['<= 10 mL', '10 mL < x <= 100 mL', '100 mL < x <= 1 L', '1 L < x <= 10 L', '10 L < x <= 100 L', '100 L < x <= 1 m3', '1 m3 < x <= 8 m3', '8 m3 < x <= 200 m3', 'x > 200 m3']
+                    lbls = [
+                        '<= 10 mL', '10 mL < x <= 100 mL', '100 mL < x <= 1 L', 
+                        '1 L < x <= 10 L', '10 L < x <= 100 L', '100 L < x <= 1 m3', 
+                        '1 m3 < x <= 8 m3', '8 m3 < x <= 200 m3', 'x > 200 m3'
+                    ]
                     df_prod_filtrado['Faixa_Vol'] = pd.cut(df_prod_filtrado['Volume'], bins=bins, labels=lbls)
                     
                     df_g13 = df_prod_filtrado.groupby(['Faixa_Vol', 'Classe de Risco'], observed=False).agg(Acid=('Processo','nunique')).reset_index()
+                    
                     fig13 = go.Figure()
                     for c in ordem_11:
                         d = df_g13[df_g13['Classe de Risco'] == c].set_index('Faixa_Vol').reindex(lbls).reset_index().fillna({'Acid':0})
-                        fig13.add_trace(go.Bar(name=f'Risco {c}' if c in ['A','B','D'] else c, x=d['Faixa_Vol'], y=d['Acid'], marker_color=get_cor_risco(c, 13), text=d['Acid'].replace(0, ''), textposition='inside'))
+                        fig13.add_trace(
+                            go.Bar(
+                                name=f'Risco {c}' if c in ['A','B','D'] else c, 
+                                x=d['Faixa_Vol'], 
+                                y=d['Acid'], 
+                                marker_color=get_cor_risco(c, 13), 
+                                text=d['Acid'].replace(0, ''), 
+                                textposition='inside',
+                                cliponaxis=False,
+                                constraintext='none', # Desativa o encolhimento/ocultação de textos em segmentos finos
+                                textfont=dict(size=14, color='black') # Valores internos das barras em tamanho 14 na cor preta
+                            )
+                        )
                     
+                    # Totais no topo de cada coluna
                     df_g13_tot = df_prod_filtrado.groupby('Faixa_Vol', observed=False).agg(Acid=('Processo','nunique')).reset_index()
                     for _, r in df_g13_tot.iterrows():
-                        fig13.add_annotation(x=r['Faixa_Vol'], y=r['Acid'], text=f"<b>{r['Acid']}</b>", showarrow=False, yshift=15, font=dict(color="white", size=12), bgcolor="black", bordercolor="black", borderpad=3)
+                        if r['Acid'] > 0:
+                            fig13.add_annotation(
+                                x=r['Faixa_Vol'], 
+                                y=r['Acid'], 
+                                text=f"<b>{r['Acid']}</b>", 
+                                showarrow=False, 
+                                yshift=15, 
+                                font=dict(color="white", size=13), 
+                                bgcolor="black", 
+                                bordercolor="black", 
+                                borderpad=3
+                            )
                     
-                    fig13.update_layout(barmode='stack', plot_bgcolor='white', margin=dict(t=30, b=30, l=40, r=40), legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="center", x=0.5))
-                    fig13.update_xaxes(tickangle=45, showgrid=False, linecolor='black')
-                    fig13.update_yaxes(showgrid=False, linecolor='black')
-                    st.plotly_chart(ajustar_layout_grafico(fig13), use_container_width=True, config=CONFIG_EXPORTACAO)
+                    # Layout com altura estendida e fundo rigorosamente branco
+                    fig13.update_layout(
+                        barmode='stack', 
+                        plot_bgcolor='white', 
+                        paper_bgcolor='white',
+                        height=600, # Aumenta a altura da exibição na web para expandir os segmentos verticais
+                        font=dict(color='black', size=15),
+                        legend_title_text='', 
+                        legend=dict(
+                            orientation="h", 
+                            yanchor="bottom", 
+                            y=1.05, 
+                            xanchor="center", 
+                            x=0.5,
+                            font=dict(color='black', size=15) # Legenda na cor preta
+                        ),
+                        margin=dict(t=80, b=120, l=60, r=40)
+                    )
+                    
+                    # Eixo X com rótulos e marcadores pretos
+                    fig13.update_xaxes(
+                        tickangle=45, 
+                        showgrid=False, 
+                        zeroline=False,
+                        linecolor='black', 
+                        tickfont=dict(color='black', size=14)
+                    )
+                    
+                    # Eixo Y com números e linha na cor preta
+                    fig13.update_yaxes(
+                        showgrid=False, 
+                        zeroline=False,
+                        linecolor='black', 
+                        tickfont=dict(color='black', size=15)
+                    )
+                    
+                    # Processa com ajustar_layout e garante a sobreposição dos fundos brancos
+                    fig13_final = ajustar_layout_grafico(fig13)
+                    fig13_final.update_layout(
+                        plot_bgcolor='white',
+                        paper_bgcolor='white'
+                    )
+                    
+                    # Configuração de exportação EXCLUSIVA para o Gráfico 13 (com altura ampliada)
+                    config_g13 = {
+                        'toImageButtonOptions': {
+                            **CONFIG_EXPORTACAO['toImageButtonOptions'],
+                            'width': 900,
+                            'height': 550 # Altura maior na exportação para evitar ocultaçâo de números
+                        }
+                    }
+                    
+                    st.plotly_chart(fig13_final, use_container_width=True, config=config_g13)
 
                     # FIGURA 3.3.14
                     df_g14 = df_prod_filtrado.groupby(['Produto', 'Classe de Risco']).agg(Vol=('Volume','sum'), Acid=('Processo','nunique')).reset_index().sort_values(by='Vol', ascending=False)
