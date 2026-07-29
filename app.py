@@ -12,33 +12,23 @@ import io
 # =========================================================================
 MULTIPLICADOR_FONTE = 1.05
 
-# Configuração da imagem que será salva ao clicar no ícone de câmera (download)
 CONFIG_EXPORTACAO = {
     'toImageButtonOptions': {
-        'format': 'jpeg',            # Pode alterar para 'svg' se quiser gráficos vetoriais no Word
+        'format': 'jpeg',
         'filename': 'grafico_ibama',
-        'height': 520,               # Altura fixa para o documento, padrao 650
-        'width': 960,               # Largura fixa para o documento, padrão = 1200
-        'scale': 3                   # Alta resolução (300 DPI para impressão/relatórios)
+        'height': 520,
+        'width': 960,
+        'scale': 3
     }
 }
 
 def ajustar_layout_grafico(fig, fator_fonte=MULTIPLICADOR_FONTE, espessura_barra=0.6):
-    """
-    Ajusta proporcionalmente as fontes, a espessura das barras e a folga entre elas.
-    - espessura_barra = 0.6 mantém as barras em 60% da largura do slot disponível.
-    """
     if fig is None:
         return fig
     
-    # Reduz a espessura das barras ajustando a folga (bargap = 1.0 - 0.6 = 0.4)
     folga = 1.0 - espessura_barra
-    fig.update_layout(
-        bargap=folga,
-        bargroupgap=0.1
-    )
+    fig.update_layout(bargap=folga, bargroupgap=0.1)
     
-    # Escala proporcional de todas as fontes internas
     if fator_fonte != 1.0:
         fig_dict = fig.to_dict()
         def _escalar(d):
@@ -51,12 +41,74 @@ def ajustar_layout_grafico(fig, fator_fonte=MULTIPLICADOR_FONTE, espessura_barra
             elif isinstance(d, list):
                 for item in d:
                     _escalar(item)
-                    
         _escalar(fig_dict)
         return go.Figure(fig_dict)
         
     return fig
 
+# --- FUNÇÕES GLOBAIS DE TRATAMENTO DE PRODUTOS E VOLUMES ---
+def limpar_volume_safely(val):
+    if pd.isna(val): return 0.0
+    if isinstance(val, (int, float)): return float(val)
+    val_str = str(val).strip()
+    if val_str.upper() == 'PREENCHER' or val_str == '': return 0.0
+    if 'E' in val_str.upper():
+        val_str = val_str.replace(',', '.')
+        try: return float(val_str)
+        except ValueError: pass
+    if '.' in val_str and ',' in val_str:
+        val_str = val_str.replace('.', '').replace(',', '.')
+    elif ',' in val_str:
+        val_str = val_str.replace(',', '.')
+    try: return float(val_str)
+    except ValueError: return 0.0
+
+def padronizar_nome_produto(nome):
+    if pd.isna(nome): return "Não Informado"
+    n = str(nome).strip()
+    n_clean = unicodedata.normalize('NFKD', n).encode('ASCII', 'ignore').decode('utf-8').lower()
+    if n_clean.startswith('erifon'): return "Erifon HD 603 HP > 1,89%"
+    if n_clean.startswith('stack'): return "Stack Magic Eco F ≥ 1%"
+    if 'panolin' in n_clean: return "Panolins"
+    if any(term in n_clean for term in ('monoetilenoglicol', 'meg')): return "Monoetilenoglicol"
+    if any(term in n_clean for term in ('br-mul', 'br_mul', 'brmul')): return "BR-Mul"
+    if 'agua oleosa' in n_clean: return "Água Oleosa"
+    if 'petroleo' in n_clean: return "Petróleo"
+    if 'oleo diesel' in n_clean: return "Óleo Diesel"
+    if 'mobil' in n_clean: return "Óleos Hidráulicos Mobil"
+    if 'lubrax' in n_clean: return "Lubrax"
+    if 'hyspin' in n_clean: return "Hyspin"
+    if 'oceanic' in n_clean:
+        if '525' in n_clean: return "Oceanic HW 525"
+        if '443' in n_clean: return "Oceanic HW 443"
+    if 'tellus' in n_clean: return "Shell Tellus"
+    if 'transaqua' in n_clean: return "Transaqua DW"
+    
+    if any(term in n_clean for term in ('fcba', 'completacao aquoso', 'completacao base agua')): 
+        return "Fluido de Completação de Base Aquosa"
+    if 'fpba' in n_clean or ('perfuracao' in n_clean and 'base agua' in n_clean): 
+        return "Fluido de Perfuração de Base Aquosa"
+    if 'parafini' in n_clean:
+        return "Fluido de Perfuração de Base Não Aquosa Parafínico"
+    if 'olefini' in n_clean or 'fpbna' in n_clean or ('perfuracao' in n_clean and 'nao aquosa' in n_clean): 
+        return "Fluido de Perfuração de Base Não Aquosa Olefínico"
+    
+    if 'produto oleoso' in n_clean or n_clean in ('oleo lubrificante',): return "Produto Oleoso Genérico"
+    return n
+
+def formatar_volume_br(val):
+    s = f"{val:,.8f}"
+    parts = s.split('.')
+    return f"{parts[0].replace(',', '.')},{parts[1]}"
+
+def get_cor_risco(classe, fig_num):
+    c = str(classe).strip()
+    if c == 'A': return '#1FA1DD'
+    if c == 'B': return '#8BC53F'
+    if c == 'D': return '#FDBB2F'
+    if c == 'Não Classificado': return '#8e44ad'
+    if c == 'Não Avaliado': return '#F37021' if fig_num in [11, 13] else '#E74C3C'
+    return '#BDC3C7'
 
 # Configuração da página Streamlit
 st.set_page_config(
@@ -247,7 +299,6 @@ def carregar_mapeamento_produtos(caminho):
 # --- VERIFICAÇÃO DE CONFIGURAÇÃO DE ARQUIVOS ---
 if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.exists(NOME_ATENDIMENTO) and os.path.exists(NOME_ENCERRAMENTO):
     try:
-        # Carga dos bancos de dados
         df_2025_bruto = carregar_dados_2025(NOME_ACIDENTES)
         df_total_prod, df_bacias_prod = carregar_producao_historica(NOME_PRODUCAO)
         df_atend_tot, df_atend_b24 = carregar_atendimento_historico(NOME_ATENDIMENTO)
@@ -261,14 +312,27 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
             ].copy()
         else:
             df_plataformas_2025 = pd.DataFrame(columns=df_2025_bruto.columns)
+
+        # =========================================================================
+        # TRATAMENTO GLOBAL DOS PRODUTOS E VOLUMES (Para uso na Aba 1, Aba 4, etc.)
+        # =========================================================================
+        for p in ['1', '2', '3']:
+            col_marca = f'marca_p{p}'
+            col_prod = f'prod_{p}'
+            col_qtd = f'qtd_p{p}'
             
-        acid_total_2025 = len(df_plataformas_2025)
-        
-        # Cruzamento de Produção 2025
-        df_plataformas_2025['bacia_clean'] = df_plataformas_2025['bacia_sedimentar'].astype(str).str.strip().str.lower()
-        counts_2025_dict = df_plataformas_2025['bacia_clean'].value_counts().to_dict()
-        df_bacias_prod['bacia_clean'] = df_bacias_prod['Bacia Sedimentar'].astype(str).str.strip().str.lower()
-        df_bacias_prod['Acid_2025'] = df_bacias_prod['bacia_clean'].map(counts_2025_dict).fillna(0).astype(int)
+            # Limpa e formata a quantidade
+            if col_qtd in df_plataformas_2025.columns:
+                df_plataformas_2025[col_qtd] = df_plataformas_2025[col_qtd].apply(limpar_volume_safely)
+            
+            # Padroniza o nome do produto (prioriza marca comercial se informada)
+            if col_marca in df_plataformas_2025.columns and col_prod in df_plataformas_2025.columns:
+                df_plataformas_2025[col_prod] = df_plataformas_2025.apply(
+                    lambda r: padronizar_nome_produto(r[col_marca]) if pd.notna(r[col_marca]) and str(r[col_marca]).strip().upper() not in ['', 'PREENCHER', 'NAN'] 
+                    else padronizar_nome_produto(r[col_prod]), axis=1
+                )
+            elif col_prod in df_plataformas_2025.columns:
+                df_plataformas_2025[col_prod] = df_plataformas_2025[col_prod].apply(padronizar_nome_produto)
         
         # --- PROCESSAMENTO LOGÍSTICO: ATENDIMENTO OCORRÊNCIAS 2025 ---
         def classificar_tempo(t):
@@ -300,7 +364,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
             "🛢️ Consolidação por Produtos"
         ]
         tab_operacional, tab_comparativa, tab_atendimento, tab_produtos = st.tabs(sidebar_abas)
-        
+
         # =========================================================================
         # ABA 1: PAINEL OPERACIONAL DETALHADO (2025)
         # =========================================================================
@@ -350,7 +414,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
             with col_t_aba1:
                 st.subheader("Base Filtrada (Dados 2025)")
                 
-                # Nomes exatos conforme mapeados no dicionário do carregar_dados_2025
+                # Exibe produtos e quantidades já higienizados e formatados
                 colunas_tabela = [
                     'num_processo', 'instalacao', 'bacia_sedimentar', 'empresa', 'dias_encerramento',
                     'prod_1', 'qtd_p1', 
@@ -358,9 +422,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                     'prod_3', 'qtd_p3'
                 ]
                 
-                # Seleciona apenas as colunas que efetivamente existem no DataFrame
                 cols_existentes = [c for c in colunas_tabela if c in df_filtrado.columns]
-                
                 st.dataframe(df_filtrado[cols_existentes], use_container_width=True, height=350)
 
         # =========================================================================
@@ -826,85 +888,21 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
         # ABA 4: CONSOLIDAÇÃO POR PRODUTO
         # =========================================================================
         with tab_produtos:
-            def limpar_volume_safely(val):
-                if pd.isna(val): return 0.0
-                if isinstance(val, (int, float)): return float(val)
-                val_str = str(val).strip()
-                if val_str.upper() == 'PREENCHER' or val_str == '': return 0.0
-                if 'E' in val_str.upper():
-                    val_str = val_str.replace(',', '.')
-                    try: return float(val_str)
-                    except ValueError: pass
-                if '.' in val_str and ',' in val_str:
-                    val_str = val_str.replace('.', '').replace(',', '.')
-                elif ',' in val_str:
-                    val_str = val_str.replace(',', '.')
-                try: return float(val_str)
-                except ValueError: return 0.0
-
-            def padronizar_nome_produto(nome):
-                if pd.isna(nome): return "Não Informado"
-                n = str(nome).strip()
-                n_clean = unicodedata.normalize('NFKD', n).encode('ASCII', 'ignore').decode('utf-8').lower()
-                if n_clean.startswith('erifon'): return "Erifon HD 603 HP > 1,89%"
-                if n_clean.startswith('stack'): return "Stack Magic Eco F ≥ 1%"
-                if 'panolin' in n_clean: return "Panolins"
-                if any(term in n_clean for term in ('monoetilenoglicol', 'meg')): return "Monoetilenoglicol"
-                if any(term in n_clean for term in ('br-mul', 'br_mul', 'brmul')): return "BR-Mul"
-                if 'agua oleosa' in n_clean: return "Água Oleosa"
-                if 'petroleo' in n_clean: return "Petróleo"
-                if 'oleo diesel' in n_clean: return "Óleo Diesel"
-                if 'mobil' in n_clean: return "Óleos Hidráulicos Mobil"
-                if 'lubrax' in n_clean: return "Lubrax"
-                if 'hyspin' in n_clean: return "Hyspin"
-                if 'oceanic' in n_clean:
-                    if '525' in n_clean: return "Oceanic HW 525"
-                    if '443' in n_clean: return "Oceanic HW 443"
-                if 'tellus' in n_clean: return "Shell Tellus"
-                if 'transaqua' in n_clean: return "Transaqua DW"
-                                
-                # 1. Fluidos de Completação (FCBA)
-                if any(term in n_clean for term in ('fcba', 'completacao aquoso', 'completacao base agua')): 
-                    return "Fluido de Completação de Base Aquosa"
-                # 2. Fluidos de Perfuração de Base Aquosa (FPBA)
-                if 'fpba' in n_clean or ('perfuracao' in n_clean and 'base agua' in n_clean): 
-                    return "Fluido de Perfuração de Base Aquosa"
-                # 3. Fluidos Parafínicos (Captura primeiro qualquer menção a parafina)
-                if 'parafini' in n_clean:
-                    return "Fluido de Perfuração de Base Não Aquosa Parafínico"
-                # 4. Fluidos Olefínicos / Genéricos Não Aquosos
-                if 'olefini' in n_clean or 'fpbna' in n_clean or ('perfuracao' in n_clean and 'nao aquosa' in n_clean): 
-                    return "Fluido de Perfuração de Base Não Aquosa Olefínico"
-                
-                if 'produto oleoso' in n_clean or n_clean in ('oleo lubrificante',): return "Produto Oleoso Genérico"
-                return n
-
-            def formatar_volume_br(val):
-                s = f"{val:,.8f}"
-                parts = s.split('.')
-                return f"{parts[0].replace(',', '.')},{parts[1]}"
-
-            def get_cor_risco(classe, fig_num):
-                c = str(classe).strip()
-                if c == 'A': return '#1FA1DD'
-                if c == 'B': return '#8BC53F'
-                if c == 'D': return '#FDBB2F'
-                if c == 'Não Classificado': return '#8e44ad'
-                if c == 'Não Avaliado': return '#F37021' if fig_num in [11, 13] else '#E74C3C'
-                return '#BDC3C7'
-
+            # Como as funções e os dados já foram tratados globalmente, 
+            # apenas montamos a lista 'registros_brutos' diretamente de df_plataformas_2025:
             registros_brutos = []
             for _, row in df_plataformas_2025.iterrows():
                 eq_atual = str(row.get('equipment', 'Não Informado')).strip()
                 id_proc = str(row.get('num_processo', 'S/N'))
                 
                 for p in ['1', '2', '3']:
-                    marca_original = str(row.get(f'marca_p{p}')).strip() if pd.notna(row.get(f'marca_p{p}')) else ''
-                    if marca_original != '' and marca_original.upper() != 'PREENCHER' and marca_original.lower() != 'nan':
-                        vol = limpar_volume_safely(row.get(f'qtd_p{p}'))
+                    prod_nome = str(row.get(f'prod_{p}', '')).strip()
+                    vol = row.get(f'qtd_p{p}', 0.0)
+                    
+                    if prod_nome != '' and prod_nome != 'Não Informado' and vol > 0:
                         registros_brutos.append({
-                            'Produto_Original': marca_original,
-                            'Produto': padronizar_nome_produto(marca_original),
+                            'Produto_Original': row.get(f'marca_p{p}', prod_nome),
+                            'Produto': prod_nome,
                             'Volume': vol,
                             'Equipamento': eq_atual,
                             'Processo': id_proc
