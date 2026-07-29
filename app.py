@@ -1118,9 +1118,9 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                             vol_real = r['Vol']
                             
                             # --- APLICAÇÃO DO CORTE VISUAL ---
-                            # Se o volume passar de 120 (caso da Classe B), limita a altura desenhada da barra a 105
-                            if vol_real > 120:
-                                vol_desenhado = 105
+                            # Se o volume passar de 150 (caso da Classe B), limita a altura desenhada da barra a 140
+                            if vol_real > 150:
+                                vol_desenhado = 140
                                 tem_corte = True
                             else:
                                 vol_desenhado = vol_real
