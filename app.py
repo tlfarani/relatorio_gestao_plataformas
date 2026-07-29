@@ -1573,7 +1573,8 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                                 y1=y_corte,
                                 line=dict(color="white", width=26),
                                 xref="x",
-                                yref="y"
+                                yref="y",
+                                layer="above" # <-- CORREÇÃO: Força o desenho da linha branca SOBRE a barra
                             )
                             fig14.add_annotation(
                                 x=row['Rank'],
