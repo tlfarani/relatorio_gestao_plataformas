@@ -1470,7 +1470,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                     
                     st.plotly_chart(fig13_final, use_container_width=True, config=config_g13)
 
-                    # FIGURA 3.3.14
+                    # --- GRÁFICO 14 ---
                     df_g14 = df_prod_filtrado.groupby(['Produto', 'Classe de Risco']).agg(Vol=('Volume','sum'), Acid=('Processo','nunique')).reset_index().sort_values(by='Vol', ascending=False)
                     top20 = df_g14.head(20).copy()
                     demais = df_g14.iloc[20:].copy()
@@ -1481,25 +1481,180 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                     top20['Rank'] = [f"{i}. {p}" if p != 'Demais Produtos' else p for i, p in enumerate(top20['Produto'], 1)]
                     
                     fig14 = make_subplots(specs=[[{"secondary_y": True}]])
+                    
+                    cores_texto_risco_escuras = {
+                        'A': '#0B5383', 
+                        'B': '#3E6B15', 
+                        'D': '#B87B08', 
+                        'Não Classificado': '#5B2C6F', 
+                        'Não Avaliado': '#A04000'
+                    }
+                    
+                    limite_eixo_unificado = 150  # Teto unificado para ambos os eixos Y
+                    limite_corte_vol = 120      # Limite para aplicação do corte visual
+                    TAMANHO_ROTULO_BARRA = 13
+                    TAMANHO_ROTULO_PONTO = 11
+                    
                     for c in ordem_11:
                         d = top20[top20['Classe de Risco'] == c]
                         if not d.empty:
-                            fig14.add_trace(go.Bar(name=f'Risco {c}' if c in ['A','B','D'] else c, x=d['Rank'], y=d['Vol'], marker_color=get_cor_risco(c, 14), text=d['Vol'].apply(lambda x: f"{x:,.2f}".replace('.',',')), textposition='outside'), secondary_y=False)
+                            cor_barra = get_cor_risco(c, 14)
+                            cor_texto_barra = cores_texto_risco_escuras.get(c, '#2C3E50')
+                            
+                            y_desenhado = []
+                            textos_barra = []
+                            
+                            for _, row in d.iterrows():
+                                vol_real = row['Vol']
+                                
+                                # Aplica o corte na altura desenhada se for volume desproporcional
+                                if vol_real > limite_corte_vol:
+                                    y_desenhado.append(110)
+                                else:
+                                    y_desenhado.append(vol_real)
+                                
+                                # Texto da barra na cor escura correspondente
+                                textos_barra.append(f"<b>{vol_real:,.2f}</b>".replace('.',','))
+                                
+                            fig14.add_trace(
+                                go.Bar(
+                                    name=f'Risco {c}' if c in ['A','B','D'] else c, 
+                                    x=d['Rank'], 
+                                    y=y_desenhado, 
+                                    marker_color=cor_barra, 
+                                    text=textos_barra, 
+                                    textposition='outside',
+                                    cliponaxis=False,
+                                    textfont=dict(color=cor_texto_barra, size=TAMANHO_ROTULO_BARRA),
+                                    showlegend=True
+                                ), 
+                                secondary_y=False
+                            )
                     
-                    fig14.add_trace(go.Scatter(name='Volume Médio', x=top20['Rank'], y=top20['Vol_Medio'], mode='markers+text', marker=dict(color='grey', size=8), text=top20['Vol_Medio'].apply(lambda x: f"{x:,.2f}".replace('.',',')), textposition='top center', textfont=dict(color='grey'), showlegend=False), secondary_y=True)
+                    # Prepara os dados do Scatter de Volume Médio
+                    scatter_x = []
+                    scatter_y = []
+                    scatter_text = []
                     
+                    for _, row in top20.iterrows():
+                        scatter_x.append(row['Rank'])
+                        scatter_y.append(row['Vol_Medio'])
+                        
+                        # Oculta o texto do ponto quando Volume Total e Volume Médio coincidirem (mantendo só o da barra)
+                        if abs(row['Vol'] - row['Vol_Medio']) < 0.01:
+                            scatter_text.append(None)
+                        else:
+                            scatter_text.append(f"{row['Vol_Medio']:,.2f}".replace('.',','))
+                    
+                    fig14.add_trace(
+                        go.Scatter(
+                            name='Volume Médio', 
+                            x=scatter_x, 
+                            y=scatter_y, 
+                            mode='markers+text', 
+                            marker=dict(color='grey', size=8), 
+                            text=scatter_text, 
+                            textposition='top center', 
+                            textfont=dict(color='grey', size=TAMANHO_ROTULO_PONTO), # Sem <b> para evitar inflar na exportação
+                            showlegend=False
+                        ), 
+                        secondary_y=True
+                    )
+                    
+                    # Adiciona a linha branca de corte e o símbolo // onde o volume ultrapassar o limite
+                    for idx, row in top20.iterrows():
+                        if row['Vol'] > limite_corte_vol:
+                            y_corte = 60
+                            fig14.add_shape(
+                                type="line",
+                                x0=idx - 0.38,
+                                x1=idx + 0.38,
+                                y0=y_corte,
+                                y1=y_corte,
+                                line=dict(color="white", width=22),
+                                xref="x",
+                                yref="y"
+                            )
+                            fig14.add_annotation(
+                                x=row['Rank'],
+                                y=y_corte,
+                                text="<b>//</b>",
+                                showarrow=False,
+                                font=dict(color="black", size=14),
+                                bgcolor="white",
+                                borderpad=1,
+                                yref="y"
+                            )
+                    
+                    # Layout e Legenda
                     fig14.update_layout(
                         plot_bgcolor='white', 
-                        height=650, 
-                        margin=dict(t=50, b=180, l=40, r=40), 
-                        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="center", x=0.5)
+                        paper_bgcolor='white',
+                        height=720, # Aumentado na exibição web
+                        font=dict(color='black', size=14),
+                        legend_title_text='', 
+                        legend=dict(
+                            orientation="h", 
+                            yanchor="bottom", 
+                            y=1.03, 
+                            xanchor="center", 
+                            x=0.5,
+                            font=dict(color='black', size=13)
+                        ),
+                        margin=dict(t=80, b=180, l=60, r=60)
                     )
-                    fig14.update_xaxes(tickangle=45, showgrid=False, linecolor='black')
-                    fig14.update_yaxes(title_text="Volume Total Liberado (m3)", secondary_y=False, showgrid=False, linecolor='black')
-                    fig14.update_yaxes(title_text="Volume Médio", secondary_y=True, showgrid=False, linecolor='black')
-                    st.plotly_chart(ajustar_layout_grafico(fig14), use_container_width=True, config=CONFIG_EXPORTACAO)
-
-                    st.write("---")
+                    
+                    # Eixo X
+                    fig14.update_xaxes(
+                        tickangle=45, 
+                        showgrid=False, 
+                        zeroline=False,
+                        linecolor='black', 
+                        tickfont=dict(color='black', size=12)
+                    )
+                    
+                    # Eixo Y Primário (Volume Total)
+                    fig14.update_yaxes(
+                        title_text="Volume Total Liberado (m3)", 
+                        title_font=dict(size=16, color='black'),
+                        secondary_y=False, 
+                        range=[0, limite_eixo_unificado],
+                        showgrid=False, 
+                        zeroline=False,
+                        linecolor='black', 
+                        tickfont=dict(color='black', size=13)
+                    )
+                    
+                    # Eixo Y Secundário (Volume Médio) - Escala unificada idêntica
+                    fig14.update_yaxes(
+                        title_text="Volume Médio", 
+                        title_font=dict(size=16, color='black'),
+                        secondary_y=True, 
+                        range=[0, limite_eixo_unificado],
+                        showgrid=False, 
+                        zeroline=False,
+                        linecolor='black', 
+                        tickfont=dict(color='black', size=13)
+                    )
+                    
+                    # Garante o fundo 100% branco após o layout padrão do dashboard
+                    fig14_final = ajustar_layout_grafico(fig14)
+                    fig14_final.update_layout(
+                        plot_bgcolor='white',
+                        paper_bgcolor='white',
+                        height=720
+                    )
+                    
+                    # Configuração de exportação de imagem com altura e largura ampliada
+                    config_g14 = {
+                        'toImageButtonOptions': {
+                            **CONFIG_EXPORTACAO['toImageButtonOptions'],
+                            'width': 1100,
+                            'height': 600
+                        }
+                    }
+                    
+                    st.plotly_chart(fig14_final, use_container_width=True, config=config_g14)
                     
                     # --- TABELA CORPORATIVA DE LÍQUIDOS NOCIVOS ---
                     def obter_unicos(series):
