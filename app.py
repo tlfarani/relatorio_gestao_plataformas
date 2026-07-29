@@ -1091,7 +1091,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                             config=config_g10  # <-- Passa a configuração exclusiva aqui
                         )
 
-                    # --- GRÁFICO 11 (Com Deslocamento de Texto em 'Não Classificado') ---
+                    # --- GRÁFICO 11 (Com Ancoragem Correta no Ponto de Acidentes para 'Não Classificado') ---
                     with col_graf2:
                         df_g11 = df_prod_filtrado.groupby('Classe de Risco').agg(Vol=('Volume','sum'), Acid=('Processo','nunique')).reset_index()
                         ordem_11 = ['A', 'B', 'D', 'Não Classificado', 'Não Avaliado']
@@ -1125,7 +1125,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                                 vol_desenhado = vol_real
                                 tem_corte = False
                                 
-                            # --- FORMATAÇÃO E DESLOCAMENTO DO TEXTO DO VOLUME / ACIDENTES ---
+                            # --- FORMATAÇÃO DO TEXTO DE VOLUME E ACIDENTES ---
                             if classe == 'Não Classificado':
                                 texto_barra_custom = f"<b>{vol_real:,.2f} m3 ({acid_real})</b>".replace('.',',')
                                 texto_barra_trace = None # Remove texto nativo da barra
@@ -1150,19 +1150,19 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                                 secondary_y=False
                             )
                             
-                            # Anotação customizada com YSHIFT exclusivo para 'Não Classificado'
+                            # Rótulo roxo customizado para 'Não Classificado': Ancorado na altura do ponto (Y=acid_real) + yshift=18
                             if classe == 'Não Classificado':
                                 fig11.add_annotation(
                                     x=classe,
-                                    y=vol_desenhado,
+                                    y=acid_real, # Ancorado na altura do ponto preto (4)
                                     text=texto_barra_custom,
                                     showarrow=False,
-                                    yshift=15, # <-- Eleva o texto 15px para CIMA do ponto/barra
+                                    yshift=18, # Eleva 18px acima do ponto preto
                                     font=dict(color=cor_texto_barra, size=18),
-                                    yref="y"
+                                    yref="y2"
                                 )
                             
-                            # Símbolo // e Linha Branca no corte da barra B
+                            # Símbolo // e Linha Branca no corte da barra B (Mantidos width=26 e size=16)
                             if tem_corte:
                                 idx = ordem_11.index(classe)
                                 y_corte = 70
@@ -1173,7 +1173,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                                     x1=idx + 0.38,
                                     y0=y_corte,
                                     y1=y_corte,
-                                    line=dict(color="white", width=26),
+                                    line=dict(color="white", width=26), # Espessura 26 mantida
                                     xref="x",
                                     yref="y"
                                 )
@@ -1183,171 +1183,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                                     y=y_corte,
                                     text="<b>//</b>",
                                     showarrow=False,
-                                    font=dict(color="black", size=16),
-                                    bgcolor="white",
-                                    borderpad=1,
-                                    yref="y"
-                                )
-                            
-                            # Pontos de Acidentes (Eixo Y Secundário)
-                            fig11.add_trace(
-                                go.Scatter(
-                                    name=f'Acidentes {classe}', 
-                                    x=[classe], 
-                                    y=[acid_real], 
-                                    mode='markers+text' if exibir_texto_scatter else 'markers', 
-                                    marker=dict(color='black', size=10), 
-                                    text=[str(acid_real)] if exibir_texto_scatter else None, 
-                                    textposition='top center', 
-                                    textfont=dict(color='black', size=15), 
-                                    showlegend=False
-                                ), 
-                                secondary_y=True
-                            )
-                        
-                        # Layout e Legenda
-                        fig11.update_layout(
-                            plot_bgcolor='white', 
-                            paper_bgcolor='white', 
-                            font=dict(color='black', size=18),
-                            legend_title_text='', 
-                            legend=dict(
-                                orientation="h", 
-                                yanchor="bottom", 
-                                y=1.05, 
-                                xanchor="left",  
-                                x=0,
-                                font=dict(color='black', size=15),
-                                entrywidth=0.45,
-                                entrywidthmode="fraction"
-                            ),
-                            margin=dict(t=90, b=50, l=50, r=50)
-                        )
-                        
-                        fig11.update_xaxes(
-                            showgrid=False, 
-                            zeroline=False, 
-                            showticklabels=False, 
-                            linecolor='black'
-                        )
-                        
-                        fig11.update_yaxes(
-                            title_text="Volume Liberado (m3)", 
-                            title_font=dict(size=20, color='black'),
-                            secondary_y=False, 
-                            range=[0, limite_eixo_unificado], 
-                            showgrid=False, 
-                            zeroline=False, 
-                            showticklabels=False, 
-                            linecolor='black'
-                        )
-                        
-                        fig11.update_yaxes(
-                            title_text="Número de Acidentes", 
-                            title_font=dict(size=20, color='black'),
-                            secondary_y=True, 
-                            range=[0, limite_eixo_unificado], 
-                            showgrid=False, 
-                            zeroline=False, 
-                            showticklabels=False, 
-                            linecolor='black'
-                        )
-                        
-                        config_g11 = {
-                            'toImageButtonOptions': {
-                                **CONFIG_EXPORTACAO['toImageButtonOptions'],
-                                'width': 594,
-                                'height': 440
-                            }
-                        }
-                        
-                        st.plotly_chart(
-                            ajustar_layout_grafico(fig11), 
-                            use_container_width=True, 
-                            config=config_g11
-                        )
-
-                    
-                    with col_graf2:
-                        df_g11 = df_prod_filtrado.groupby('Classe de Risco').agg(Vol=('Volume','sum'), Acid=('Processo','nunique')).reset_index()
-                        ordem_11 = ['A', 'B', 'D', 'Não Classificado', 'Não Avaliado']
-                        df_g11['Classe de Risco'] = pd.Categorical(df_g11['Classe de Risco'], categories=ordem_11, ordered=True)
-                        df_g11 = df_g11.sort_values('Classe de Risco').dropna(subset=['Classe de Risco'])
-                        
-                        fig11 = make_subplots(specs=[[{"secondary_y": True}]])
-                        
-                        cores_texto_risco_escuras = {
-                            'A': '#0B5383', 
-                            'B': '#3E6B15', 
-                            'D': '#B87B08', 
-                            'Não Classificado': '#5B2C6F', 
-                            'Não Avaliado': '#A04000'
-                        }
-                        
-                        limite_eixo_unificado = 175  
-                        
-                        for _, r in df_g11.iterrows():
-                            classe = r['Classe de Risco']
-                            cor_barra = get_cor_risco(classe, 11)
-                            cor_texto_barra = cores_texto_risco_escuras.get(classe, '#2C3E50')
-                            vol_real = r['Vol']
-                            acid_real = r['Acid']
-                            
-                            # --- CORTE VISUAL EM 140 (CLASSE B) ---
-                            if vol_real > 140:
-                                vol_desenhado = 140
-                                tem_corte = True
-                            else:
-                                vol_desenhado = vol_real
-                                tem_corte = False
-                                
-                            # --- FORMATAÇÃO DO TEXTO DO VOLUME / ACIDENTES ---
-                            if classe == 'Não Classificado':
-                                # Inclui o número de acidentes entre parênteses ao lado do volume na cor roxa
-                                texto_barra = f"<b>{vol_real:,.2f} m3 ({acid_real})</b>".replace('.',',')
-                                exibir_texto_scatter = False # Oculta o número preto sobre o ponto para não colidir
-                            else:
-                                texto_barra = f"<b>{vol_real:,.2f} m3</b>".replace('.',',')
-                                exibir_texto_scatter = True
-                            
-                            # Barras de Volume (Eixo Y Primário)
-                            fig11.add_trace(
-                                go.Bar(
-                                    name=str(classe), 
-                                    x=[classe], 
-                                    y=[vol_desenhado], 
-                                    marker_color=cor_barra, 
-                                    text=[texto_barra], 
-                                    textposition='outside', 
-                                    cliponaxis=False, 
-                                    textfont=dict(color=cor_texto_barra, size=18),
-                                    showlegend=True
-                                ), 
-                                secondary_y=False
-                            )
-                            
-                            # Símbolo // e Linha Branca no corte da barra B
-                            if tem_corte:
-                                idx = ordem_11.index(classe)
-                                y_corte = 70
-                                
-                                fig11.add_shape(
-                                    type="line",
-                                    x0=idx - 0.38,
-                                    x1=idx + 0.38,
-                                    y0=y_corte,
-                                    y1=y_corte,
-                                    line=dict(color="white", width=26),
-                                    xref="x",
-                                    yref="y"
-                                )
-                                
-                                fig11.add_annotation(
-                                    x=classe,
-                                    y=y_corte,
-                                    text="<b>//</b>",
-                                    showarrow=False,
-                                    font=dict(color="black", size=16),
+                                    font=dict(color="black", size=16), # Fonte 16 mantida
                                     bgcolor="white",
                                     borderpad=1,
                                     yref="y"
