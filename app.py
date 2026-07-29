@@ -1470,7 +1470,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                     
                     st.plotly_chart(fig13_final, use_container_width=True, config=config_g13)
 
-                    # --- GRÁFICO 14 (Com Corte Visual 'layer=above' Corrigido) ---
+                    # --- GRÁFICO 14 (Com Posição da Linha Branca Mapeada Corretamente) ---
                     df_g14 = df_prod_filtrado.groupby(['Produto', 'Classe de Risco']).agg(Vol=('Volume','sum'), Acid=('Processo','nunique')).reset_index().sort_values(by='Vol', ascending=False)
                     top20 = df_g14.head(20).copy()
                     demais = df_g14.iloc[20:].copy()
@@ -1495,6 +1495,9 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                     TAMANHO_ROTULO_BARRA = 13
                     TAMANHO_ROTULO_PONTO = 11
                     
+                    # Mapeia a ordem exata das categorias no eixo X conforme são plotadas
+                    lista_categorias_x = []
+                    
                     for c in ordem_11:
                         d = top20[top20['Classe de Risco'] == c]
                         if not d.empty:
@@ -1506,6 +1509,10 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                             
                             for _, row in d.iterrows():
                                 vol_real = row['Vol']
+                                cat_rank = row['Rank']
+                                
+                                if cat_rank not in lista_categorias_x:
+                                    lista_categorias_x.append(cat_rank)
                                 
                                 # Aplica o corte na altura desenhada se for volume desproporcional
                                 if vol_real > limite_corte_vol:
@@ -1555,43 +1562,48 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                             marker=dict(color='grey', size=8), 
                             text=scatter_text, 
                             textposition='top center', 
-                            textfont=dict(color='grey', size=TAMANHO_ROTULO_PONTO), # Sem <b> para evitar inflar na exportação
+                            textfont=dict(color='grey', size=TAMANHO_ROTULO_PONTO), # Sem <b> para não engrossar na exportação
                             showlegend=False
                         ), 
                         secondary_y=True
                     )
                     
-                    # Adiciona a linha branca de corte (com layer="above") e o símbolo // onde o volume ultrapassar o limite
-                    for idx, row in top20.iterrows():
+                    # Adiciona a linha branca de corte na posição X exata da barra
+                    for _, row in top20.iterrows():
                         if row['Vol'] > limite_corte_vol:
-                            y_corte = 75
-                            fig14.add_shape(
-                                type="line",
-                                x0=idx - 0.38,
-                                x1=idx + 0.38,
-                                y0=y_corte,
-                                y1=y_corte,
-                                line=dict(color="white", width=26),
-                                xref="x",
-                                yref="y",
-                                layer="above" # <-- CORREÇÃO: Força o desenho da linha branca SOBRE a barra
-                            )
-                            fig14.add_annotation(
-                                x=row['Rank'],
-                                y=y_corte,
-                                text="<b>//</b>",
-                                showarrow=False,
-                                font=dict(color="black", size=14),
-                                bgcolor="white",
-                                borderpad=1,
-                                yref="y"
-                            )
+                            cat_rank = row['Rank']
+                            if cat_rank in lista_categorias_x:
+                                x_pos = lista_categorias_x.index(cat_rank) # Posição numérica exata no eixo X (ex: 2)
+                                y_corte = 75
+                                
+                                fig14.add_shape(
+                                    type="line",
+                                    x0=x_pos - 0.38,
+                                    x1=x_pos + 0.38,
+                                    y0=y_corte,
+                                    y1=y_corte,
+                                    line=dict(color="white", width=26),
+                                    xref="x",
+                                    yref="y",
+                                    layer="above" # Desenha a linha SOBRE a barra verde
+                                )
+                                
+                                fig14.add_annotation(
+                                    x=cat_rank,
+                                    y=y_corte,
+                                    text="<b>//</b>",
+                                    showarrow=False,
+                                    font=dict(color="black", size=14),
+                                    bgcolor="white",
+                                    borderpad=1,
+                                    yref="y"
+                                )
                     
                     # Layout e Legenda
                     fig14.update_layout(
                         plot_bgcolor='white', 
                         paper_bgcolor='white',
-                        height=720, # Aumentado na exibição web
+                        height=720,
                         font=dict(color='black', size=14),
                         legend_title_text='', 
                         legend=dict(
@@ -1626,7 +1638,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                         tickfont=dict(color='black', size=13)
                     )
                     
-                    # Eixo Y Secundário (Volume Médio) - Escala unificada idêntica
+                    # Eixo Y Secundário (Volume Médio)
                     fig14.update_yaxes(
                         title_text="Volume Médio", 
                         title_font=dict(size=16, color='black'),
@@ -1646,7 +1658,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                         height=720
                     )
                     
-                    # Configuração de exportação de imagem com altura e largura ampliada
+                    # Configuração de exportação de imagem
                     config_g14 = {
                         'toImageButtonOptions': {
                             **CONFIG_EXPORTACAO['toImageButtonOptions'],
