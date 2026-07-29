@@ -1470,7 +1470,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                     
                     st.plotly_chart(fig13_final, use_container_width=True, config=config_g13)
 
-                    # --- GRÁFICO 14 ---
+                    # --- GRÁFICO 14 (Com Corte Visual 'layer=above' Corrigido) ---
                     df_g14 = df_prod_filtrado.groupby(['Produto', 'Classe de Risco']).agg(Vol=('Volume','sum'), Acid=('Processo','nunique')).reset_index().sort_values(by='Vol', ascending=False)
                     top20 = df_g14.head(20).copy()
                     demais = df_g14.iloc[20:].copy()
@@ -1491,7 +1491,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                     }
                     
                     limite_eixo_unificado = 110  # Teto unificado para ambos os eixos Y
-                    limite_corte_vol = 90      # Limite para aplicação do corte visual
+                    limite_corte_vol = 90       # Limite para aplicação do corte visual
                     TAMANHO_ROTULO_BARRA = 13
                     TAMANHO_ROTULO_PONTO = 11
                     
@@ -1561,7 +1561,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                         secondary_y=True
                     )
                     
-                    # Adiciona a linha branca de corte e o símbolo // onde o volume ultrapassar o limite
+                    # Adiciona a linha branca de corte (com layer="above") e o símbolo // onde o volume ultrapassar o limite
                     for idx, row in top20.iterrows():
                         if row['Vol'] > limite_corte_vol:
                             y_corte = 75
