@@ -313,6 +313,15 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
         else:
             df_plataformas_2025 = pd.DataFrame(columns=df_2025_bruto.columns)
 
+        # --- VARIÁVEIS E CRUZAMENTOS DE PRODUÇÃO/ACIDENTES PARA 2025 ---
+        acid_total_2025 = len(df_plataformas_2025)
+
+        if 'bacia_sedimentar' in df_plataformas_2025.columns:
+            df_plataformas_2025['bacia_clean'] = df_plataformas_2025['bacia_sedimentar'].astype(str).str.strip().str.lower()
+            counts_2025_dict = df_plataformas_2025['bacia_clean'].value_counts().to_dict()
+            df_bacias_prod['bacia_clean'] = df_bacias_prod['Bacia Sedimentar'].astype(str).str.strip().str.lower()
+            df_bacias_prod['Acid_2025'] = df_bacias_prod['bacia_clean'].map(counts_2025_dict).fillna(0).astype(int)
+
         # =========================================================================
         # TRATAMENTO GLOBAL DOS PRODUTOS E VOLUMES (Para uso na Aba 1, Aba 4, etc.)
         # =========================================================================
