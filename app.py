@@ -698,12 +698,23 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                 max_total8 = df_g8['Total'].max()
                 
                 fig8 = go.Figure()
-                fig8.add_trace(go.Bar(name='Até 180 dias (6 meses)', x=df_g8['Ano'], y=df_g8['<=180'], marker_color='#1FA1DD', 
-                                      text=df_g8['<=180'], textposition='inside', textfont=dict(color='black', size=15)))
-                fig8.add_trace(go.Bar(name='Mais de 180 dias', x=df_g8['Ano'], y=df_g8['>180'], marker_color='#FDBB2F', 
-                                      text=df_g8['>180'], textposition='inside', textfont=dict(color='black', size=15)))
-                fig8.add_trace(go.Bar(name='Em Andamento', x=df_g8['Ano'], y=df_g8['Investigação em Andamento'], marker_color='#8BC53F', 
-                                      text=df_g8['Investigação em Andamento'], textposition='inside', textfont=dict(color='black', size=15)))
+                
+                # legendrank define a ordem de exibição na legenda mantendo o empilhamento original
+                fig8.add_trace(go.Bar(
+                    name='Até 180 dias (6 meses)', x=df_g8['Ano'], y=df_g8['<=180'], marker_color='#1FA1DD', 
+                    text=df_g8['<=180'], textposition='inside', textfont=dict(color='black', size=15),
+                    legendrank=3 # Exibido na 2ª linha
+                ))
+                fig8.add_trace(go.Bar(
+                    name='Mais de 180 dias', x=df_g8['Ano'], y=df_g8['>180'], marker_color='#FDBB2F', 
+                    text=df_g8['>180'], textposition='inside', textfont=dict(color='black', size=15),
+                    legendrank=2 # Exibido em 2º na 1ª linha
+                ))
+                fig8.add_trace(go.Bar(
+                    name='Em Andamento', x=df_g8['Ano'], y=df_g8['Investigação em Andamento'], marker_color='#8BC53F', 
+                    text=df_g8['Investigação em Andamento'], textposition='inside', textfont=dict(color='black', size=15),
+                    legendrank=1 # Exibido em 1º na 1ª linha
+                ))
                 
                 # 2. Adiciona os totais acima das barras empilhadas
                 for _, row in df_g8.iterrows():
@@ -712,26 +723,50 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                         y=row['Total'],
                         text=f"<b>{row['Total']}</b>",
                         showarrow=False,
-                        yshift=10, # Eleva o texto 10px acima do topo da barra
+                        yshift=10,
                         font=dict(color='black', size=15)
                     )
                 
                 fig8.update_layout(
-                    barmode='stack', plot_bgcolor='white', paper_bgcolor='white', font=dict(color='black', size=15),
-                    legend_title_text='', legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="center", x=0.5, font=dict(color='black', size=15)),
-                    margin=dict(t=50, b=50, l=50, r=50)
+                    barmode='stack', 
+                    plot_bgcolor='white', 
+                    paper_bgcolor='white', 
+                    font=dict(color='black', size=15),
+                    legend_title_text='', 
+                    legend=dict(
+                        orientation="h", 
+                        yanchor="bottom", 
+                        y=1.02, 
+                        xanchor="left", 
+                        x=0, # Alinha no canto esquerdo
+                        font=dict(color='black', size=15),
+                        entrywidth=0.45,             # Cada item ocupa 45% da largura da legenda
+                        entrywidthmode="fraction"    # Força o 3º item a quebrar para a linha de baixo
+                    ),
+                    margin=dict(t=90, b=50, l=50, r=50) # Margem superior ampliada para acomodar a legenda em 2 linhas
                 )
+                
                 fig8.update_xaxes(showgrid=False, zeroline=False, linecolor='black', tickfont=dict(color='black', size=15))
                 
                 # 3. Adicionado range para criar margem no topo e evitar corte do total
                 fig8.update_yaxes(
                     title_text="", 
-                    range=[0, max_total8 * 1.15],
+                    range=[0, max_total8 * 1.20],
                     showticklabels=False, showgrid=False, zeroline=False, showline=False, 
                     title_font=dict(color='black', size=15)
                 )
                 
-                st.plotly_chart(ajustar_layout_grafico(fig8), use_container_width=True, config=CONFIG_EXPORTACAO)
+                # Configuração de exportação EXCLUSIVA para o Gráfico 8
+                config_g8 = {
+                    'toImageButtonOptions': {
+                        **CONFIG_EXPORTACAO['toImageButtonOptions'],
+                        'width': 540,
+                        'height': 400
+                    }
+                }
+                                
+                st.plotly_chart(ajustar_layout_grafico(fig8), use_container_width=True, config=config_g8)
+
                 
             # --- GRÁFICO 9 ---
             with col_enc_2:
@@ -972,7 +1007,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                                     text=d['Vol'].apply(lambda x: f"<b>{x:,.1f} m3</b>".replace('.',',')), # <-- Negrito em HTML
                                     textposition='outside',               # <-- Força o texto para FORA/ACIMA da barra
                                     cliponaxis=False,                     # <-- Impede o corte caso o texto passe do limite
-                                    textfont=dict(color=cor_texto_barra, size=16), # <-- Fonte 16 na cor escura
+                                    textfont=dict(color=cor_texto_barra, size=20), # <-- Fonte 20 na cor escura
                                     showlegend=True
                                 ), 
                                 secondary_y=False
@@ -988,7 +1023,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                                     marker=dict(color='black', size=12), 
                                     text=d['Acid'], 
                                     textposition='top center', 
-                                    textfont=dict(color='black', size=15), 
+                                    textfont=dict(color='black', size=18), 
                                     showlegend=False
                                 ), 
                                 secondary_y=True
@@ -997,7 +1032,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                         fig10.update_layout(
                             plot_bgcolor='white', 
                             paper_bgcolor='white', 
-                            font=dict(color='black', size=15),
+                            font=dict(color='black', size=18),
                             legend_title_text='', 
                             legend=dict(
                                 orientation="h", 
@@ -1005,7 +1040,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                                 y=1.05, 
                                 xanchor="center", 
                                 x=0.5, 
-                                font=dict(size=15, color='black')
+                                font=dict(size=18, color='black')
                             ),
                             margin=dict(t=60, b=40, l=40, r=40)
                         )
@@ -1020,7 +1055,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                         # Eixo Y Primário: Teto em 1.25 para dar respiro ao texto em negrito acima da barra
                         fig10.update_yaxes(
                             title_text="Volume de Produto Liberado (m3)", 
-                            title_font=dict(size=15, color='black'),
+                            title_font=dict(size=20, color='black'),
                             secondary_y=False, 
                             range=[0, max_vol * 1.25], 
                             showgrid=False, 
@@ -1031,7 +1066,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                         
                         fig10.update_yaxes(
                             title_text="Número de Acidentes", 
-                            title_font=dict(size=15, color='black'),
+                            title_font=dict(size=20, color='black'),
                             secondary_y=True, 
                             range=[0, max_vol * 1.25], #range=[0, max_acid * 1.25],
                             showgrid=False, 
@@ -1040,9 +1075,23 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                             linecolor='black'
                         )
                         
-                        st.plotly_chart(ajustar_layout_grafico(fig10), use_container_width=True, config=CONFIG_EXPORTACAO)
+                        # Configuração de exportação EXCLUSIVA para este gráfico
+                        config_g10 = {
+                            'toImageButtonOptions': {
+                                **CONFIG_EXPORTACAO['toImageButtonOptions'], # Herda formato, escala e nome
+                                'width': 540,   # <-- Largura menor exclusiva para a imagem salva deste gráfico
+                                'height': 400   # <-- Altura (pode manter ou alterar como preferir)
+                            }
+                        }
+                    
+                        # Renderização no Streamlit usando o config personalizado
+                        st.plotly_chart(
+                            ajustar_layout_grafico(fig10), 
+                            use_container_width=True, 
+                            config=config_g10  # <-- Passa a configuração exclusiva aqui
+                        )
 
-                    # FIGURA 3.3.11 ----
+                    # GRÁFICO 11 ----
                     with col_graf2:
                         df_g11 = df_prod_filtrado.groupby('Classe de Risco').agg(Vol=('Volume','sum'), Acid=('Processo','nunique')).reset_index()
                         ordem_11 = ['A', 'B', 'D', 'Não Classificado', 'Não Avaliado']
