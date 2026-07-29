@@ -698,12 +698,23 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                 max_total8 = df_g8['Total'].max()
                 
                 fig8 = go.Figure()
-                fig8.add_trace(go.Bar(name='Até 180 dias (6 meses)', x=df_g8['Ano'], y=df_g8['<=180'], marker_color='#1FA1DD', 
-                                      text=df_g8['<=180'], textposition='inside', textfont=dict(color='black', size=15)))
-                fig8.add_trace(go.Bar(name='Mais de 180 dias', x=df_g8['Ano'], y=df_g8['>180'], marker_color='#FDBB2F', 
-                                      text=df_g8['>180'], textposition='inside', textfont=dict(color='black', size=15)))
-                fig8.add_trace(go.Bar(name='Em Andamento', x=df_g8['Ano'], y=df_g8['Investigação em Andamento'], marker_color='#8BC53F', 
-                                      text=df_g8['Investigação em Andamento'], textposition='inside', textfont=dict(color='black', size=15)))
+                
+                # legendrank define a ordem de exibição na legenda mantendo o empilhamento original
+                fig8.add_trace(go.Bar(
+                    name='Até 180 dias (6 meses)', x=df_g8['Ano'], y=df_g8['<=180'], marker_color='#1FA1DD', 
+                    text=df_g8['<=180'], textposition='inside', textfont=dict(color='black', size=15),
+                    legendrank=3 # Exibido na 2ª linha
+                ))
+                fig8.add_trace(go.Bar(
+                    name='Mais de 180 dias', x=df_g8['Ano'], y=df_g8['>180'], marker_color='#FDBB2F', 
+                    text=df_g8['>180'], textposition='inside', textfont=dict(color='black', size=15),
+                    legendrank=2 # Exibido em 2º na 1ª linha
+                ))
+                fig8.add_trace(go.Bar(
+                    name='Em Andamento', x=df_g8['Ano'], y=df_g8['Investigação em Andamento'], marker_color='#8BC53F', 
+                    text=df_g8['Investigação em Andamento'], textposition='inside', textfont=dict(color='black', size=15),
+                    legendrank=1 # Exibido em 1º na 1ª linha
+                ))
                 
                 # 2. Adiciona os totais acima das barras empilhadas
                 for _, row in df_g8.iterrows():
@@ -712,22 +723,35 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                         y=row['Total'],
                         text=f"<b>{row['Total']}</b>",
                         showarrow=False,
-                        yshift=10, # Eleva o texto 10px acima do topo da barra
+                        yshift=10,
                         font=dict(color='black', size=15)
                     )
                 
                 fig8.update_layout(
-                    barmode='stack', plot_bgcolor='white', paper_bgcolor='white', font=dict(color='black', size=15),
-                    legend_title_text='', legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="center", x=0.5, font=dict(color='black', size=15)),
-                    # Margens laterais ajustáveis se quiser estreitar o gráfico na tela web
-                    margin=dict(t=50, b=50, l=50, r=50) 
+                    barmode='stack', 
+                    plot_bgcolor='white', 
+                    paper_bgcolor='white', 
+                    font=dict(color='black', size=15),
+                    legend_title_text='', 
+                    legend=dict(
+                        orientation="h", 
+                        yanchor="bottom", 
+                        y=1.02, 
+                        xanchor="left", 
+                        x=0, # Alinha no canto esquerdo
+                        font=dict(color='black', size=15),
+                        entrywidth=0.45,             # Cada item ocupa 45% da largura da legenda
+                        entrywidthmode="fraction"    # Força o 3º item a quebrar para a linha de baixo
+                    ),
+                    margin=dict(t=90, b=50, l=50, r=50) # Margem superior ampliada para acomodar a legenda em 2 linhas
                 )
+                
                 fig8.update_xaxes(showgrid=False, zeroline=False, linecolor='black', tickfont=dict(color='black', size=15))
                 
                 # 3. Adicionado range para criar margem no topo e evitar corte do total
                 fig8.update_yaxes(
                     title_text="", 
-                    range=[0, max_total8 * 1.15],
+                    range=[0, max_total8 * 1.20],
                     showticklabels=False, showgrid=False, zeroline=False, showline=False, 
                     title_font=dict(color='black', size=15)
                 )
@@ -736,7 +760,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                 config_g8 = {
                     'toImageButtonOptions': {
                         **CONFIG_EXPORTACAO['toImageButtonOptions'],
-                        'width': 700,   # <-- Largura customizada para a imagem exportada deste gráfico
+                        'width': 700,
                         'height': 520
                     }
                 }
