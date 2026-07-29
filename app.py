@@ -1490,8 +1490,8 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                         'Não Avaliado': '#A04000'
                     }
                     
-                    limite_eixo_unificado = 110  # Teto unificado para ambos os eixos Y
-                    limite_corte_vol = 90       # Limite para aplicação do corte visual
+                    limite_eixo_unificado = 100  # Teto unificado para ambos os eixos Y
+                    limite_corte_vol = 80       # Limite para aplicação do corte visual
                     TAMANHO_ROTULO_BARRA = 13
                     TAMANHO_ROTULO_PONTO = 11
                     
@@ -1574,7 +1574,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                             cat_rank = row['Rank']
                             if cat_rank in lista_categorias_x:
                                 x_pos = lista_categorias_x.index(cat_rank) # Posição numérica exata no eixo X (ex: 2)
-                                y_corte = 75
+                                y_corte = 72
                                 
                                 fig14.add_shape(
                                     type="line",
