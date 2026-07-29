@@ -1278,17 +1278,6 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                     # Cálculo do maior valor acumulado para dar margem à direita no eixo X
                     max_acid12 = df_g12.groupby('Rank')['Acid'].sum().max() if not df_g12.empty else 10
                     
-                    # Mapeamento para organizar a legenda em 2 colunas verticais
-                    # Coluna 1 (Esq): Risco A (1), Risco B (3), Risco D (5)
-                    # Coluna 2 (Dir): Não Avaliado (2), Não Classificado (4)
-                    rank_legenda_g12 = {
-                        'A': 1,
-                        'Não Avaliado': 2,
-                        'B': 3,
-                        'Não Classificado': 4,
-                        'D': 5
-                    }
-                    
                     fig12 = go.Figure()
                     for c in ordem_11:
                         d = df_g12[df_g12['Classe de Risco'] == c]
@@ -1305,11 +1294,25 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                                     cliponaxis=False,
                                     constraintext='none',
                                     textfont=dict(color='black', size=15),
-                                    legendrank=rank_legenda_g12.get(c, 99) # Define a posição na grade de 2 colunas
+                                    showlegend=False # Desativa legenda nativa para usar anotação alinhada à direita
                                 )
                             )
                     
                     lista_rank_eixo_y = df_g12['Rank'].tolist()[::-1]
+                    
+                    # Cores para montar os marcadores da legenda customizada
+                    cor_a = get_cor_risco('A', 12)
+                    cor_b = get_cor_risco('B', 12)
+                    cor_d = get_cor_risco('D', 12)
+                    cor_nc = get_cor_risco('Não Classificado', 12)
+                    cor_na = get_cor_risco('Não Avaliado', 12)
+                    
+                    # Monta o texto em 2 colunas com alinhamento à direita estrito
+                    texto_legenda = (
+                        f"<span style='color:{cor_a}'>■</span> Risco A &nbsp;&nbsp;&nbsp;&nbsp; <span style='color:{cor_na}'>■</span> Não Avaliado<br>"
+                        f"<span style='color:{cor_b}'>■</span> Risco B &nbsp;&nbsp;&nbsp;&nbsp; <span style='color:{cor_nc}'>■</span> Não Classificado<br>"
+                        f"<span style='color:{cor_d}'>■</span> Risco D"
+                    )
                     
                     fig12.update_layout(
                         barmode='stack', 
@@ -1318,18 +1321,20 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                         font=dict(color='black', size=15),
                         uniformtext_minsize=15, 
                         uniformtext_mode='show',
-                        legend_title_text='', 
-                        legend=dict(
-                            orientation="h", 
-                            yanchor="bottom", 
-                            y=0, 
-                            xanchor="right", 
-                            x=1, # Canto inferior direito
-                            font=dict(color='black', size=13),
-                            entrywidth=0.48,             # Cada item ocupa 48% da largura da legenda
-                            entrywidthmode="fraction"    # Força a divisão perfeita em 2 colunas
-                        ),
+                        showlegend=False,
                         margin=dict(t=30, b=30, l=40, r=40)
+                    )
+                    
+                    # Adiciona a legenda via Anotação: align="right" garante que o último caractere encoste na margem
+                    fig12.add_annotation(
+                        xref="paper", yref="paper",
+                        x=1, y=0,
+                        xanchor="right", 
+                        yanchor="bottom",
+                        align="right", # Força o alinhamento do texto à direita
+                        text=texto_legenda,
+                        showarrow=False,
+                        font=dict(color='black', size=13) # Fonte 13 mantida para as legendas
                     )
                     
                     # Eixo X: Remove valores, linhas, marcadores e grades
@@ -1360,7 +1365,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                         }
                     }
                     
-                    st.plotly_chart(ajustar_layout_grafico(fig12), use_container_width=True, config=config_g12)
+                    st.plotly_chart(ajustar_layout_grafico(fig12), use_container_width=True, config=CONFIG_EXPORTACAO) #CONFIG_EXPORTACAO ou config_g12
 
                     # FIGURA 3.3.13
                     bins = [-float('inf'), 0.00001, 0.0001, 0.001, 0.01, 0.1, 1.0, 8.0, 200.0, float('inf')]
