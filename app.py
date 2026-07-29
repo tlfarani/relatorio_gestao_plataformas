@@ -1292,7 +1292,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                                     text=d['Acid'], 
                                     textposition='outside',
                                     cliponaxis=False,
-                                    textfont=dict(color='black', size=18) # Fonte dos valores das barras: 18 e preta
+                                    textfont=dict(color='black', size=20) # Fonte dos valores das barras: 20 e preta
                                 )
                             )
                     
@@ -1329,7 +1329,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                         showgrid=False, 
                         zeroline=False, 
                         linecolor='black', 
-                        tickfont=dict(color='black', size=15),
+                        tickfont=dict(color='black', size=14),
                         categoryorder='array', 
                         categoryarray=lista_rank_eixo_y
                     )
@@ -1338,8 +1338,8 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                     config_g12 = {
                         'toImageButtonOptions': {
                             **CONFIG_EXPORTACAO['toImageButtonOptions'],
-                            'width': 800,
-                            'height': 600
+                            'width': 594,
+                            'height': 440
                         }
                     }
                     
