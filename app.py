@@ -1490,7 +1490,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                         'Não Avaliado': '#A04000'
                     }
                     
-                    limite_eixo_unificado = 100  # Teto unificado para ambos os eixos Y
+                    limite_eixo_unificado = 105  # Teto unificado para ambos os eixos Y
                     limite_corte_vol = 80       # Limite para aplicação do corte visual
                     TAMANHO_ROTULO_BARRA = 13
                     TAMANHO_ROTULO_PONTO = 11
@@ -1582,7 +1582,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                                     x1=x_pos + 0.38,
                                     y0=y_corte,
                                     y1=y_corte,
-                                    line=dict(color="white", width=26),
+                                    line=dict(color="white", width=22),
                                     xref="x",
                                     yref="y",
                                     layer="above" # Desenha a linha SOBRE a barra verde
