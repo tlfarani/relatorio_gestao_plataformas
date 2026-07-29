@@ -760,11 +760,11 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                 config_g8 = {
                     'toImageButtonOptions': {
                         **CONFIG_EXPORTACAO['toImageButtonOptions'],
-                        'width': 700,
-                        'height': 520
+                        'width': 540,
+                        'height': 400
                     }
                 }
-                
+                                
                 st.plotly_chart(ajustar_layout_grafico(fig8), use_container_width=True, config=config_g8)
 
                 
