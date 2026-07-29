@@ -1171,7 +1171,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                                     y=y_corte,
                                     text="<b>//</b>",
                                     showarrow=False,
-                                    font=dict(color="black", size=20),
+                                    font=dict(color="black", size=16),
                                     bgcolor="white",
                                     borderpad=1,
                                     yref="y"
