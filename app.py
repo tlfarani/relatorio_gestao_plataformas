@@ -1470,7 +1470,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                     
                     st.plotly_chart(fig13_final, use_container_width=True, config=config_g13)
 
-                    # --- GRÁFICO 14 (Com Rótulos de Volume Médio Exibidos Apenas para Vol >= 5 m³) ---
+                    # --- GRÁFICO 14 (Rótulos de Volume Médio para Vol >= 8 m³ na Cor Branca) ---
                     df_g14 = df_prod_filtrado.groupby(['Produto', 'Classe de Risco']).agg(Vol=('Volume','sum'), Acid=('Processo','nunique')).reset_index().sort_values(by='Vol', ascending=False)
                     top20 = df_g14.head(20).copy()
                     demais = df_g14.iloc[20:].copy()
@@ -1547,8 +1547,8 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                         scatter_x.append(row['Rank'])
                         scatter_y.append(row['Vol_Medio'])
                         
-                        # Exibe o texto do Volume Médio APENAS se Vol >= 5 m3 E se não coincidir com o Volume Total
-                        if row['Vol'] >= 5 and abs(row['Vol'] - row['Vol_Medio']) >= 0.01:
+                        # Exibe o texto do Volume Médio APENAS se Vol >= 8 m³ E se não coincidir com o Volume Total
+                        if row['Vol'] >= 8 and abs(row['Vol'] - row['Vol_Medio']) >= 0.01:
                             scatter_text.append(f"{row['Vol_Medio']:,.2f}".replace('.',','))
                         else:
                             scatter_text.append(None)
@@ -1562,7 +1562,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                             marker=dict(color='grey', size=8), 
                             text=scatter_text, 
                             textposition='top center', 
-                            textfont=dict(color='grey', size=TAMANHO_ROTULO_PONTO), # Sem <b> para não engrossar na exportação
+                            textfont=dict(color='white', size=TAMANHO_ROTULO_PONTO), # Cor da fonte alterada para BRANCA
                             showlegend=False
                         ), 
                         secondary_y=True
@@ -1585,7 +1585,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                                     line=dict(color="white", width=24),
                                     xref="x",
                                     yref="y",
-                                    layer="above" # Desenha a linha SOBRE a barra verde
+                                    layer="above"
                                 )
                                 
                                 fig14.add_annotation(
