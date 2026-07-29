@@ -1495,7 +1495,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                     
                     limite_altura_barra_corte = 90  # Altura da barra cortada
                     limite_eixo_unificado = 120    # Teto ampliado para dar folga no topo para o texto "outside"
-                    limite_corte_vol = 50          # Limite para aplicação do corte visual
+                    limite_corte_vol = 70          # Limite para aplicação do corte visual
                     
                     TAMANHO_ROTULO_BARRA = 13
                     TAMANHO_ROTULO_PONTO = 10      # Ajustado para 10 (sem negrito HTML) para igualar visualmente às barras na exportação
@@ -1573,7 +1573,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                             cat_rank = row['Rank']
                             if cat_rank in ordem_rank_x:
                                 x_pos = ordem_rank_x.index(cat_rank)
-                                y_corte = 62
+                                y_corte = 80
                                 
                                 fig14.add_shape(
                                     type="line",
