@@ -1573,7 +1573,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                             cat_rank = row['Rank']
                             if cat_rank in ordem_rank_x:
                                 x_pos = ordem_rank_x.index(cat_rank)
-                                y_corte = 80
+                                y_corte = 75
                                 
                                 fig14.add_shape(
                                     type="line",
