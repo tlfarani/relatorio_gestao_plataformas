@@ -1161,7 +1161,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                                     x1=idx + 0.38,
                                     y0=y_corte,
                                     y1=y_corte,
-                                    line=dict(color="white", width=16),
+                                    line=dict(color="white", width=18),
                                     xref="x",
                                     yref="y"
                                 )
