@@ -1033,7 +1033,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                             title_text="Número de Acidentes", 
                             title_font=dict(size=15, color='black'),
                             secondary_y=True, 
-                            range=[0, max_acid * 1.25],
+                            range=[0, max_vol * 1.25], #range=[0, max_acid * 1.25],
                             showgrid=False, 
                             zeroline=False, 
                             showticklabels=False, 
