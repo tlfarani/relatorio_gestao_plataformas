@@ -719,7 +719,8 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                 fig8.update_layout(
                     barmode='stack', plot_bgcolor='white', paper_bgcolor='white', font=dict(color='black', size=15),
                     legend_title_text='', legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="center", x=0.5, font=dict(color='black', size=15)),
-                    margin=dict(t=50, b=50, l=50, r=50)
+                    # Margens laterais ajustáveis se quiser estreitar o gráfico na tela web
+                    margin=dict(t=50, b=50, l=50, r=50) 
                 )
                 fig8.update_xaxes(showgrid=False, zeroline=False, linecolor='black', tickfont=dict(color='black', size=15))
                 
@@ -731,24 +732,17 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                     title_font=dict(color='black', size=15)
                 )
                 
-                #st.plotly_chart(ajustar_layout_grafico(fig8), use_container_width=True, config=CONFIG_EXPORTACAO)
-
-                # Configuração de exportação EXCLUSIVA para este gráfico
-                config_g8 = {toImageButtonOptions': {
-                    **CONFIG_EXPORTACAO['toImageButtonOptions'], # Herda formato, escala e nome
-                    'width': 540,   # <-- Largura menor exclusiva para a imagem salva deste gráfico
-                    'height': 400   # <-- Altura (pode manter ou alterar como preferir)
+                # Configuração de exportação EXCLUSIVA para o Gráfico 8
+                config_g8 = {
+                    'toImageButtonOptions': {
+                        **CONFIG_EXPORTACAO['toImageButtonOptions'],
+                        'width': 700,   # <-- Largura customizada para a imagem exportada deste gráfico
+                        'height': 520
                     }
                 }
-                # Renderização no Streamlit usando o config personalizado
-                st.plotly_chart(
-                    ajustar_layout_grafico(fig8),
-                    use_container_width=True, 
-                    config=config_g8  # <-- Passa a configuração exclusiva aqui
-                )
-                   
-                       
-            
+                
+                st.plotly_chart(ajustar_layout_grafico(fig8), use_container_width=True, config=config_g8)
+
                 
             # --- GRÁFICO 9 ---
             with col_enc_2:
