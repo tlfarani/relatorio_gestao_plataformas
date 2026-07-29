@@ -1307,12 +1307,12 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                         legend=dict(
                             orientation="h", 
                             yanchor="bottom", 
-                            y=1.02, 
-                            xanchor="left", 
-                            x=0.5,
+                            y=0, 
+                            xanchor="right", 
+                            x=1, # Posiciona no canto inferior direito
                             font=dict(color='black', size=11) # Fonte da legenda: 11 e preta
                         ),
-                        margin=dict(t=50, b=30, l=40, r=40)
+                        margin=dict(t=30, b=30, l=40, r=40)
                     )
                     
                     # Eixo X: Remove valores, linhas, marcadores e grades
