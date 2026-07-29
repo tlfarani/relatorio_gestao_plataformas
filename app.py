@@ -1346,12 +1346,12 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                         range=[0, max_acid12 * 1.18]
                     )
                     
-                    # Eixo Y: Nomes dos produtos em tamanho 15 na cor preta
+                    # Eixo Y: Nomes dos produtos em tamanho 14 na cor preta
                     fig12.update_yaxes(
                         showgrid=False, 
                         zeroline=False, 
                         linecolor='black', 
-                        tickfont=dict(color='black', size=15),
+                        tickfont=dict(color='black', size=14),
                         categoryorder='array', 
                         categoryarray=lista_rank_eixo_y
                     )
@@ -1365,7 +1365,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                         }
                     }
                     
-                    st.plotly_chart(ajustar_layout_grafico(fig12), use_container_width=True, config=config_g12) #CONFIG_EXPORTACAO ou config_g12
+                    st.plotly_chart(ajustar_layout_grafico(fig12), use_container_width=True, config=CONFIG_EXPORTACAO) #CONFIG_EXPORTACAO ou config_g12
 
                     # FIGURA 3.3.13
                     bins = [-float('inf'), 0.00001, 0.0001, 0.001, 0.01, 0.1, 1.0, 8.0, 200.0, float('inf')]
