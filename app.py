@@ -1493,7 +1493,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                         'Não Avaliado': '#A04000'
                     }
                     
-                    limite_altura_barra_corte = 100  # Altura da barra cortada
+                    limite_altura_barra_corte = 70  # Altura da barra cortada
                     limite_eixo_unificado = 120    # Teto ampliado para dar folga no topo para o texto "outside"
                     limite_corte_vol = 80          # Limite para aplicação do corte visual
                     
