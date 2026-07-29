@@ -1516,7 +1516,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                                 
                                 # Aplica o corte na altura desenhada se for volume desproporcional
                                 if vol_real > limite_corte_vol:
-                                    y_desenhado.append(110)
+                                    y_desenhado.append(105)
                                 else:
                                     y_desenhado.append(vol_real)
                                 
@@ -1582,7 +1582,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                                     x1=x_pos + 0.38,
                                     y0=y_corte,
                                     y1=y_corte,
-                                    line=dict(color="white", width=22),
+                                    line=dict(color="white", width=23),
                                     xref="x",
                                     yref="y",
                                     layer="above" # Desenha a linha SOBRE a barra verde
