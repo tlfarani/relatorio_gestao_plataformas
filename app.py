@@ -1091,7 +1091,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                             config=config_g10  # <-- Passa a configuração exclusiva aqui
                         )
 
-                    # --- GRÁFICO 11 (Com Ancoragem Correta no Ponto de Acidentes para 'Não Classificado') ---
+                    # --- GRÁFICO 11 (Com Tamanhos de Fonte de Rótulos 100% Harmonizados) ---
                     with col_graf2:
                         df_g11 = df_prod_filtrado.groupby('Classe de Risco').agg(Vol=('Volume','sum'), Acid=('Processo','nunique')).reset_index()
                         ordem_11 = ['A', 'B', 'D', 'Não Classificado', 'Não Avaliado']
@@ -1109,6 +1109,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                         }
                         
                         limite_eixo_unificado = 175  
+                        TAMANHO_ROTULOS = 16 # Padronização única para TODOS os rótulos de dados
                         
                         for _, r in df_g11.iterrows():
                             classe = r['Classe de Risco']
@@ -1128,13 +1129,13 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                             # --- FORMATAÇÃO DO TEXTO DE VOLUME E ACIDENTES ---
                             if classe == 'Não Classificado':
                                 texto_barra_custom = f"<b>{vol_real:,.2f} m3 ({acid_real})</b>".replace('.',',')
-                                texto_barra_trace = None # Remove texto nativo da barra
+                                texto_barra_trace = None
                                 exibir_texto_scatter = False
                             else:
                                 texto_barra_trace = f"<b>{vol_real:,.2f} m3</b>".replace('.',',')
                                 exibir_texto_scatter = True
                             
-                            # Barras de Volume (Eixo Y Primário)
+                            # Barras de Volume (Eixo Y Primário) - Tamanho 16
                             fig11.add_trace(
                                 go.Bar(
                                     name=str(classe), 
@@ -1144,25 +1145,25 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                                     text=[texto_barra_trace] if texto_barra_trace else None, 
                                     textposition='outside', 
                                     cliponaxis=False, 
-                                    textfont=dict(color=cor_texto_barra, size=18),
+                                    textfont=dict(color=cor_texto_barra, size=TAMANHO_ROTULOS), # <-- Tamanho 16
                                     showlegend=True
                                 ), 
                                 secondary_y=False
                             )
                             
-                            # Rótulo roxo customizado para 'Não Classificado': Ancorado na altura do ponto (Y=acid_real) + yshift=18
+                            # Rótulo customizado para 'Não Classificado' - Tamanho 16
                             if classe == 'Não Classificado':
                                 fig11.add_annotation(
                                     x=classe,
-                                    y=acid_real, # Ancorado na altura do ponto preto (4)
+                                    y=acid_real,
                                     text=texto_barra_custom,
                                     showarrow=False,
-                                    yshift=18, # Eleva 18px acima do ponto preto
-                                    font=dict(color=cor_texto_barra, size=18),
+                                    yshift=18,
+                                    font=dict(color=cor_texto_barra, size=TAMANHO_ROTULOS), # <-- Tamanho 16
                                     yref="y2"
                                 )
                             
-                            # Símbolo // e Linha Branca no corte da barra B (Mantidos width=26 e size=16)
+                            # Símbolo // e Linha Branca no corte da barra B (width=26 e size=16)
                             if tem_corte:
                                 idx = ordem_11.index(classe)
                                 y_corte = 70
@@ -1173,7 +1174,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                                     x1=idx + 0.38,
                                     y0=y_corte,
                                     y1=y_corte,
-                                    line=dict(color="white", width=26), # Espessura 26 mantida
+                                    line=dict(color="white", width=26),
                                     xref="x",
                                     yref="y"
                                 )
@@ -1183,13 +1184,13 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                                     y=y_corte,
                                     text="<b>//</b>",
                                     showarrow=False,
-                                    font=dict(color="black", size=16), # Fonte 16 mantida
+                                    font=dict(color="black", size=16),
                                     bgcolor="white",
                                     borderpad=1,
                                     yref="y"
                                 )
                             
-                            # Pontos de Acidentes (Eixo Y Secundário)
+                            # Pontos de Acidentes (Eixo Y Secundário) - Tamanho 16 em negrito para igualar às barras
                             fig11.add_trace(
                                 go.Scatter(
                                     name=f'Acidentes {classe}', 
@@ -1197,9 +1198,9 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                                     y=[acid_real], 
                                     mode='markers+text' if exibir_texto_scatter else 'markers', 
                                     marker=dict(color='black', size=10), 
-                                    text=[str(acid_real)] if exibir_texto_scatter else None, 
+                                    text=[f"<b>{acid_real}</b>"] if exibir_texto_scatter else None, # <-- Negrito + Tamanho 16
                                     textposition='top center', 
-                                    textfont=dict(color='black', size=15), 
+                                    textfont=dict(color='black', size=TAMANHO_ROTULOS), # <-- Tamanho 16
                                     showlegend=False
                                 ), 
                                 secondary_y=True
@@ -1209,7 +1210,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                         fig11.update_layout(
                             plot_bgcolor='white', 
                             paper_bgcolor='white', 
-                            font=dict(color='black', size=18),
+                            font=dict(color='black', size=15),
                             legend_title_text='', 
                             legend=dict(
                                 orientation="h", 
@@ -1233,7 +1234,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                         
                         fig11.update_yaxes(
                             title_text="Volume Liberado (m3)", 
-                            title_font=dict(size=20, color='black'),
+                            title_font=dict(size=18, color='black'),
                             secondary_y=False, 
                             range=[0, limite_eixo_unificado], 
                             showgrid=False, 
@@ -1244,7 +1245,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                         
                         fig11.update_yaxes(
                             title_text="Número de Acidentes", 
-                            title_font=dict(size=20, color='black'),
+                            title_font=dict(size=18, color='black'),
                             secondary_y=True, 
                             range=[0, limite_eixo_unificado], 
                             showgrid=False, 
