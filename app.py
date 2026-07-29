@@ -1020,7 +1020,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                         # Eixo Y Primário: Teto em 1.25 para dar respiro ao texto em negrito acima da barra
                         fig10.update_yaxes(
                             title_text="Volume de Produto Liberado (m3)", 
-                            title_font=dict(size=18, color='black'),
+                            title_font=dict(size=20, color='black'),
                             secondary_y=False, 
                             range=[0, max_vol * 1.25], 
                             showgrid=False, 
@@ -1031,7 +1031,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                         
                         fig10.update_yaxes(
                             title_text="Número de Acidentes", 
-                            title_font=dict(size=18, color='black'),
+                            title_font=dict(size=20, color='black'),
                             secondary_y=True, 
                             range=[0, max_vol * 1.25], #range=[0, max_acid * 1.25],
                             showgrid=False, 
