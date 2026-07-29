@@ -1278,6 +1278,17 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                     # Cálculo do maior valor acumulado para dar margem à direita no eixo X
                     max_acid12 = df_g12.groupby('Rank')['Acid'].sum().max() if not df_g12.empty else 10
                     
+                    # Mapeamento para organizar a legenda em 2 colunas verticais
+                    # Coluna 1 (Esq): Risco A (1), Risco B (3), Risco D (5)
+                    # Coluna 2 (Dir): Não Avaliado (2), Não Classificado (4)
+                    rank_legenda_g12 = {
+                        'A': 1,
+                        'Não Avaliado': 2,
+                        'B': 3,
+                        'Não Classificado': 4,
+                        'D': 5
+                    }
+                    
                     fig12 = go.Figure()
                     for c in ordem_11:
                         d = df_g12[df_g12['Classe de Risco'] == c]
@@ -1292,8 +1303,9 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                                     text=d['Acid'], 
                                     textposition='outside',
                                     cliponaxis=False,
-                                    constraintext='none', # Desativa encolhimento automático da fonte
-                                    textfont=dict(color='black', size=15) # Fonte dos valores das barras: 15 e preta
+                                    constraintext='none',
+                                    textfont=dict(color='black', size=15),
+                                    legendrank=rank_legenda_g12.get(c, 99) # Define a posição na grade de 2 colunas
                                 )
                             )
                     
@@ -1304,7 +1316,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                         plot_bgcolor='white', 
                         paper_bgcolor='white',
                         font=dict(color='black', size=15),
-                        uniformtext_minsize=15, # Garanete fonte mínima 15 nos rótulos das barras
+                        uniformtext_minsize=15, 
                         uniformtext_mode='show',
                         legend_title_text='', 
                         legend=dict(
@@ -1313,7 +1325,9 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                             y=0, 
                             xanchor="right", 
                             x=1, # Canto inferior direito
-                            font=dict(color='black', size=13) # Fonte da legenda: 13 e preta
+                            font=dict(color='black', size=13),
+                            entrywidth=0.48,             # Cada item ocupa 48% da largura da legenda
+                            entrywidthmode="fraction"    # Força a divisão perfeita em 2 colunas
                         ),
                         margin=dict(t=30, b=30, l=40, r=40)
                     )
@@ -1346,7 +1360,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                         }
                     }
                     
-                    st.plotly_chart(ajustar_layout_grafico(fig12), use_container_width=True, config=CONFIG_EXPORTACAO)
+                    st.plotly_chart(ajustar_layout_grafico(fig12), use_container_width=True, config=config_g12)
 
                     # FIGURA 3.3.13
                     bins = [-float('inf'), 0.00001, 0.0001, 0.001, 0.01, 0.1, 1.0, 8.0, 200.0, float('inf')]
