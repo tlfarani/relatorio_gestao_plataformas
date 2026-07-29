@@ -1091,7 +1091,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                             config=config_g10  # <-- Passa a configuração exclusiva aqui
                         )
 
-                    # --- GRÁFICO 11 (Ajuste Fino de Proporção de Fontes na Exportação) ---
+                    # --- GRÁFICO 11 (Ajuste Pontual de Fonte para 'Não Classificado' na Exportação) ---
                     with col_graf2:
                         df_g11 = df_prod_filtrado.groupby('Classe de Risco').agg(Vol=('Volume','sum'), Acid=('Processo','nunique')).reset_index()
                         ordem_11 = ['A', 'B', 'D', 'Não Classificado', 'Não Avaliado']
@@ -1110,7 +1110,8 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                         
                         limite_eixo_unificado = 175  
                         TAMANHO_ROTULO_BARRA = 16
-                        TAMANHO_ROTULO_PONTO = 13  # <-- Ajustado para 13 para compensar a escala do Plotly na exportação
+                        TAMANHO_ROTULO_PONTO = 13
+                        TAMANHO_ROTULO_ANNOTATION = 13  # <-- Tamanho exclusivo para equalizar a anotação na exportação
                         
                         for _, r in df_g11.iterrows():
                             classe = r['Classe de Risco']
@@ -1152,7 +1153,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                                 secondary_y=False
                             )
                             
-                            # Rótulo customizado para 'Não Classificado'
+                            # Rótulo customizado para 'Não Classificado' ajustado para TAMANHO_ROTULO_ANNOTATION (13)
                             if classe == 'Não Classificado':
                                 fig11.add_annotation(
                                     x=classe,
@@ -1160,11 +1161,11 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                                     text=texto_barra_custom,
                                     showarrow=False,
                                     yshift=18,
-                                    font=dict(color=cor_texto_barra, size=TAMANHO_ROTULO_BARRA),
+                                    font=dict(color=cor_texto_barra, size=TAMANHO_ROTULO_ANNOTATION), # <-- Ajustado aqui
                                     yref="y2"
                                 )
                             
-                            # Símbolo // e Linha Branca no corte da barra B
+                            # Símbolo // e Linha Branca no corte da barra B (width=26 e size=16)
                             if tem_corte:
                                 idx = ordem_11.index(classe)
                                 y_corte = 70
@@ -1191,7 +1192,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                                     yref="y"
                                 )
                             
-                            # Pontos de Acidentes (Eixo Y Secundário) - Sem <b> e size=13 para harmonizar na exportação
+                            # Pontos de Acidentes (Eixo Y Secundário)
                             fig11.add_trace(
                                 go.Scatter(
                                     name=f'Acidentes {classe}', 
@@ -1199,9 +1200,9 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                                     y=[acid_real], 
                                     mode='markers+text' if exibir_texto_scatter else 'markers', 
                                     marker=dict(color='black', size=10), 
-                                    text=[str(acid_real)] if exibir_texto_scatter else None, # <-- Sem o <b> para evitar efeito inflado
+                                    text=[str(acid_real)] if exibir_texto_scatter else None, 
                                     textposition='top center', 
-                                    textfont=dict(color='black', size=TAMANHO_ROTULO_PONTO), # <-- Size 13
+                                    textfont=dict(color='black', size=TAMANHO_ROTULO_PONTO),
                                     showlegend=False
                                 ), 
                                 secondary_y=True
