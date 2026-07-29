@@ -1470,7 +1470,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                     
                     st.plotly_chart(fig13_final, use_container_width=True, config=config_g13)
 
-                    # --- GRÁFICO 14 (Com Texto Preto em Fundo Branco no Volume Médio e Eixos Y sem Números) ---
+                    # --- GRÁFICO 14 (Com Ordenação por Volume Descendente e Caixas Brancas no Vol. Médio) ---
                     df_g14 = df_prod_filtrado.groupby(['Produto', 'Classe de Risco']).agg(Vol=('Volume','sum'), Acid=('Processo','nunique')).reset_index().sort_values(by='Vol', ascending=False)
                     top20 = df_g14.head(20).copy()
                     demais = df_g14.iloc[20:].copy()
@@ -1479,6 +1479,9 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                     
                     top20['Vol_Medio'] = top20['Vol'] / top20['Acid']
                     top20['Rank'] = [f"{i}. {p}" if p != 'Demais Produtos' else p for i, p in enumerate(top20['Produto'], 1)]
+                    
+                    # Ordem estrita do maior para o menor volume (esquerda para a direita)
+                    ordem_rank_x = top20['Rank'].tolist()
                     
                     fig14 = make_subplots(specs=[[{"secondary_y": True}]])
                     
@@ -1495,9 +1498,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                     TAMANHO_ROTULO_BARRA = 13
                     TAMANHO_ROTULO_PONTO = 11
                     
-                    # Mapeia a ordem exata das categorias no eixo X conforme são plotadas
-                    lista_categorias_x = []
-                    
+                    # Adiciona as barras por classe de risco
                     for c in ordem_11:
                         d = top20[top20['Classe de Risco'] == c]
                         if not d.empty:
@@ -1509,10 +1510,6 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                             
                             for _, row in d.iterrows():
                                 vol_real = row['Vol']
-                                cat_rank = row['Rank']
-                                
-                                if cat_rank not in lista_categorias_x:
-                                    lista_categorias_x.append(cat_rank)
                                 
                                 # Aplica o corte na altura desenhada se for volume desproporcional
                                 if vol_real > limite_corte_vol:
@@ -1538,43 +1535,41 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                                 secondary_y=False
                             )
                     
-                    # Prepara os dados do Scatter de Volume Médio
-                    scatter_x = []
-                    scatter_y = []
-                    scatter_text = []
-                    
-                    for _, row in top20.iterrows():
-                        scatter_x.append(row['Rank'])
-                        scatter_y.append(row['Vol_Medio'])
-                        
-                        # Exibe o texto do Volume Médio com fundo branco e texto preto apenas para Vol >= 8 m³
-                        if row['Vol'] >= 8 and abs(row['Vol'] - row['Vol_Medio']) >= 0.01:
-                            val_str = f"{row['Vol_Medio']:,.2f}".replace('.',',')
-                            scatter_text.append(f"<span style='background-color: white; color: black;'>{val_str}</span>")
-                        else:
-                            scatter_text.append(None)
-                    
+                    # Desenha apenas os pontos (marcadores cinzas) do Volume Médio
                     fig14.add_trace(
                         go.Scatter(
                             name='Volume Médio', 
-                            x=scatter_x, 
-                            y=scatter_y, 
-                            mode='markers+text', 
+                            x=top20['Rank'], 
+                            y=top20['Vol_Medio'], 
+                            mode='markers', 
                             marker=dict(color='grey', size=8), 
-                            text=scatter_text, 
-                            textposition='top center', 
-                            textfont=dict(size=TAMANHO_ROTULO_PONTO), 
                             showlegend=False
                         ), 
                         secondary_y=True
                     )
                     
+                    # Adiciona os rótulos de Volume Médio com CAIXA BRANCA customizada (para Vol >= 8 m³)
+                    for _, row in top20.iterrows():
+                        if row['Vol'] >= 8 and abs(row['Vol'] - row['Vol_Medio']) >= 0.01:
+                            fig14.add_annotation(
+                                x=row['Rank'],
+                                y=row['Vol_Medio'],
+                                text=f"<b>{row['Vol_Medio']:,.2f}</b>".replace('.',','),
+                                showarrow=False,
+                                yshift=14,
+                                font=dict(color="black", size=TAMANHO_ROTULO_PONTO),
+                                bgcolor="white",
+                                bordercolor="white",
+                                borderpad=1,
+                                yref="y2" # Ancorado no eixo Y secundário (Volume Médio)
+                            )
+                    
                     # Adiciona a linha branca de corte na posição X exata da barra
                     for _, row in top20.iterrows():
                         if row['Vol'] > limite_corte_vol:
                             cat_rank = row['Rank']
-                            if cat_rank in lista_categorias_x:
-                                x_pos = lista_categorias_x.index(cat_rank)
+                            if cat_rank in ordem_rank_x:
+                                x_pos = ordem_rank_x.index(cat_rank) # Índice exato da barra ordenada no eixo X
                                 y_corte = 73
                                 
                                 fig14.add_shape(
@@ -1618,13 +1613,15 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                         margin=dict(t=80, b=180, l=60, r=60)
                     )
                     
-                    # Eixo X
+                    # Eixo X: Força rigorosamente a ordem do maior para o menor volume (da esquerda para a direita)
                     fig14.update_xaxes(
                         tickangle=45, 
                         showgrid=False, 
                         zeroline=False,
                         linecolor='black', 
-                        tickfont=dict(color='black', size=12)
+                        tickfont=dict(color='black', size=12),
+                        categoryorder='array',
+                        categoryarray=ordem_rank_x # <-- Ordem descendente fixada aqui
                     )
                     
                     # Eixo Y Primário (Volume Total) - Sem números de escala
@@ -1635,7 +1632,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                         range=[0, limite_eixo_unificado],
                         showgrid=False, 
                         zeroline=False,
-                        showticklabels=False, # <-- Remove os números da escala
+                        showticklabels=False,
                         linecolor='black'
                     )
                     
@@ -1647,7 +1644,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                         range=[0, limite_eixo_unificado],
                         showgrid=False, 
                         zeroline=False,
-                        showticklabels=False, # <-- Remove os números da escala
+                        showticklabels=False,
                         linecolor='black'
                     )
                     
@@ -1663,7 +1660,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                     config_g14 = {
                         'toImageButtonOptions': {
                             **CONFIG_EXPORTACAO['toImageButtonOptions'],
-                            'width': 900,
+                            'width': 1100,
                             'height': 600
                         }
                     }
