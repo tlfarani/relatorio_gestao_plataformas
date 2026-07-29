@@ -1091,7 +1091,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                             config=config_g10  # <-- Passa a configuração exclusiva aqui
                         )
 
-                    # GRÁFICO 11 ----
+                    # --- GRÁFICO 11 ---
                     with col_graf2:
                         df_g11 = df_prod_filtrado.groupby('Classe de Risco').agg(Vol=('Volume','sum'), Acid=('Processo','nunique')).reset_index()
                         ordem_11 = ['A', 'B', 'D', 'Não Classificado', 'Não Avaliado']
@@ -1099,14 +1099,119 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                         df_g11 = df_g11.sort_values('Classe de Risco').dropna(subset=['Classe de Risco'])
                         
                         fig11 = make_subplots(specs=[[{"secondary_y": True}]])
+                        
+                        # Mapeamento de cores mais escuras para os textos das barras de cada Classe de Risco
+                        cores_texto_risco_escuras = {
+                            'A': '#0B5383', 
+                            'B': '#3E6B15', 
+                            'D': '#B87B08', 
+                            'Não Classificado': '#5B2C6F', 
+                            'Não Avaliado': '#A04000'
+                        }
+                        
+                        max_vol11 = df_g11['Vol'].max() if not df_g11.empty else 100
+                        max_acid11 = df_g11['Acid'].max() if not df_g11.empty else 10
+                        
                         for _, r in df_g11.iterrows():
-                            fig11.add_trace(go.Bar(name=r['Classe de Risco'], x=[r['Classe de Risco']], y=[r['Vol']], marker_color=get_cor_risco(r['Classe de Risco'], 11), text=f"{r['Vol']:,.2f} m3".replace('.',','), textposition='inside', showlegend=False), secondary_y=False)
-                            fig11.add_trace(go.Scatter(name='Acidentes', x=[r['Classe de Risco']], y=[r['Acid']], mode='markers+text', marker=dict(color='black', size=10), text=str(r['Acid']), textposition='top center', textfont=dict(color='black', size=13), showlegend=False), secondary_y=True)
-                        fig11.update_layout(plot_bgcolor='white', margin=dict(t=30, b=30, l=40, r=40))
-                        fig11.update_xaxes(showgrid=False, linecolor='black')
-                        fig11.update_yaxes(title_text="Volume Liberado (m3)", secondary_y=False, showgrid=False, linecolor='black')
-                        fig11.update_yaxes(title_text="Número de Acidentes", secondary_y=True, showgrid=False, linecolor='black')
-                        st.plotly_chart(ajustar_layout_grafico(fig11), use_container_width=True, config=CONFIG_EXPORTACAO)
+                            classe = r['Classe de Risco']
+                            cor_barra = get_cor_risco(classe, 11)
+                            cor_texto_barra = cores_texto_risco_escuras.get(classe, '#2C3E50')
+                            
+                            # Barras de Volume: valor em negrito <b>, fonte 20 na cor escura, posicionado acima/fora
+                            fig11.add_trace(
+                                go.Bar(
+                                    name=str(classe), 
+                                    x=[classe], 
+                                    y=[r['Vol']], 
+                                    marker_color=cor_barra, 
+                                    text=[f"<b>{r['Vol']:,.2f} m3</b>".replace('.',',')],
+                                    textposition='outside', 
+                                    cliponaxis=False, 
+                                    textfont=dict(color=cor_texto_barra, size=20),
+                                    showlegend=True
+                                ), 
+                                secondary_y=False
+                            )
+                            
+                            # Pontos de Acidentes
+                            fig11.add_trace(
+                                go.Scatter(
+                                    name=f'Acidentes {classe}', 
+                                    x=[classe], 
+                                    y=[r['Acid']], 
+                                    mode='markers+text', 
+                                    marker=dict(color='black', size=12), 
+                                    text=[str(r['Acid'])], 
+                                    textposition='top center', 
+                                    textfont=dict(color='black', size=18), 
+                                    showlegend=False
+                                ), 
+                                secondary_y=True
+                            )
+                        
+                        # Layout e Legenda no topo centralizada
+                        fig11.update_layout(
+                            plot_bgcolor='white', 
+                            paper_bgcolor='white', 
+                            font=dict(color='black', size=18),
+                            legend_title_text='', 
+                            legend=dict(
+                                orientation="h", 
+                                yanchor="bottom", 
+                                y=1.05, 
+                                xanchor="center", 
+                                x=0.5, 
+                                font=dict(size=18, color='black')
+                            ),
+                            margin=dict(t=60, b=40, l=40, r=40)
+                        )
+                        
+                        # Eixo X: Oculta os nomes das classes
+                        fig11.update_xaxes(
+                            showgrid=False, 
+                            zeroline=False, 
+                            showticklabels=False, 
+                            linecolor='black'
+                        )
+                        
+                        # Eixo Y Primário (Volume Liberado)
+                        fig11.update_yaxes(
+                            title_text="Volume Liberado (m3)", 
+                            title_font=dict(size=20, color='black'),
+                            secondary_y=False, 
+                            range=[0, max_vol11 * 1.25], 
+                            showgrid=False, 
+                            zeroline=False, 
+                            showticklabels=False, 
+                            linecolor='black'
+                        )
+                        
+                        # Eixo Y Secundário (Número de Acidentes)
+                        fig11.update_yaxes(
+                            title_text="Número de Acidentes", 
+                            title_font=dict(size=20, color='black'),
+                            secondary_y=True, 
+                            range=[0, max_vol11 * 1.25], 
+                            showgrid=False, 
+                            zeroline=False, 
+                            showticklabels=False, 
+                            linecolor='black'
+                        )
+                        
+                        # Configuração de exportação EXCLUSIVA para o Gráfico 11
+                        config_g11 = {
+                            'toImageButtonOptions': {
+                                **CONFIG_EXPORTACAO['toImageButtonOptions'],
+                                'width': 540,
+                                'height': 400
+                            }
+                        }
+                        
+                        st.plotly_chart(
+                            ajustar_layout_grafico(fig11), 
+                            use_container_width=True, 
+                            config=config_g11
+                        )
 
                     # FIGURA 3.3.12
                     df_g12 = df_prod_filtrado.groupby(['Produto', 'Classe de Risco']).agg(Acid=('Processo','nunique')).reset_index()
