@@ -1470,7 +1470,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                     
                     st.plotly_chart(fig13_final, use_container_width=True, config=config_g13)
 
-                    # --- GRÁFICO 14 (Com Posição da Linha Branca Mapeada Corretamente) ---
+                    # --- GRÁFICO 14 (Com Rótulos de Volume Médio Exibidos Apenas para Vol >= 5 m³) ---
                     df_g14 = df_prod_filtrado.groupby(['Produto', 'Classe de Risco']).agg(Vol=('Volume','sum'), Acid=('Processo','nunique')).reset_index().sort_values(by='Vol', ascending=False)
                     top20 = df_g14.head(20).copy()
                     demais = df_g14.iloc[20:].copy()
@@ -1491,7 +1491,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                     }
                     
                     limite_eixo_unificado = 105  # Teto unificado para ambos os eixos Y
-                    limite_corte_vol = 80       # Limite para aplicação do corte visual
+                    limite_corte_vol = 80        # Limite para aplicação do corte visual
                     TAMANHO_ROTULO_BARRA = 13
                     TAMANHO_ROTULO_PONTO = 11
                     
@@ -1547,11 +1547,11 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                         scatter_x.append(row['Rank'])
                         scatter_y.append(row['Vol_Medio'])
                         
-                        # Oculta o texto do ponto quando Volume Total e Volume Médio coincidirem (mantendo só o da barra)
-                        if abs(row['Vol'] - row['Vol_Medio']) < 0.01:
-                            scatter_text.append(None)
-                        else:
+                        # Exibe o texto do Volume Médio APENAS se Vol >= 5 m3 E se não coincidir com o Volume Total
+                        if row['Vol'] >= 5 and abs(row['Vol'] - row['Vol_Medio']) >= 0.01:
                             scatter_text.append(f"{row['Vol_Medio']:,.2f}".replace('.',','))
+                        else:
+                            scatter_text.append(None)
                     
                     fig14.add_trace(
                         go.Scatter(
@@ -1573,7 +1573,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                         if row['Vol'] > limite_corte_vol:
                             cat_rank = row['Rank']
                             if cat_rank in lista_categorias_x:
-                                x_pos = lista_categorias_x.index(cat_rank) # Posição numérica exata no eixo X (ex: 2)
+                                x_pos = lista_categorias_x.index(cat_rank)
                                 y_corte = 73
                                 
                                 fig14.add_shape(
