@@ -1091,7 +1091,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                             config=config_g10  # <-- Passa a configuração exclusiva aqui
                         )
 
-                    # --- GRÁFICO 11 ---
+                    # --- GRÁFICO 11 (Com Corte Visual na Classe B e Eixos Unificados) ---
                     with col_graf2:
                         df_g11 = df_prod_filtrado.groupby('Classe de Risco').agg(Vol=('Volume','sum'), Acid=('Processo','nunique')).reset_index()
                         ordem_11 = ['A', 'B', 'D', 'Não Classificado', 'Não Avaliado']
@@ -1100,7 +1100,6 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                         
                         fig11 = make_subplots(specs=[[{"secondary_y": True}]])
                         
-                        # Mapeamento de cores mais escuras para os textos das barras de cada Classe de Risco
                         cores_texto_risco_escuras = {
                             'A': '#0B5383', 
                             'B': '#3E6B15', 
@@ -1109,31 +1108,52 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                             'Não Avaliado': '#A04000'
                         }
                         
-                        max_vol11 = df_g11['Vol'].max() if not df_g11.empty else 100
-                        max_acid11 = df_g11['Acid'].max() if not df_g11.empty else 10
+                        # Define o teto unificado para ambos os eixos Y (com base nos acidentes máximos e volumes normais)
+                        limite_eixo_unificado = 140  
                         
                         for _, r in df_g11.iterrows():
                             classe = r['Classe de Risco']
                             cor_barra = get_cor_risco(classe, 11)
                             cor_texto_barra = cores_texto_risco_escuras.get(classe, '#2C3E50')
+                            vol_real = r['Vol']
                             
-                            # Barras de Volume: valor em negrito <b>, fonte 20 na cor escura, posicionado acima/fora
+                            # --- APLICAÇÃO DO CORTE VISUAL ---
+                            # Se o volume passar de 120 (caso da Classe B), limita a altura desenhada da barra a 105
+                            if vol_real > 120:
+                                vol_desenhado = 105
+                                tem_corte = True
+                            else:
+                                vol_desenhado = vol_real
+                                tem_corte = False
+                            
+                            # Barras de Volume (Eixo Y Primário) - Exibe valor REAL no texto acima
                             fig11.add_trace(
                                 go.Bar(
                                     name=str(classe), 
                                     x=[classe], 
-                                    y=[r['Vol']], 
+                                    y=[vol_desenhado], # Altura visual cortada para a Classe B
                                     marker_color=cor_barra, 
-                                    text=[f"<b>{r['Vol']:,.2f} m3</b>".replace('.',',')],
+                                    text=[f"<b>{vol_real:,.2f} m3</b>".replace('.',',')], # Exibe o valor real (378,77 m3)
                                     textposition='outside', 
                                     cliponaxis=False, 
-                                    textfont=dict(color=cor_texto_barra, size=20),
+                                    textfont=dict(color=cor_texto_barra, size=18),
                                     showlegend=True
                                 ), 
                                 secondary_y=False
                             )
                             
-                            # Pontos de Acidentes
+                            # Símbolo // indicando o corte na barra
+                            if tem_corte:
+                                fig11.add_annotation(
+                                    x=classe,
+                                    y=vol_desenhado / 2,
+                                    text="<b>//</b>",
+                                    showarrow=False,
+                                    font=dict(color="white", size=22),
+                                    yref="y"
+                                )
+                            
+                            # Pontos de Acidentes (Eixo Y Secundário)
                             fig11.add_trace(
                                 go.Scatter(
                                     name=f'Acidentes {classe}', 
@@ -1143,13 +1163,13 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                                     marker=dict(color='black', size=10), 
                                     text=[str(r['Acid'])], 
                                     textposition='top center', 
-                                    textfont=dict(color='black', size=14), 
+                                    textfont=dict(color='black', size=15), 
                                     showlegend=False
                                 ), 
                                 secondary_y=True
                             )
                         
-                        # Layout e Legenda no topo centralizada
+                        # Layout e Legenda no topo organizada em 2 linhas
                         fig11.update_layout(
                             plot_bgcolor='white', 
                             paper_bgcolor='white', 
@@ -1160,13 +1180,12 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                                 yanchor="bottom", 
                                 y=1.05, 
                                 xanchor="left",  
-                                x=0, # Alinha no canto esquerdo
+                                x=0,
                                 font=dict(color='black', size=15),
-                                entrywidth=0.45,             # Cada item ocupa 45% da largura da legenda
-                                entrywidthmode="fraction"    # Força o 3º item a quebrar para a linha de baixo
-                                ),
-                            margin=dict(t=90, b=50, l=50, r=50) # Margem superior ampliada para acomodar a legenda em 2 linhas
-                            #margin=dict(t=60, b=40, l=40, r=40)
+                                entrywidth=0.45,
+                                entrywidthmode="fraction"
+                            ),
+                            margin=dict(t=90, b=50, l=50, r=50)
                         )
                         
                         # Eixo X: Oculta os nomes das classes
@@ -1177,24 +1196,24 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                             linecolor='black'
                         )
                         
-                        # Eixo Y Primário (Volume Liberado)
+                        # Eixo Y Primário (Volume Liberado) - ESCALA HARMONIZADA [0, 140]
                         fig11.update_yaxes(
                             title_text="Volume Liberado (m3)", 
                             title_font=dict(size=20, color='black'),
                             secondary_y=False, 
-                            range=[0, max_vol11 * 1.25], 
+                            range=[0, limite_eixo_unificado], 
                             showgrid=False, 
                             zeroline=False, 
                             showticklabels=False, 
                             linecolor='black'
                         )
                         
-                        # Eixo Y Secundário (Número de Acidentes)
+                        # Eixo Y Secundário (Número de Acidentes) - ESCALA EXATAMENTE IGUAL [0, 140]
                         fig11.update_yaxes(
                             title_text="Número de Acidentes", 
                             title_font=dict(size=20, color='black'),
                             secondary_y=True, 
-                            range=[0, max_vol11 * 1.25], 
+                            range=[0, limite_eixo_unificado], 
                             showgrid=False, 
                             zeroline=False, 
                             showticklabels=False, 
