@@ -972,7 +972,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                                     text=d['Vol'].apply(lambda x: f"<b>{x:,.1f} m3</b>".replace('.',',')), # <-- Negrito em HTML
                                     textposition='outside',               # <-- Força o texto para FORA/ACIMA da barra
                                     cliponaxis=False,                     # <-- Impede o corte caso o texto passe do limite
-                                    textfont=dict(color=cor_texto_barra, size=16), # <-- Fonte 16 na cor escura
+                                    textfont=dict(color=cor_texto_barra, size=20), # <-- Fonte 20 na cor escura
                                     showlegend=True
                                 ), 
                                 secondary_y=False
@@ -988,7 +988,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                                     marker=dict(color='black', size=12), 
                                     text=d['Acid'], 
                                     textposition='top center', 
-                                    textfont=dict(color='black', size=15), 
+                                    textfont=dict(color='black', size=18), 
                                     showlegend=False
                                 ), 
                                 secondary_y=True
@@ -997,7 +997,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                         fig10.update_layout(
                             plot_bgcolor='white', 
                             paper_bgcolor='white', 
-                            font=dict(color='black', size=15),
+                            font=dict(color='black', size=18),
                             legend_title_text='', 
                             legend=dict(
                                 orientation="h", 
@@ -1005,7 +1005,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                                 y=1.05, 
                                 xanchor="center", 
                                 x=0.5, 
-                                font=dict(size=15, color='black')
+                                font=dict(size=18, color='black')
                             ),
                             margin=dict(t=60, b=40, l=40, r=40)
                         )
@@ -1020,7 +1020,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                         # Eixo Y Primário: Teto em 1.25 para dar respiro ao texto em negrito acima da barra
                         fig10.update_yaxes(
                             title_text="Volume de Produto Liberado (m3)", 
-                            title_font=dict(size=15, color='black'),
+                            title_font=dict(size=18, color='black'),
                             secondary_y=False, 
                             range=[0, max_vol * 1.25], 
                             showgrid=False, 
@@ -1031,7 +1031,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                         
                         fig10.update_yaxes(
                             title_text="Número de Acidentes", 
-                            title_font=dict(size=15, color='black'),
+                            title_font=dict(size=18, color='black'),
                             secondary_y=True, 
                             range=[0, max_vol * 1.25], #range=[0, max_acid * 1.25],
                             showgrid=False, 
