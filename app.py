@@ -1140,10 +1140,10 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                                     x=[classe], 
                                     y=[r['Acid']], 
                                     mode='markers+text', 
-                                    marker=dict(color='black', size=12), 
+                                    marker=dict(color='black', size=10), 
                                     text=[str(r['Acid'])], 
                                     textposition='top center', 
-                                    textfont=dict(color='black', size=18), 
+                                    textfont=dict(color='black', size=14), 
                                     showlegend=False
                                 ), 
                                 secondary_y=True
