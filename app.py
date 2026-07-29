@@ -1044,8 +1044,8 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                         config_g10 = {
                             'toImageButtonOptions': {
                                 **CONFIG_EXPORTACAO['toImageButtonOptions'], # Herda formato, escala e nome
-                                'width': 700,   # <-- Largura menor exclusiva para a imagem salva deste gráfico
-                                'height': 520   # <-- Altura (pode manter ou alterar como preferir)
+                                'width': 490,   # <-- Largura menor exclusiva para a imagem salva deste gráfico
+                                'height': 364   # <-- Altura (pode manter ou alterar como preferir)
                             }
                         }
                     
