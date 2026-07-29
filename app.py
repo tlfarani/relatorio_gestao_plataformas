@@ -1270,23 +1270,80 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                             config=config_g11
                         )
 
-                    # FIGURA 3.3.12
+                    # --- GRÁFICO 12 ---
                     df_g12 = df_prod_filtrado.groupby(['Produto', 'Classe de Risco']).agg(Acid=('Processo','nunique')).reset_index()
                     df_g12 = df_g12.sort_values(by='Acid', ascending=False).head(20)
                     df_g12['Rank'] = [f"{i}. {p}" for i, p in enumerate(df_g12['Produto'], 1)]
+                    
+                    # Cálculo do maior valor acumulado para dar margem à direita no eixo X
+                    max_acid12 = df_g12.groupby('Rank')['Acid'].sum().max() if not df_g12.empty else 10
                     
                     fig12 = go.Figure()
                     for c in ordem_11:
                         d = df_g12[df_g12['Classe de Risco'] == c]
                         if not d.empty:
-                            fig12.add_trace(go.Bar(name=f'Risco {c}' if c in ['A','B','D'] else c, y=d['Rank'], x=d['Acid'], orientation='h', marker_color=get_cor_risco(c, 12), text=d['Acid'], textposition='outside'))
+                            fig12.add_trace(
+                                go.Bar(
+                                    name=f'Risco {c}' if c in ['A','B','D'] else c, 
+                                    y=d['Rank'], 
+                                    x=d['Acid'], 
+                                    orientation='h', 
+                                    marker_color=get_cor_risco(c, 12), 
+                                    text=d['Acid'], 
+                                    textposition='outside',
+                                    cliponaxis=False,
+                                    textfont=dict(color='black', size=15) # Fonte dos valores das barras: 15 e preta
+                                )
+                            )
                     
                     lista_rank_eixo_y = df_g12['Rank'].tolist()[::-1]
                     
-                    fig12.update_layout(barmode='stack', plot_bgcolor='white', margin=dict(t=30, b=30, l=40, r=40), legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="center", x=0.5))
-                    fig12.update_xaxes(showgrid=False, zeroline=False, linecolor='black')
-                    fig12.update_yaxes(showgrid=False, zeroline=False, linecolor='black', categoryorder='array', categoryarray=lista_rank_eixo_y)
-                    st.plotly_chart(ajustar_layout_grafico(fig12), use_container_width=True, config=CONFIG_EXPORTACAO)
+                    fig12.update_layout(
+                        barmode='stack', 
+                        plot_bgcolor='white', 
+                        paper_bgcolor='white',
+                        font=dict(color='black', size=15),
+                        legend_title_text='', 
+                        legend=dict(
+                            orientation="h", 
+                            yanchor="bottom", 
+                            y=1.02, 
+                            xanchor="center", 
+                            x=0.5,
+                            font=dict(color='black', size=13) # Fonte da legenda: 13 e preta
+                        ),
+                        margin=dict(t=50, b=30, l=40, r=40)
+                    )
+                    
+                    # Eixo X: Remove valores, linhas, marcadores e grades
+                    fig12.update_xaxes(
+                        showgrid=False, 
+                        zeroline=False, 
+                        showline=False, 
+                        showticklabels=False, 
+                        range=[0, max_acid12 * 1.15]
+                    )
+                    
+                    # Eixo Y: Nomes dos produtos em tamanho 15 na cor preta
+                    fig12.update_yaxes(
+                        showgrid=False, 
+                        zeroline=False, 
+                        linecolor='black', 
+                        tickfont=dict(color='black', size=15),
+                        categoryorder='array', 
+                        categoryarray=lista_rank_eixo_y
+                    )
+                    
+                    # Configuração de exportação EXCLUSIVA para o Gráfico 12
+                    config_g12 = {
+                        'toImageButtonOptions': {
+                            **CONFIG_EXPORTACAO['toImageButtonOptions'],
+                            'width': 800,
+                            'height': 600
+                        }
+                    }
+                    
+                    st.plotly_chart(ajustar_layout_grafico(fig12), use_container_width=True, config=config_g12)
 
                     # FIGURA 3.3.13
                     bins = [-float('inf'), 0.00001, 0.0001, 0.001, 0.01, 0.1, 1.0, 8.0, 200.0, float('inf')]
