@@ -1270,7 +1270,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                             config=config_g11
                         )
 
-                    # --- GRÁFICO 12 ---
+                    # --- GRÁFICO 12 (Com Margem Esquerda Expandida para Rótulos Longos) ---
                     df_g12 = df_prod_filtrado.groupby(['Produto', 'Classe de Risco']).agg(Acid=('Processo','nunique')).reset_index()
                     df_g12 = df_g12.sort_values(by='Acid', ascending=False).head(20)
                     df_g12['Rank'] = [f"{i}. {p}" for i, p in enumerate(df_g12['Produto'], 1)]
@@ -1294,7 +1294,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                                     cliponaxis=False,
                                     constraintext='none',
                                     textfont=dict(color='black', size=15),
-                                    showlegend=False # Desativa legenda nativa para usar anotação alinhada à direita
+                                    showlegend=False
                                 )
                             )
                     
@@ -1322,19 +1322,20 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                         uniformtext_minsize=15, 
                         uniformtext_mode='show',
                         showlegend=False,
-                        margin=dict(t=30, b=30, l=40, r=40)
+                        # Ampliado 'l' para 320px para comportar o nome do produto 12 sem cortar a numeração
+                        margin=dict(t=30, b=30, l=320, r=40) 
                     )
                     
-                    # Adiciona a legenda via Anotação: align="right" garante que o último caractere encoste na margem
+                    # Adiciona a legenda via Anotação no canto inferior direito
                     fig12.add_annotation(
                         xref="paper", yref="paper",
                         x=1, y=0,
                         xanchor="right", 
                         yanchor="bottom",
-                        align="right", # Força o alinhamento do texto à direita
+                        align="right",
                         text=texto_legenda,
                         showarrow=False,
-                        font=dict(color='black', size=13) # Fonte 13 mantida para as legendas
+                        font=dict(color='black', size=13)
                     )
                     
                     # Eixo X: Remove valores, linhas, marcadores e grades
@@ -1346,26 +1347,27 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                         range=[0, max_acid12 * 1.18]
                     )
                     
-                    # Eixo Y: Nomes dos produtos em tamanho 14 na cor preta
+                    # Eixo Y: Com automargin=True para evitar cortes
                     fig12.update_yaxes(
                         showgrid=False, 
                         zeroline=False, 
                         linecolor='black', 
-                        tickfont=dict(color='black', size=14),
+                        tickfont=dict(color='black', size=15),
                         categoryorder='array', 
-                        categoryarray=lista_rank_eixo_y
+                        categoryarray=lista_rank_eixo_y,
+                        automargin=True # <-- Garante que textos longos não sejam cortados à esquerda
                     )
                     
                     # Configuração de exportação EXCLUSIVA para o Gráfico 12
                     config_g12 = {
                         'toImageButtonOptions': {
                             **CONFIG_EXPORTACAO['toImageButtonOptions'],
-                            'width': 800,
+                            'width': 850, # Ligeiramente ampliado para acomodar a margem maior
                             'height': 600
                         }
                     }
                     
-                    st.plotly_chart(ajustar_layout_grafico(fig12), use_container_width=True, config=CONFIG_EXPORTACAO) #CONFIG_EXPORTACAO ou config_g12
+                    st.plotly_chart(ajustar_layout_grafico(fig12), use_container_width=True, config=config_g12) #CONFIG_EXPORTACAO ou config_g12
 
                     # FIGURA 3.3.13
                     bins = [-float('inf'), 0.00001, 0.0001, 0.001, 0.01, 0.1, 1.0, 8.0, 200.0, float('inf')]
