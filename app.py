@@ -1091,7 +1091,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                             config=config_g10  # <-- Passa a configuração exclusiva aqui
                         )
 
-                    # --- GRÁFICO 11 (Com Corte Visual na Classe B e Eixos Unificados) ---
+                    # --- GRÁFICO 11 (Com Limite 140, Linha Branca Espessa e // em Preto) ---
                     with col_graf2:
                         df_g11 = df_prod_filtrado.groupby('Classe de Risco').agg(Vol=('Volume','sum'), Acid=('Processo','nunique')).reset_index()
                         ordem_11 = ['A', 'B', 'D', 'Não Classificado', 'Não Avaliado']
@@ -1108,8 +1108,8 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                             'Não Avaliado': '#A04000'
                         }
                         
-                        # Define o teto unificado para ambos os eixos Y (com base nos acidentes máximos e volumes normais)
-                        limite_eixo_unificado = 140  
+                        # Eixo unificado em 175 para dar respiro ao texto "378,77 m3" acima da barra de 140
+                        limite_eixo_unificado = 175  
                         
                         for _, r in df_g11.iterrows():
                             classe = r['Classe de Risco']
@@ -1117,9 +1117,8 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                             cor_texto_barra = cores_texto_risco_escuras.get(classe, '#2C3E50')
                             vol_real = r['Vol']
                             
-                            # --- APLICAÇÃO DO CORTE VISUAL ---
-                            # Se o volume passar de 150 (caso da Classe B), limita a altura desenhada da barra a 140
-                            if vol_real > 150:
+                            # --- APLICAÇÃO DO CORTE VISUAL EM 140 ---
+                            if vol_real > 140:
                                 vol_desenhado = 140
                                 tem_corte = True
                             else:
@@ -1131,9 +1130,9 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                                 go.Bar(
                                     name=str(classe), 
                                     x=[classe], 
-                                    y=[vol_desenhado], # Altura visual cortada para a Classe B
+                                    y=[vol_desenhado], # Barra desenhada até no máximo 140
                                     marker_color=cor_barra, 
-                                    text=[f"<b>{vol_real:,.2f} m3</b>".replace('.',',')], # Exibe o valor real (378,77 m3)
+                                    text=[f"<b>{vol_real:,.2f} m3</b>".replace('.',',')], # Texto exibe o valor real (378,77 m3)
                                     textposition='outside', 
                                     cliponaxis=False, 
                                     textfont=dict(color=cor_texto_barra, size=18),
@@ -1142,14 +1141,32 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                                 secondary_y=False
                             )
                             
-                            # Símbolo // indicando o corte na barra
+                            # --- LINHA BRANCA ESPESSA + SIMBOLO // EM PRETO ---
                             if tem_corte:
+                                idx = ordem_11.index(classe) # Índice da classe no eixo X (1 para 'B')
+                                y_corte = 70                # Posição central da barra onde o corte é desenhado
+                                
+                                # 1. Linha branca espessa cortando a barra verde de ponta a ponta
+                                fig11.add_shape(
+                                    type="line",
+                                    x0=idx - 0.38,
+                                    x1=idx + 0.38,
+                                    y0=y_corte,
+                                    y1=y_corte,
+                                    line=dict(color="white", width=8),
+                                    xref="x",
+                                    yref="y"
+                                )
+                                
+                                # 2. Símbolo // em PRETO posicionado sobre a linha branca
                                 fig11.add_annotation(
                                     x=classe,
-                                    y=vol_desenhado / 2,
+                                    y=y_corte,
                                     text="<b>//</b>",
                                     showarrow=False,
-                                    font=dict(color="white", size=22),
+                                    font=dict(color="black", size=20),
+                                    bgcolor="white", # Fundo branco sob o // para corte perfeito
+                                    borderpad=1,
                                     yref="y"
                                 )
                             
@@ -1169,7 +1186,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                                 secondary_y=True
                             )
                         
-                        # Layout e Legenda no topo organizada em 2 linhas
+                        # Layout e Legenda no topo organizada
                         fig11.update_layout(
                             plot_bgcolor='white', 
                             paper_bgcolor='white', 
@@ -1196,7 +1213,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                             linecolor='black'
                         )
                         
-                        # Eixo Y Primário (Volume Liberado) - ESCALA HARMONIZADA [0, 140]
+                        # Eixo Y Primário (Volume Liberado) - ESCALA HARMONIZADA [0, 175]
                         fig11.update_yaxes(
                             title_text="Volume Liberado (m3)", 
                             title_font=dict(size=20, color='black'),
@@ -1208,7 +1225,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                             linecolor='black'
                         )
                         
-                        # Eixo Y Secundário (Número de Acidentes) - ESCALA EXATAMENTE IGUAL [0, 140]
+                        # Eixo Y Secundário (Número de Acidentes) - ESCALA EXATAMENTE IGUAL [0, 175]
                         fig11.update_yaxes(
                             title_text="Número de Acidentes", 
                             title_font=dict(size=20, color='black'),
