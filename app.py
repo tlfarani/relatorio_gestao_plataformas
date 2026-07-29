@@ -1040,7 +1040,21 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                             linecolor='black'
                         )
                         
-                        st.plotly_chart(ajustar_layout_grafico(fig10), use_container_width=True, config=CONFIG_EXPORTACAO)
+                        # Configuração de exportação EXCLUSIVA para este gráfico
+                        config_g10 = {
+                            'toImageButtonOptions': {
+                                **CONFIG_EXPORTACAO['toImageButtonOptions'], # Herda formato, escala e nome
+                                'width': 700,   # <-- Largura menor exclusiva para a imagem salva deste gráfico
+                                'height': 520   # <-- Altura (pode manter ou alterar como preferir)
+                            }
+                        }
+                    
+                        # Renderização no Streamlit usando o config personalizado
+                        st.plotly_chart(
+                            ajustar_layout_grafico(fig10), 
+                            use_container_width=True, 
+                            config=config_g10  # <-- Passa a configuração exclusiva aqui
+                        )
 
                     # FIGURA 3.3.11 ----
                     with col_graf2:
