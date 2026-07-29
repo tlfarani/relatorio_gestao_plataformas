@@ -1661,7 +1661,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                         'toImageButtonOptions': {
                             **CONFIG_EXPORTACAO['toImageButtonOptions'],
                             'width': 900,
-                            'height': 800
+                            'height': 400
                         }
                     }
                     
