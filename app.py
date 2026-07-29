@@ -1470,7 +1470,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                     
                     st.plotly_chart(fig13_final, use_container_width=True, config=config_g13)
 
-                    # --- GRÁFICO 14 (Rótulos de Volume Médio para Vol >= 8 m³ na Cor Branca) ---
+                    # --- GRÁFICO 14 (Com Texto Preto em Fundo Branco no Volume Médio e Eixos Y sem Números) ---
                     df_g14 = df_prod_filtrado.groupby(['Produto', 'Classe de Risco']).agg(Vol=('Volume','sum'), Acid=('Processo','nunique')).reset_index().sort_values(by='Vol', ascending=False)
                     top20 = df_g14.head(20).copy()
                     demais = df_g14.iloc[20:].copy()
@@ -1547,9 +1547,10 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                         scatter_x.append(row['Rank'])
                         scatter_y.append(row['Vol_Medio'])
                         
-                        # Exibe o texto do Volume Médio APENAS se Vol >= 8 m³ E se não coincidir com o Volume Total
+                        # Exibe o texto do Volume Médio com fundo branco e texto preto apenas para Vol >= 8 m³
                         if row['Vol'] >= 8 and abs(row['Vol'] - row['Vol_Medio']) >= 0.01:
-                            scatter_text.append(f"{row['Vol_Medio']:,.2f}".replace('.',','))
+                            val_str = f"{row['Vol_Medio']:,.2f}".replace('.',',')
+                            scatter_text.append(f"<span style='background-color: white; color: black;'>{val_str}</span>")
                         else:
                             scatter_text.append(None)
                     
@@ -1562,7 +1563,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                             marker=dict(color='grey', size=8), 
                             text=scatter_text, 
                             textposition='top center', 
-                            textfont=dict(color='white', size=TAMANHO_ROTULO_PONTO), # Cor da fonte alterada para BRANCA
+                            textfont=dict(size=TAMANHO_ROTULO_PONTO), 
                             showlegend=False
                         ), 
                         secondary_y=True
@@ -1626,7 +1627,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                         tickfont=dict(color='black', size=12)
                     )
                     
-                    # Eixo Y Primário (Volume Total)
+                    # Eixo Y Primário (Volume Total) - Sem números de escala
                     fig14.update_yaxes(
                         title_text="Volume Total Liberado (m3)", 
                         title_font=dict(size=16, color='black'),
@@ -1634,11 +1635,11 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                         range=[0, limite_eixo_unificado],
                         showgrid=False, 
                         zeroline=False,
-                        linecolor='black', 
-                        tickfont=dict(color='black', size=13)
+                        showticklabels=False, # <-- Remove os números da escala
+                        linecolor='black'
                     )
                     
-                    # Eixo Y Secundário (Volume Médio)
+                    # Eixo Y Secundário (Volume Médio) - Sem números de escala
                     fig14.update_yaxes(
                         title_text="Volume Médio", 
                         title_font=dict(size=16, color='black'),
@@ -1646,8 +1647,8 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                         range=[0, limite_eixo_unificado],
                         showgrid=False, 
                         zeroline=False,
-                        linecolor='black', 
-                        tickfont=dict(color='black', size=13)
+                        showticklabels=False, # <-- Remove os números da escala
+                        linecolor='black'
                     )
                     
                     # Garante o fundo 100% branco após o layout padrão do dashboard
@@ -1662,7 +1663,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                     config_g14 = {
                         'toImageButtonOptions': {
                             **CONFIG_EXPORTACAO['toImageButtonOptions'],
-                            'width': 1100,
+                            'width': 900,
                             'height': 600
                         }
                     }
