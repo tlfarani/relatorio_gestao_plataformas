@@ -1574,7 +1574,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                             cat_rank = row['Rank']
                             if cat_rank in lista_categorias_x:
                                 x_pos = lista_categorias_x.index(cat_rank) # Posição numérica exata no eixo X (ex: 2)
-                                y_corte = 72
+                                y_corte = 73
                                 
                                 fig14.add_shape(
                                     type="line",
@@ -1582,7 +1582,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                                     x1=x_pos + 0.38,
                                     y0=y_corte,
                                     y1=y_corte,
-                                    line=dict(color="white", width=23),
+                                    line=dict(color="white", width=24),
                                     xref="x",
                                     yref="y",
                                     layer="above" # Desenha a linha SOBRE a barra verde
