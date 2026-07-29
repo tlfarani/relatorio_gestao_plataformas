@@ -734,20 +734,20 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                 #st.plotly_chart(ajustar_layout_grafico(fig8), use_container_width=True, config=CONFIG_EXPORTACAO)
 
                 # Configuração de exportação EXCLUSIVA para este gráfico
-                       config_g8 = {
-                           'toImageButtonOptions': {
-                               **CONFIG_EXPORTACAO['toImageButtonOptions'], # Herda formato, escala e nome
-                               'width': 540,   # <-- Largura menor exclusiva para a imagem salva deste gráfico
-                               'height': 400   # <-- Altura (pode manter ou alterar como preferir)
-                           }
-                       }
+                config_g8 = {toImageButtonOptions': {
+                    **CONFIG_EXPORTACAO['toImageButtonOptions'], # Herda formato, escala e nome
+                    'width': 540,   # <-- Largura menor exclusiva para a imagem salva deste gráfico
+                    'height': 400   # <-- Altura (pode manter ou alterar como preferir)
+                    }
+                }
+                # Renderização no Streamlit usando o config personalizado
+                st.plotly_chart(
+                    ajustar_layout_grafico(fig8),
+                    use_container_width=True, 
+                    config=config_g8  # <-- Passa a configuração exclusiva aqui
+                )
                    
-                       # Renderização no Streamlit usando o config personalizado
-                       st.plotly_chart(
-                           ajustar_layout_grafico(fig8), 
-                           use_container_width=True, 
-                           config=config_g8  # <-- Passa a configuração exclusiva aqui
-                       )
+                       
             
                 
             # --- GRÁFICO 9 ---
