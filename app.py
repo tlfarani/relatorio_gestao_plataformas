@@ -1270,7 +1270,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                             config=config_g11
                         )
 
-                    # --- GRÁFICO 12 (Com Margem Esquerda Expandida para Rótulos Longos) ---
+                    # --- GRÁFICO 12 (Com Margem de 480px para Rótulos de 55 Caracteres) ---
                     df_g12 = df_prod_filtrado.groupby(['Produto', 'Classe de Risco']).agg(Acid=('Processo','nunique')).reset_index()
                     df_g12 = df_g12.sort_values(by='Acid', ascending=False).head(20)
                     df_g12['Rank'] = [f"{i}. {p}" for i, p in enumerate(df_g12['Produto'], 1)]
@@ -1300,14 +1300,14 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                     
                     lista_rank_eixo_y = df_g12['Rank'].tolist()[::-1]
                     
-                    # Cores para montar os marcadores da legenda customizada
+                    # Cores para os marcadores da legenda customizada
                     cor_a = get_cor_risco('A', 12)
                     cor_b = get_cor_risco('B', 12)
                     cor_d = get_cor_risco('D', 12)
                     cor_nc = get_cor_risco('Não Classificado', 12)
                     cor_na = get_cor_risco('Não Avaliado', 12)
                     
-                    # Monta o texto em 2 colunas com alinhamento à direita estrito
+                    # Monta a legenda em 2 colunas alinhadas à direita
                     texto_legenda = (
                         f"<span style='color:{cor_a}'>■</span> Risco A &nbsp;&nbsp;&nbsp;&nbsp; <span style='color:{cor_na}'>■</span> Não Avaliado<br>"
                         f"<span style='color:{cor_b}'>■</span> Risco B &nbsp;&nbsp;&nbsp;&nbsp; <span style='color:{cor_nc}'>■</span> Não Classificado<br>"
@@ -1322,8 +1322,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                         uniformtext_minsize=15, 
                         uniformtext_mode='show',
                         showlegend=False,
-                        # Ampliado 'l' para 320px para comportar o nome do produto 12 sem cortar a numeração
-                        margin=dict(t=30, b=30, l=320, r=40) 
+                        margin=dict(t=30, b=30, l=480, r=40) # <-- Margem esquerda ampliada para 480px
                     )
                     
                     # Adiciona a legenda via Anotação no canto inferior direito
@@ -1347,7 +1346,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                         range=[0, max_acid12 * 1.18]
                     )
                     
-                    # Eixo Y: Com automargin=True para evitar cortes
+                    # Eixo Y: Nomes dos produtos em tamanho 15 na cor preta
                     fig12.update_yaxes(
                         showgrid=False, 
                         zeroline=False, 
@@ -1355,19 +1354,23 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                         tickfont=dict(color='black', size=15),
                         categoryorder='array', 
                         categoryarray=lista_rank_eixo_y,
-                        automargin=True # <-- Garante que textos longos não sejam cortados à esquerda
+                        automargin=False # Desativado para forçar rigorosamente a margem 'l=480'
                     )
+                    
+                    # Aplica o layout do sistema e reforça a margem de 480px
+                    fig12_final = ajustar_layout_grafico(fig12)
+                    fig12_final.update_layout(margin=dict(t=30, b=30, l=480, r=40))
                     
                     # Configuração de exportação EXCLUSIVA para o Gráfico 12
                     config_g12 = {
                         'toImageButtonOptions': {
                             **CONFIG_EXPORTACAO['toImageButtonOptions'],
-                            'width': 850, # Ligeiramente ampliado para acomodar a margem maior
+                            'width': 980,  # Largura expandida para acomodar a margem de 480px
                             'height': 600
                         }
                     }
                     
-                    st.plotly_chart(ajustar_layout_grafico(fig12), use_container_width=True, config=config_g12) #CONFIG_EXPORTACAO ou config_g12
+                    st.plotly_chart(fig12_final, use_container_width=True, config=config_g12) #CONFIG_EXPORTACAO ou config_g12
 
                     # FIGURA 3.3.13
                     bins = [-float('inf'), 0.00001, 0.0001, 0.001, 0.01, 0.1, 1.0, 8.0, 200.0, float('inf')]
