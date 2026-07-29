@@ -346,9 +346,22 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                     fig.update_xaxes(showgrid=False, zeroline=False, linecolor='black', tickfont=dict(size=12))
                     fig.update_yaxes(showgrid=False, zeroline=False, linecolor='black', tickfont=dict(size=12))
                     st.plotly_chart(ajustar_layout_grafico(fig), use_container_width=True, config=CONFIG_EXPORTACAO)
+                    
             with col_t_aba1:
                 st.subheader("Base Filtrada (Dados 2025)")
-                st.dataframe(df_filtrado[['num_processo', 'instalacao', 'bacia_sedimentar', 'empresa', 'dias_encerramento']], use_container_width=True, height=350)
+                
+                # Colunas a serem exibidas na tabela
+                colunas_tabela = [
+                    'num_processo', 'instalacao', 'bacia_sedimentar', 'empresa', 'dias_encerramento',
+                    'produto_1', 'quantidade_1', 
+                    'produto_2', 'quantidade_2', 
+                    'produto_3', 'quantidade_3'
+                ]
+                
+                # Filtro de segurança para selecionar apenas as colunas existentes na base
+                cols_existentes = [c for c in colunas_tabela if c in df_filtrado.columns]
+                
+                st.dataframe(df_filtrado[cols_existentes], use_container_width=True, height=350)
 
         # =========================================================================
         # ABA 2: RELATÓRIO COMPARATIVO E PRODUÇÃO
