@@ -1490,8 +1490,8 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                         'Não Avaliado': '#A04000'
                     }
                     
-                    limite_eixo_unificado = 150  # Teto unificado para ambos os eixos Y
-                    limite_corte_vol = 120      # Limite para aplicação do corte visual
+                    limite_eixo_unificado = 110  # Teto unificado para ambos os eixos Y
+                    limite_corte_vol = 90      # Limite para aplicação do corte visual
                     TAMANHO_ROTULO_BARRA = 13
                     TAMANHO_ROTULO_PONTO = 11
                     
@@ -1564,14 +1564,14 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                     # Adiciona a linha branca de corte e o símbolo // onde o volume ultrapassar o limite
                     for idx, row in top20.iterrows():
                         if row['Vol'] > limite_corte_vol:
-                            y_corte = 60
+                            y_corte = 75
                             fig14.add_shape(
                                 type="line",
                                 x0=idx - 0.38,
                                 x1=idx + 0.38,
                                 y0=y_corte,
                                 y1=y_corte,
-                                line=dict(color="white", width=22),
+                                line=dict(color="white", width=26),
                                 xref="x",
                                 yref="y"
                             )
