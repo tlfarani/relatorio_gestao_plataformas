@@ -350,15 +350,15 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
             with col_t_aba1:
                 st.subheader("Base Filtrada (Dados 2025)")
                 
-                # Colunas a serem exibidas na tabela
+                # Nomes exatos conforme mapeados no dicionário do carregar_dados_2025
                 colunas_tabela = [
                     'num_processo', 'instalacao', 'bacia_sedimentar', 'empresa', 'dias_encerramento',
-                    'produto_1', 'quantidade_1', 
-                    'produto_2', 'quantidade_2', 
-                    'produto_3', 'quantidade_3'
+                    'prod_1', 'qtd_p1', 
+                    'prod_2', 'qtd_p2', 
+                    'prod_3', 'qtd_p3'
                 ]
                 
-                # Filtro de segurança para selecionar apenas as colunas existentes na base
+                # Seleciona apenas as colunas que efetivamente existem no DataFrame
                 cols_existentes = [c for c in colunas_tabela if c in df_filtrado.columns]
                 
                 st.dataframe(df_filtrado[cols_existentes], use_container_width=True, height=350)
