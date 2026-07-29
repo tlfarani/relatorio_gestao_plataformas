@@ -1292,7 +1292,8 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                                     text=d['Acid'], 
                                     textposition='outside',
                                     cliponaxis=False,
-                                    textfont=dict(color='black', size=20) # Fonte dos valores das barras: 20 e preta
+                                    constraintext='none', # Desativa encolhimento automático da fonte
+                                    textfont=dict(color='black', size=15) # Fonte dos valores das barras: 15 e preta
                                 )
                             )
                     
@@ -1303,14 +1304,16 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                         plot_bgcolor='white', 
                         paper_bgcolor='white',
                         font=dict(color='black', size=15),
+                        uniformtext_minsize=15, # Garanete fonte mínima 15 nos rótulos das barras
+                        uniformtext_mode='show',
                         legend_title_text='', 
                         legend=dict(
                             orientation="h", 
                             yanchor="bottom", 
                             y=0, 
                             xanchor="right", 
-                            x=1, # Posiciona no canto inferior direito
-                            font=dict(color='black', size=11) # Fonte da legenda: 11 e preta
+                            x=1, # Canto inferior direito
+                            font=dict(color='black', size=13) # Fonte da legenda: 13 e preta
                         ),
                         margin=dict(t=30, b=30, l=40, r=40)
                     )
@@ -1321,7 +1324,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                         zeroline=False, 
                         showline=False, 
                         showticklabels=False, 
-                        range=[0, max_acid12 * 1.15]
+                        range=[0, max_acid12 * 1.18]
                     )
                     
                     # Eixo Y: Nomes dos produtos em tamanho 15 na cor preta
@@ -1329,7 +1332,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                         showgrid=False, 
                         zeroline=False, 
                         linecolor='black', 
-                        tickfont=dict(color='black', size=14),
+                        tickfont=dict(color='black', size=15),
                         categoryorder='array', 
                         categoryarray=lista_rank_eixo_y
                     )
@@ -1338,12 +1341,12 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                     config_g12 = {
                         'toImageButtonOptions': {
                             **CONFIG_EXPORTACAO['toImageButtonOptions'],
-                            'width': 594,
-                            'height': 440
+                            'width': 800,
+                            'height': 600
                         }
                     }
                     
-                    st.plotly_chart(ajustar_layout_grafico(fig12), use_container_width=True, config=CONFIG_EXPORTACAO)
+                    st.plotly_chart(ajustar_layout_grafico(fig12), use_container_width=True, config=config_g12)
 
                     # FIGURA 3.3.13
                     bins = [-float('inf'), 0.00001, 0.0001, 0.001, 0.01, 0.1, 1.0, 8.0, 200.0, float('inf')]
