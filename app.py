@@ -1220,7 +1220,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                                 y=1.05, 
                                 xanchor="left",  
                                 x=0,
-                                font=dict(color='black', size=15),
+                                font=dict(color='black', size=13),
                                 entrywidth=0.45,
                                 entrywidthmode="fraction"
                             ),
