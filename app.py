@@ -1470,7 +1470,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                     
                     st.plotly_chart(fig13_final, use_container_width=True, config=config_g13)
 
-                    # --- GRÁFICO 14 (Com Ordenação por Volume Descendente e Caixas Brancas no Vol. Médio) ---
+                    # --- GRÁFICO 14 (Harmonização Completa de Fontes e Folga de Topo na Exportação) ---
                     df_g14 = df_prod_filtrado.groupby(['Produto', 'Classe de Risco']).agg(Vol=('Volume','sum'), Acid=('Processo','nunique')).reset_index().sort_values(by='Vol', ascending=False)
                     top20 = df_g14.head(20).copy()
                     demais = df_g14.iloc[20:].copy()
@@ -1493,10 +1493,12 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                         'Não Avaliado': '#A04000'
                     }
                     
-                    limite_eixo_unificado = 105  # Teto unificado para ambos os eixos Y
-                    limite_corte_vol = 80        # Limite para aplicação do corte visual
+                    limite_altura_barra_corte = 95  # Altura da barra cortada
+                    limite_eixo_unificado = 120    # Teto ampliado para dar folga no topo para o texto "outside"
+                    limite_corte_vol = 80          # Limite para aplicação do corte visual
+                    
                     TAMANHO_ROTULO_BARRA = 13
-                    TAMANHO_ROTULO_PONTO = 11
+                    TAMANHO_ROTULO_PONTO = 10      # Ajustado para 10 (sem negrito HTML) para igualar visualmente às barras na exportação
                     
                     # Adiciona as barras por classe de risco
                     for c in ordem_11:
@@ -1513,7 +1515,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                                 
                                 # Aplica o corte na altura desenhada se for volume desproporcional
                                 if vol_real > limite_corte_vol:
-                                    y_desenhado.append(105)
+                                    y_desenhado.append(limite_altura_barra_corte)
                                 else:
                                     y_desenhado.append(vol_real)
                                 
@@ -1529,6 +1531,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                                     text=textos_barra, 
                                     textposition='outside',
                                     cliponaxis=False,
+                                    constraintext='none', # Impede a redução automática da fonte das barras
                                     textfont=dict(color=cor_texto_barra, size=TAMANHO_ROTULO_BARRA),
                                     showlegend=True
                                 ), 
@@ -1554,14 +1557,14 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                             fig14.add_annotation(
                                 x=row['Rank'],
                                 y=row['Vol_Medio'],
-                                text=f"<b>{row['Vol_Medio']:,.2f}</b>".replace('.',','),
+                                text=f"{row['Vol_Medio']:,.2f}".replace('.',','), # Sem <b> para evitar o "inchaço" SVG na exportação
                                 showarrow=False,
                                 yshift=14,
                                 font=dict(color="black", size=TAMANHO_ROTULO_PONTO),
                                 bgcolor="white",
                                 bordercolor="white",
                                 borderpad=1,
-                                yref="y2" # Ancorado no eixo Y secundário (Volume Médio)
+                                yref="y2"
                             )
                     
                     # Adiciona a linha branca de corte na posição X exata da barra
@@ -1569,8 +1572,8 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                         if row['Vol'] > limite_corte_vol:
                             cat_rank = row['Rank']
                             if cat_rank in ordem_rank_x:
-                                x_pos = ordem_rank_x.index(cat_rank) # Índice exato da barra ordenada no eixo X
-                                y_corte = 73
+                                x_pos = ordem_rank_x.index(cat_rank)
+                                y_corte = 62
                                 
                                 fig14.add_shape(
                                     type="line",
@@ -1601,6 +1604,8 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                         paper_bgcolor='white',
                         height=720,
                         font=dict(color='black', size=14),
+                        uniformtext_minsize=12,
+                        uniformtext_mode='show',
                         legend_title_text='', 
                         legend=dict(
                             orientation="h", 
@@ -1613,7 +1618,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                         margin=dict(t=80, b=180, l=60, r=60)
                     )
                     
-                    # Eixo X: Força rigorosamente a ordem do maior para o menor volume (da esquerda para a direita)
+                    # Eixo X
                     fig14.update_xaxes(
                         tickangle=45, 
                         showgrid=False, 
@@ -1621,10 +1626,10 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                         linecolor='black', 
                         tickfont=dict(color='black', size=12),
                         categoryorder='array',
-                        categoryarray=ordem_rank_x # <-- Ordem descendente fixada aqui
+                        categoryarray=ordem_rank_x
                     )
                     
-                    # Eixo Y Primário (Volume Total) - Sem números de escala
+                    # Eixo Y Primário (Volume Total) - Com folga superior para o rótulo outside
                     fig14.update_yaxes(
                         title_text="Volume Total Liberado (m3)", 
                         title_font=dict(size=16, color='black'),
@@ -1636,7 +1641,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                         linecolor='black'
                     )
                     
-                    # Eixo Y Secundário (Volume Médio) - Sem números de escala
+                    # Eixo Y Secundário (Volume Médio)
                     fig14.update_yaxes(
                         title_text="Volume Médio", 
                         title_font=dict(size=16, color='black'),
@@ -1648,7 +1653,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                         linecolor='black'
                     )
                     
-                    # Garante o fundo 100% branco após o layout padrão do dashboard
+                    # Garante o fundo 100% branco após a função de ajuste
                     fig14_final = ajustar_layout_grafico(fig14)
                     fig14_final.update_layout(
                         plot_bgcolor='white',
@@ -1660,8 +1665,8 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                     config_g14 = {
                         'toImageButtonOptions': {
                             **CONFIG_EXPORTACAO['toImageButtonOptions'],
-                            'width': 900,
-                            'height': 700
+                            'width': 1000,
+                            'height': 650
                         }
                     }
                     
