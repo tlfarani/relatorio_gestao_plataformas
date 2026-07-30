@@ -835,7 +835,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                 st.plotly_chart(ajustar_layout_grafico(fig9), use_container_width=True, config=CONFIG_EXPORTACAO)
 
         # =========================================================================
-        # ABA 4: CONSOLIDAÇÃO POR PRODUTO - GRÁFICO 10 AJUSTADO PARA CONTAR LIBERAÇÕES DE PRODUTOS (TOTAL 242
+        # ABA 4: CONSOLIDAÇÃO POR PRODUTO (REGRAS E MÉTRICAS UNIFICADAS - TOTAL 242 LIBERAÇÕES)
         # =========================================================================
         with tab_produtos:
             registros_brutos = []
@@ -846,10 +846,10 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                 for p in ['1', '2', '3']:
                     prod_nome = str(row.get(f'prod_{p}', '')).strip()
                     vol = row.get(f'qtd_p{p}', 0.0)
-                    marca_orig = str(row.get(f'marca_p{p}', '')).strip()
+                    marca_orig = str(row.get(f'marca_p{p}', '')).strip() if f'marca_p{p}' in row else ''
                     nome_original = marca_orig if marca_orig not in ['', 'PREENCHER', 'NAN', 'nan'] else prod_nome
                     
-                    # Sem filtro "vol > 0" para capturar produtos informados com volume 0
+                    # Captura todos os lançamentos cadastrados de produtos
                     if prod_nome not in ['', 'Não Informado', 'PREENCHER', 'NAN', 'nan']:
                         registros_brutos.append({
                             'Produto_Original': nome_original,
@@ -872,7 +872,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                     (df_todas_liberacoes['Classe de Risco'] != 'Não se Aplica') & 
                     (df_todas_liberacoes['Tipo'] != 'Não se Aplica')
                 ].copy()
-
+        
                 equipamentos_unicos_filtro = set()
                 for eq_row in df_liquidos['Equipamento']:
                     eq_str = str(eq_row).strip()
@@ -886,7 +886,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                 
                 list_classe = sorted(list(df_liquidos['Classe de Risco'].unique()))
                 list_tipo = sorted(list(df_liquidos['Tipo'].unique()))
-
+        
                 st.subheader("Filtros Analíticos de Líquidos Nocivos")
                 col_p1, col_p2, col_p3 = st.columns(3)
                 
@@ -902,13 +902,13 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                     if pd.isna(eq_val) or eq_str == '' or eq_str.lower() in ['nan', 'não informado']: return 'Não Informado' in selecionados
                     items = [item.strip() for item in eq_str.split(',') if item.strip()]
                     return any(item in selecionados for item in items)
-
+        
                 df_prod_filtrado = df_liquidos[
                     (df_liquidos['Equipamento'].apply(lambda x: verificar_aderencia(x, equip_selecionados))) &
                     (df_liquidos['Classe de Risco'].isin(classes_selecionadas)) &
                     (df_liquidos['Tipo'].isin(tipos_selecionados))
                 ].copy()
-
+        
                 if not df_prod_filtrado.empty:
                     tot_acid_25 = len(df_plataformas_2025)
                     
@@ -916,7 +916,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                     df_gas = df_todas_liberacoes[df_todas_liberacoes['Produto'].str.contains('Gás natural', case=False, na=False)]
                     acid_gas = df_gas['Processo'].nunique()
                     vol_gas = df_gas['Volume'].sum()
-
+        
                     # Detalhes de Não se Aplica (Guindaste)
                     df_na = df_todas_liberacoes[df_todas_liberacoes['Produto'].str.contains('Não se Aplica', case=False, na=False)]
                     acid_na = df_na['Processo'].nunique()
@@ -924,7 +924,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                     # Cálculo dos acidentes com liberações simultâneas nos eventos válidos
                     procs_excluidos = set(df_gas['Processo']).union(set(df_na['Processo']))
                     df_plataformas_liquidos = df_plataformas_2025[~df_plataformas_2025['num_processo'].isin(procs_excluidos)].copy()
-
+        
                     def contar_prods_validos(r):
                         cnt = 0
                         for i in ['1','2','3']:
@@ -932,7 +932,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                             if p not in ['', 'Não Informado', 'PREENCHER', 'NAN', 'nan', 'Gás natural', 'Não se Aplica']:
                                 cnt += 1
                         return cnt
-
+        
                     df_plataformas_liquidos['cont_prods'] = df_plataformas_liquidos.apply(contar_prods_validos, axis=1)
                     acid_2_simultaneos = (df_plataformas_liquidos['cont_prods'] >= 2).sum()
                     
@@ -965,10 +965,9 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                     
                     # --- GRÁFICO 10 ---
                     with col_graf1:
-                        # Agrupa por 'Tipo' contando o número total de LIBERAÇÕES DE PRODUTOS (count), totalizando 242
                         df_g10 = df_prod_filtrado.groupby('Tipo').agg(
                             Vol=('Volume', 'sum'), 
-                            Qtd=('Produto', 'count')  # <-- 'count' garante a contagem exata de 242 liberações de produtos
+                            Qtd=('Produto', 'count')
                         ).reset_index()
                         
                         fig10 = make_subplots(specs=[[{"secondary_y": True}]])
@@ -983,56 +982,24 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                             cor_barra = cores_tp.get(tipo, '#BDC3C7')
                             cor_texto_barra = cores_texto_escuras.get(tipo, '#2C3E50')
                             
-                            # Barras de Volume
-                            fig10.add_trace(
-                                go.Bar(
-                                    name=tipo, 
-                                    x=d['Tipo'], 
-                                    y=d['Vol'], 
-                                    marker_color=cor_barra, 
-                                    text=d['Vol'].apply(lambda x: f"<b>{x:,.1f} m3</b>".replace('.',',')), 
-                                    textposition='outside', 
-                                    cliponaxis=False, 
-                                    textfont=dict(color=cor_texto_barra, size=20), 
-                                    showlegend=True
-                                ), 
-                                secondary_y=False
-                            )
-                            
-                            # Pontos de Liberações de Produtos (Métrica exata de 242 liberações)
-                            fig10.add_trace(
-                                go.Scatter(
-                                    name=f'Liberações {tipo}', 
-                                    x=d['Tipo'], 
-                                    y=d['Qtd'], 
-                                    mode='markers+text', 
-                                    marker=dict(color='black', size=12), 
-                                    text=d['Qtd'], 
-                                    textposition='top center', 
-                                    textfont=dict(color='black', size=18), 
-                                    showlegend=False
-                                ), 
-                                secondary_y=True
-                            )
+                            fig10.add_trace(go.Bar(name=tipo, x=d['Tipo'], y=d['Vol'], marker_color=cor_barra, text=d['Vol'].apply(lambda x: f"<b>{x:,.1f} m3</b>".replace('.',',')), textposition='outside', cliponaxis=False, textfont=dict(color=cor_texto_barra, size=20), showlegend=True), secondary_y=False)
+                            fig10.add_trace(go.Scatter(name=f'Liberações {tipo}', x=d['Tipo'], y=d['Qtd'], mode='markers+text', marker=dict(color='black', size=12), text=d['Qtd'], textposition='top center', textfont=dict(color='black', size=18), showlegend=False), secondary_y=True)
                         
-                        fig10.update_layout(
-                            plot_bgcolor='white', 
-                            paper_bgcolor='white', 
-                            font=dict(color='black', size=18), 
-                            legend_title_text='', 
-                            legend=dict(orientation="h", yanchor="bottom", y=1.05, xanchor="center", x=0.5, font=dict(size=18, color='black')), 
-                            margin=dict(t=60, b=40, l=40, r=40)
-                        )
+                        fig10.update_layout(plot_bgcolor='white', paper_bgcolor='white', font=dict(color='black', size=18), legend_title_text='', legend=dict(orientation="h", yanchor="bottom", y=1.05, xanchor="center", x=0.5, font=dict(size=18, color='black')), margin=dict(t=60, b=40, l=40, r=40))
                         fig10.update_xaxes(showgrid=False, zeroline=False, showticklabels=False, linecolor='black')
                         fig10.update_yaxes(title_text="Volume de Produto Liberado (m3)", title_font=dict(size=20, color='black'), secondary_y=False, range=[0, max_vol * 1.25], showgrid=False, zeroline=False, showticklabels=False, linecolor='black')
                         fig10.update_yaxes(title_text="Número de Liberações de Produtos", title_font=dict(size=20, color='black'), secondary_y=True, range=[0, max_vol * 1.25], showgrid=False, zeroline=False, showticklabels=False, linecolor='black')
                         
                         config_g10 = {'toImageButtonOptions': {**CONFIG_EXPORTACAO['toImageButtonOptions'], 'width': 540, 'height': 400}}
                         st.plotly_chart(ajustar_layout_grafico(fig10), use_container_width=True, config=config_g10)
-
+        
                     # --- GRÁFICO 11 ---
                     with col_graf2:
-                        df_g11 = df_prod_filtrado.groupby('Classe de Risco').agg(Vol=('Volume','sum'), Acid=('Processo','nunique')).reset_index()
+                        df_g11 = df_prod_filtrado.groupby('Classe de Risco').agg(
+                            Vol=('Volume', 'sum'), 
+                            Qtd=('Produto', 'count')  # <-- Agrupamento ajustado para Liberações de Produtos
+                        ).reset_index()
+                        
                         ordem_11 = ['A', 'B', 'D', 'Não Classificado', 'Não Avaliado']
                         df_g11['Classe de Risco'] = pd.Categorical(df_g11['Classe de Risco'], categories=ordem_11, ordered=True)
                         df_g11 = df_g11.sort_values('Classe de Risco').dropna(subset=['Classe de Risco'])
@@ -1050,7 +1017,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                             cor_barra = get_cor_risco(classe, 11)
                             cor_texto_barra = cores_texto_risco_escuras.get(classe, '#2C3E50')
                             vol_real = r['Vol']
-                            acid_real = r['Acid']
+                            qtd_real = r['Qtd']
                             
                             if vol_real > 140:
                                 vol_desenhado = 140
@@ -1060,7 +1027,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                                 tem_corte = False
                                 
                             if classe == 'Não Classificado':
-                                texto_barra_custom = f"<b>{vol_real:,.2f} m3 ({acid_real})</b>".replace('.',',')
+                                texto_barra_custom = f"<b>{vol_real:,.2f} m3 ({qtd_real})</b>".replace('.',',')
                                 texto_barra_trace = None
                                 exibir_texto_scatter = False
                             else:
@@ -1070,7 +1037,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                             fig11.add_trace(go.Bar(name=str(classe), x=[classe], y=[vol_desenhado], marker_color=cor_barra, text=[texto_barra_trace] if texto_barra_trace else None, textposition='outside', cliponaxis=False, textfont=dict(color=cor_texto_barra, size=TAMANHO_ROTULO_BARRA), showlegend=True), secondary_y=False)
                             
                             if classe == 'Não Classificado':
-                                fig11.add_annotation(x=classe, y=acid_real, text=texto_barra_custom, showarrow=False, yshift=18, font=dict(color=cor_texto_barra, size=TAMANHO_ROTULO_ANNOTATION), yref="y2")
+                                fig11.add_annotation(x=classe, y=qtd_real, text=texto_barra_custom, showarrow=False, yshift=18, font=dict(color=cor_texto_barra, size=TAMANHO_ROTULO_ANNOTATION), yref="y2")
                             
                             if tem_corte:
                                 idx = ordem_11.index(classe)
@@ -1078,27 +1045,29 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                                 fig11.add_shape(type="line", x0=idx - 0.38, x1=idx + 0.38, y0=y_corte, y1=y_corte, line=dict(color="white", width=26), xref="x", yref="y")
                                 fig11.add_annotation(x=classe, y=y_corte, text="<b>//</b>", showarrow=False, font=dict(color="black", size=16), bgcolor="white", borderpad=1, yref="y")
                             
-                            fig11.add_trace(go.Scatter(name=f'Acidentes {classe}', x=[classe], y=[acid_real], mode='markers+text' if exibir_texto_scatter else 'markers', marker=dict(color='black', size=10), text=[str(acid_real)] if exibir_texto_scatter else None, textposition='top center', textfont=dict(color='black', size=TAMANHO_ROTULO_PONTO), showlegend=False), secondary_y=True)
+                            fig11.add_trace(go.Scatter(name=f'Liberações {classe}', x=[classe], y=[qtd_real], mode='markers+text' if exibir_texto_scatter else 'markers', marker=dict(color='black', size=10), text=[str(qtd_real)] if exibir_texto_scatter else None, textposition='top center', textfont=dict(color='black', size=TAMANHO_ROTULO_PONTO), showlegend=False), secondary_y=True)
                         
                         fig11.update_layout(plot_bgcolor='white', paper_bgcolor='white', font=dict(color='black', size=15), legend_title_text='', legend=dict(orientation="h", yanchor="bottom", y=1.05, xanchor="left", x=0, font=dict(color='black', size=13), entrywidth=0.45, entrywidthmode="fraction"), margin=dict(t=90, b=50, l=50, r=50))
                         fig11.update_xaxes(showgrid=False, zeroline=False, showticklabels=False, linecolor='black')
                         fig11.update_yaxes(title_text="Volume Liberado (m3)", title_font=dict(size=18, color='black'), secondary_y=False, range=[0, limite_eixo_unificado], showgrid=False, zeroline=False, showticklabels=False, linecolor='black')
-                        fig11.update_yaxes(title_text="Número de Acidentes", title_font=dict(size=18, color='black'), secondary_y=True, range=[0, limite_eixo_unificado], showgrid=False, zeroline=False, showticklabels=False, linecolor='black')
+                        fig11.update_yaxes(title_text="Número de Liberações de Produtos", title_font=dict(size=18, color='black'), secondary_y=True, range=[0, limite_eixo_unificado], showgrid=False, zeroline=False, showticklabels=False, linecolor='black')
                         
                         config_g11 = {'toImageButtonOptions': {**CONFIG_EXPORTACAO['toImageButtonOptions'], 'width': 594, 'height': 440}}
                         st.plotly_chart(ajustar_layout_grafico(fig11), use_container_width=True, config=config_g11)
-
+        
                     # --- GRÁFICO 12 ---
-                    df_g12 = df_prod_filtrado.groupby(['Produto', 'Classe de Risco']).agg(Acid=('Processo','nunique')).reset_index()
-                    df_g12 = df_g12.sort_values(by='Acid', ascending=False).head(20)
+                    df_g12 = df_prod_filtrado.groupby(['Produto', 'Classe de Risco']).agg(
+                        Qtd=('Produto', 'count')  # <-- Agrupamento por Liberações de Produtos
+                    ).reset_index()
+                    df_g12 = df_g12.sort_values(by='Qtd', ascending=False).head(20)
                     df_g12['Rank'] = [f"{i}. {p}" for i, p in enumerate(df_g12['Produto'], 1)]
-                    max_acid12 = df_g12.groupby('Rank')['Acid'].sum().max() if not df_g12.empty else 10
+                    max_qtd12 = df_g12.groupby('Rank')['Qtd'].sum().max() if not df_g12.empty else 10
                     
                     fig12 = go.Figure()
                     for c in ordem_11:
                         d = df_g12[df_g12['Classe de Risco'] == c]
                         if not d.empty:
-                            fig12.add_trace(go.Bar(name=f'Risco {c}' if c in ['A','B','D'] else c, y=d['Rank'], x=d['Acid'], orientation='h', marker_color=get_cor_risco(c, 12), text=d['Acid'], textposition='outside', cliponaxis=False, constraintext='none', textfont=dict(color='black', size=15), showlegend=False))
+                            fig12.add_trace(go.Bar(name=f'Risco {c}' if c in ['A','B','D'] else c, y=d['Rank'], x=d['Qtd'], orientation='h', marker_color=get_cor_risco(c, 12), text=d['Qtd'], textposition='outside', cliponaxis=False, constraintext='none', textfont=dict(color='black', size=15), showlegend=False))
                     
                     lista_rank_eixo_y = df_g12['Rank'].tolist()[::-1]
                     cor_a, cor_b, cor_d = get_cor_risco('A', 12), get_cor_risco('B', 12), get_cor_risco('D', 12)
@@ -1112,29 +1081,33 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                     
                     fig12.update_layout(barmode='stack', plot_bgcolor='white', paper_bgcolor='white', font=dict(color='black', size=15), uniformtext_minsize=15, uniformtext_mode='show', showlegend=False, margin=dict(t=30, b=30, l=480, r=40))
                     fig12.add_annotation(xref="paper", yref="paper", x=1, y=0, xanchor="right", yanchor="bottom", align="right", text=texto_legenda, showarrow=False, font=dict(color='black', size=13))
-                    fig12.update_xaxes(showgrid=False, zeroline=False, showline=False, showticklabels=False, range=[0, max_acid12 * 1.18])
+                    fig12.update_xaxes(showgrid=False, zeroline=False, showline=False, showticklabels=False, range=[0, max_qtd12 * 1.18])
                     fig12.update_yaxes(showgrid=False, zeroline=False, linecolor='black', tickfont=dict(color='black', size=15), categoryorder='array', categoryarray=lista_rank_eixo_y, automargin=False)
                     
                     fig12_final = ajustar_layout_grafico(fig12)
                     fig12_final.update_layout(margin=dict(t=30, b=30, l=480, r=40))
                     config_g12 = {'toImageButtonOptions': {**CONFIG_EXPORTACAO['toImageButtonOptions'], 'width': 980, 'height': 600}}
                     st.plotly_chart(fig12_final, use_container_width=True, config=config_g12)
-
+        
                     # --- GRÁFICO 13 ---
                     bins = [-float('inf'), 0.00001, 0.0001, 0.001, 0.01, 0.1, 1.0, 8.0, 200.0, float('inf')]
                     lbls = ['<= 10 mL', '10 mL < x <= 100 mL', '100 mL < x <= 1 L', '1 L < x <= 10 L', '10 L < x <= 100 L', '100 L < x <= 1 m3', '1 m3 < x <= 8 m3', '8 m3 < x <= 200 m3', 'x > 200 m3']
                     df_prod_filtrado['Faixa_Vol'] = pd.cut(df_prod_filtrado['Volume'], bins=bins, labels=lbls)
-                    df_g13 = df_prod_filtrado.groupby(['Faixa_Vol', 'Classe de Risco'], observed=False).agg(Acid=('Processo','nunique')).reset_index()
+                    
+                    # Agrupamento ajustado para Liberações de Produtos (count)
+                    df_g13 = df_prod_filtrado.groupby(['Faixa_Vol', 'Classe de Risco'], observed=False).agg(
+                        Qtd=('Produto', 'count')
+                    ).reset_index()
                     
                     fig13 = go.Figure()
                     for c in ordem_11:
-                        d = df_g13[df_g13['Classe de Risco'] == c].set_index('Faixa_Vol').reindex(lbls).reset_index().fillna({'Acid':0})
-                        fig13.add_trace(go.Bar(name=f'Risco {c}' if c in ['A','B','D'] else c, x=d['Faixa_Vol'], y=d['Acid'], marker_color=get_cor_risco(c, 13), text=d['Acid'].replace(0, ''), textposition='inside', cliponaxis=False, constraintext='none', textfont=dict(size=14, color='black')))
+                        d = df_g13[df_g13['Classe de Risco'] == c].set_index('Faixa_Vol').reindex(lbls).reset_index().fillna({'Qtd':0})
+                        fig13.add_trace(go.Bar(name=f'Risco {c}' if c in ['A','B','D'] else c, x=d['Faixa_Vol'], y=d['Qtd'], marker_color=get_cor_risco(c, 13), text=d['Qtd'].replace(0, ''), textposition='inside', cliponaxis=False, constraintext='none', textfont=dict(size=14, color='black')))
                     
-                    df_g13_tot = df_prod_filtrado.groupby('Faixa_Vol', observed=False).agg(Acid=('Processo','nunique')).reset_index()
+                    df_g13_tot = df_prod_filtrado.groupby('Faixa_Vol', observed=False).agg(Qtd=('Produto', 'count')).reset_index()
                     for _, r in df_g13_tot.iterrows():
-                        if r['Acid'] > 0:
-                            fig13.add_annotation(x=r['Faixa_Vol'], y=r['Acid'], text=f"<b>{r['Acid']}</b>", showarrow=False, yshift=15, font=dict(color="white", size=13), bgcolor="black", bordercolor="black", borderpad=3)
+                        if r['Qtd'] > 0:
+                            fig13.add_annotation(x=r['Faixa_Vol'], y=r['Qtd'], text=f"<b>{r['Qtd']}</b>", showarrow=False, yshift=15, font=dict(color="white", size=13), bgcolor="black", bordercolor="black", borderpad=3)
                     
                     fig13.update_layout(barmode='stack', plot_bgcolor='white', paper_bgcolor='white', height=600, font=dict(color='black', size=15), legend_title_text='', legend=dict(orientation="h", yanchor="bottom", y=1.05, xanchor="center", x=0.5, font=dict(color='black', size=15)), margin=dict(t=80, b=120, l=60, r=40))
                     fig13.update_xaxes(tickangle=45, showgrid=False, zeroline=False, linecolor='black', tickfont=dict(color='black', size=14))
@@ -1144,15 +1117,20 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                     fig13_final.update_layout(plot_bgcolor='white', paper_bgcolor='white')
                     config_g13 = {'toImageButtonOptions': {**CONFIG_EXPORTACAO['toImageButtonOptions'], 'width': 900, 'height': 550}}
                     st.plotly_chart(fig13_final, use_container_width=True, config=config_g13)
-
+        
                     # --- GRÁFICO 14 ---
-                    df_g14 = df_prod_filtrado.groupby(['Produto', 'Classe de Risco']).agg(Vol=('Volume','sum'), Acid=('Processo','nunique')).reset_index().sort_values(by='Vol', ascending=False)
+                    df_g14 = df_prod_filtrado.groupby(['Produto', 'Classe de Risco']).agg(
+                        Vol=('Volume', 'sum'), 
+                        Qtd=('Produto', 'count')  # <-- Agrupamento ajustado para Liberações de Produtos
+                    ).reset_index().sort_values(by='Vol', ascending=False)
+                    
                     top20 = df_g14.head(20).copy()
                     demais = df_g14.iloc[20:].copy()
                     if not demais.empty:
-                        top20 = pd.concat([top20, pd.DataFrame([{'Produto':'Demais Produtos', 'Classe de Risco':'Não Avaliado', 'Vol':demais['Vol'].sum(), 'Acid':demais['Acid'].sum()}])], ignore_index=True)
+                        top20 = pd.concat([top20, pd.DataFrame([{'Produto':'Demais Produtos', 'Classe de Risco':'Não Avaliado', 'Vol':demais['Vol'].sum(), 'Qtd':demais['Qtd'].sum()}])], ignore_index=True)
                     
-                    top20['Vol_Medio'] = top20['Vol'] / top20['Acid']
+                    # Volume Médio calculado por Liberação de Produto
+                    top20['Vol_Medio'] = top20['Vol'] / top20['Qtd']
                     top20['Rank'] = [f"{i}. {p}" if p != 'Demais Produtos' else p for i, p in enumerate(top20['Produto'], 1)]
                     ordem_rank_x = top20['Rank'].tolist()
                     
@@ -1181,7 +1159,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                                 
                             fig14.add_trace(go.Bar(name=f'Risco {c}' if c in ['A','B','D'] else c, x=d['Rank'], y=y_desenhado, marker_color=cor_barra, text=textos_barra, textposition='outside', cliponaxis=False, constraintext='none', textfont=dict(color=cor_texto_barra, size=TAMANHO_ROTULO_BARRA), showlegend=True), secondary_y=False)
                     
-                    fig14.add_trace(go.Scatter(name='Volume Médio', x=top20['Rank'], y=top20['Vol_Medio'], mode='markers', marker=dict(color='grey', size=8), showlegend=False), secondary_y=True)
+                    fig14.add_trace(go.Scatter(name='Volume Médio por Liberação', x=top20['Rank'], y=top20['Vol_Medio'], mode='markers', marker=dict(color='grey', size=8), showlegend=False), secondary_y=True)
                     
                     for _, row in top20.iterrows():
                         if row['Vol'] >= 8 and abs(row['Vol'] - row['Vol_Medio']) >= 0.01:
@@ -1199,12 +1177,35 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                     fig14.update_layout(plot_bgcolor='white', paper_bgcolor='white', height=720, font=dict(color='black', size=14), uniformtext_minsize=12, uniformtext_mode='show', legend_title_text='', legend=dict(orientation="h", yanchor="bottom", y=1.03, xanchor="center", x=0.5, font=dict(color='black', size=13)), margin=dict(t=80, b=180, l=60, r=60))
                     fig14.update_xaxes(tickangle=45, showgrid=False, zeroline=False, linecolor='black', tickfont=dict(color='black', size=12), categoryorder='array', categoryarray=ordem_rank_x)
                     fig14.update_yaxes(title_text="Volume Total Liberado (m3)", title_font=dict(size=16, color='black'), secondary_y=False, range=[0, limite_eixo_unificado], showgrid=False, zeroline=False, showticklabels=False, linecolor='black')
-                    fig14.update_yaxes(title_text="Volume Médio", title_font=dict(size=16, color='black'), secondary_y=True, range=[0, limite_eixo_unificado], showgrid=False, zeroline=False, showticklabels=False, linecolor='black')
+                    fig14.update_yaxes(title_text="Volume Médio por Liberação", title_font=dict(size=16, color='black'), secondary_y=True, range=[0, limite_eixo_unificado], showgrid=False, zeroline=False, showticklabels=False, linecolor='black')
                     
                     fig14_final = ajustar_layout_grafico(fig14)
                     fig14_final.update_layout(plot_bgcolor='white', paper_bgcolor='white', height=720)
                     config_g14 = {'toImageButtonOptions': {**CONFIG_EXPORTACAO['toImageButtonOptions'], 'width': 1000, 'height': 650}}
                     st.plotly_chart(fig14_final, use_container_width=True, config=config_g14)
+                    
+                    # --- TABELA CORPORATIVA DE LÍQUIDOS NOCIVOS ---
+                    def obter_unicos(series):
+                        s = set()
+                        for v in series:
+                            if pd.notna(v):
+                                for item in str(v).split(','):
+                                    cl = item.strip()
+                                    if cl and cl.lower() not in ['nan', 'não informado']: s.add(cl)
+                        return ", ".join(sorted(s)) if s else "Não Informado"
+        
+                    df_resumo = df_prod_filtrado.groupby(['Produto', 'Classe de Risco', 'Tipo']).agg(
+                        Qtd_Liberacoes=('Produto', 'count'),  # <-- Atualizado para Quantidade de Liberações
+                        Vol_Total=('Volume', 'sum'), 
+                        Equipamentos_Lista=('Equipamento', obter_unicos)
+                    ).reset_index()
+                    
+                    df_resumo.columns = ['Nome do Produto', 'Classe de Risco', 'Tipo', 'Quantidade de Liberações', 'Soma dos Volumes', 'Equipamentos Envolvidos']
+                    df_resumo = df_resumo[['Nome do Produto', 'Quantidade de Liberações', 'Soma dos Volumes', 'Classe de Risco', 'Tipo', 'Equipamentos Envolvidos']].sort_values(by='Nome do Produto')
+                    
+                    st.dataframe(df_resumo.style.format({'Soma dos Volumes': '{:,.8f}'}, decimal=',', thousands='.'), use_container_width=True)
+                else:
+                    st.info("Nenhum produto corresponde aos critérios dos filtros selecionados.")
                     
                     # --- TABELA CORPORATIVA DE LÍQUIDOS NOCIVOS ---
                     def obter_unicos(series):
