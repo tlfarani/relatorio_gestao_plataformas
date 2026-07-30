@@ -1055,28 +1055,27 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                         config_g11 = {'toImageButtonOptions': {**CONFIG_EXPORTACAO['toImageButtonOptions'], 'width': 594, 'height': 440}}
                         st.plotly_chart(ajustar_layout_grafico(fig11), use_container_width=True, config=config_g11)
         
-                    # --- GRÁFICO 12 --- Número de acidentes por produtos liberados
-                    
-                    # Campo de seleção do modo de visualização
+                    # =========================================================================
+                    # SELETOR UNIFICADO PARA OS GRÁFICOS 12, 13 E 14
+                    # =========================================================================
                     modo_g12 = st.radio(
-                        "Classificação no Gráfico de Principais Produtos:",
+                        "Classificação nos Gráficos Analíticos (Gráficos 12, 13 e 14):",
                         options=["Classe de Risco", "Tipo (Oleoso / Não Oleoso)"],
                         horizontal=True,
                         key="radio_modo_g12"
                     )
                     
-                    # 1. Agrupamento e ranking dos 20 produtos com maior número de liberações
                     coluna_classificacao = 'Classe de Risco' if modo_g12 == "Classe de Risco" else 'Tipo'
                     
+                    # --- GRÁFICO 12 --- Número de acidentes por produtos liberados
                     df_g12 = df_prod_filtrado.groupby(['Produto', coluna_classificacao]).agg(
                         Qtd=('Produto', 'count')
                     ).reset_index()
                     
-                    # Ordena pelo volume de ocorrências e seleciona os Top 20 produtos
+                    # Ranking dos Top 20 produtos mais frequentes
                     df_g12_rank = df_prod_filtrado.groupby('Produto').agg(Qtd_Total=('Produto', 'count')).reset_index().sort_values(by='Qtd_Total', ascending=False).head(20)
                     df_g12_rank['Rank'] = [f"{i}. {p}" for i, p in enumerate(df_g12_rank['Produto'], 1)]
                     
-                    # Associa o rótulo com o número do ranking ao DataFrame agrupado
                     df_g12 = df_g12.merge(df_g12_rank[['Produto', 'Rank']], on='Produto', how='inner')
                     
                     max_qtd12 = df_g12_rank['Qtd_Total'].max() if not df_g12_rank.empty else 10
@@ -1084,132 +1083,93 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                     
                     fig12 = go.Figure()
                     
-                    # 2. Montagem das barras empilhadas e legendas conforme o modo selecionado
                     if modo_g12 == "Classe de Risco":
-                        ordem_categorias = ['A', 'B', 'D', 'Não Classificado', 'Não Avaliado']
-                        
-                        for c in ordem_categorias:
+                        ordem_categorias_12 = ['A', 'B', 'D', 'Não Classificado', 'Não Avaliado']
+                        for c in ordem_categorias_12:
                             d = df_g12[df_g12['Classe de Risco'] == c]
                             if not d.empty:
                                 fig12.add_trace(go.Bar(
                                     name=f'Risco {c}' if c in ['A','B','D'] else c, 
-                                    y=d['Rank'], 
-                                    x=d['Qtd'], 
-                                    orientation='h', 
+                                    y=d['Rank'], x=d['Qtd'], orientation='h', 
                                     marker_color=get_cor_risco(c, 12), 
-                                    text=d['Qtd'], 
-                                    textposition='outside', 
-                                    cliponaxis=False, 
-                                    constraintext='none', 
-                                    textfont=dict(color='black', size=15), 
-                                    showlegend=False
+                                    text=d['Qtd'], textposition='outside', cliponaxis=False, constraintext='none', 
+                                    textfont=dict(color='black', size=15), showlegend=False
                                 ))
                                 
                         cor_a, cor_b, cor_d = get_cor_risco('A', 12), get_cor_risco('B', 12), get_cor_risco('D', 12)
                         cor_nc, cor_na = get_cor_risco('Não Classificado', 12), get_cor_risco('Não Avaliado', 12)
                         
-                        texto_legenda = (
+                        texto_legenda_12 = (
                             f"<span style='color:{cor_a}'>■</span> Risco A &nbsp;&nbsp;&nbsp;&nbsp; <span style='color:{cor_na}'>■</span> Não Avaliado<br>"
                             f"<span style='color:{cor_b}'>■</span> Risco B &nbsp;&nbsp;&nbsp;&nbsp; <span style='color:{cor_nc}'>■</span> Não Classificado<br>"
                             f"<span style='color:{cor_d}'>■</span> Risco D"
                         )
-                    
-                    else:  # Modo "Tipo (Oleoso / Não Oleoso)"
+                    else:
                         cores_tp = {'Não Oleoso': '#1FA1DD', 'Oleoso': '#8BC53F', 'Sem Informação': '#BDC3C7'}
-                        ordem_categorias = ['Oleoso', 'Não Oleoso', 'Sem Informação']
-                        
-                        for t in ordem_categorias:
+                        ordem_categorias_12 = ['Oleoso', 'Não Oleoso', 'Sem Informação']
+                        for t in ordem_categorias_12:
                             d = df_g12[df_g12['Tipo'] == t]
                             if not d.empty:
                                 fig12.add_trace(go.Bar(
                                     name=t, 
-                                    y=d['Rank'], 
-                                    x=d['Qtd'], 
-                                    orientation='h', 
+                                    y=d['Rank'], x=d['Qtd'], orientation='h', 
                                     marker_color=cores_tp.get(t, '#BDC3C7'), 
-                                    text=d['Qtd'], 
-                                    textposition='outside', 
-                                    cliponaxis=False, 
-                                    constraintext='none', 
-                                    textfont=dict(color='black', size=15), 
-                                    showlegend=False
+                                    text=d['Qtd'], textposition='outside', cliponaxis=False, constraintext='none', 
+                                    textfont=dict(color='black', size=15), showlegend=False
                                 ))
                                 
                         cor_oleoso = cores_tp['Oleoso']
                         cor_nao_oleoso = cores_tp['Não Oleoso']
                         
-                        texto_legenda = (
+                        texto_legenda_12 = (
                             f"<span style='color:{cor_oleoso}'>■</span> Oleoso &nbsp;&nbsp;&nbsp;&nbsp; "
                             f"<span style='color:{cor_nao_oleoso}'>■</span> Não Oleoso"
                         )
                     
-                    # 3. Configurações de layout, eixos e exportação
-                    fig12.update_layout(
-                        barmode='stack', 
-                        plot_bgcolor='white', 
-                        paper_bgcolor='white', 
-                        font=dict(color='black', size=15), 
-                        uniformtext_minsize=15, 
-                        uniformtext_mode='show', 
-                        showlegend=False, 
-                        margin=dict(t=30, b=30, l=480, r=40)
-                    )
-                    
-                    fig12.add_annotation(
-                        xref="paper", yref="paper", 
-                        x=1, y=0, 
-                        xanchor="right", yanchor="bottom", 
-                        align="right", 
-                        text=texto_legenda, 
-                        showarrow=False, 
-                        font=dict(color='black', size=13)
-                    )
-                    
-                    fig12.update_xaxes(
-                        showgrid=False, 
-                        zeroline=False, 
-                        showline=False, 
-                        showticklabels=False, 
-                        range=[0, max_qtd12 * 1.18]
-                    )
-                    
-                    fig12.update_yaxes(
-                        showgrid=False, 
-                        zeroline=False, 
-                        linecolor='black', 
-                        tickfont=dict(color='black', size=15), 
-                        categoryorder='array', 
-                        categoryarray=lista_rank_eixo_y, 
-                        automargin=False
-                    )
+                    fig12.update_layout(barmode='stack', plot_bgcolor='white', paper_bgcolor='white', font=dict(color='black', size=15), uniformtext_minsize=15, uniformtext_mode='show', showlegend=False, margin=dict(t=30, b=30, l=480, r=40))
+                    fig12.add_annotation(xref="paper", yref="paper", x=1, y=0, xanchor="right", yanchor="bottom", align="right", text=texto_legenda_12, showarrow=False, font=dict(color='black', size=13))
+                    fig12.update_xaxes(showgrid=False, zeroline=False, showline=False, showticklabels=False, range=[0, max_qtd12 * 1.18])
+                    fig12.update_yaxes(showgrid=False, zeroline=False, linecolor='black', tickfont=dict(color='black', size=15), categoryorder='array', categoryarray=lista_rank_eixo_y, automargin=False)
                     
                     fig12_final = ajustar_layout_grafico(fig12)
                     fig12_final.update_layout(margin=dict(t=30, b=30, l=480, r=40))
-                    
-                    config_g12 = {
-                        'toImageButtonOptions': {
-                            **CONFIG_EXPORTACAO['toImageButtonOptions'], 
-                            'width': 980, 
-                            'height': 600
-                        }
-                    }
-                    
+                    config_g12 = {'toImageButtonOptions': {**CONFIG_EXPORTACAO['toImageButtonOptions'], 'width': 980, 'height': 600}}
                     st.plotly_chart(fig12_final, use_container_width=True, config=config_g12)
-        
-                    # --- GRÁFICO 13 ---
+                    
+                    # --- GRÁFICO 13 --- Distribuição de Liberações por Faixa de Volume
                     bins = [-float('inf'), 0.00001, 0.0001, 0.001, 0.01, 0.1, 1.0, 8.0, 200.0, float('inf')]
                     lbls = ['<= 10 mL', '10 mL < x <= 100 mL', '100 mL < x <= 1 L', '1 L < x <= 10 L', '10 L < x <= 100 L', '100 L < x <= 1 m3', '1 m3 < x <= 8 m3', '8 m3 < x <= 200 m3', 'x > 200 m3']
                     df_prod_filtrado['Faixa_Vol'] = pd.cut(df_prod_filtrado['Volume'], bins=bins, labels=lbls)
                     
-                    # Agrupamento ajustado para Liberações de Produtos (count)
-                    df_g13 = df_prod_filtrado.groupby(['Faixa_Vol', 'Classe de Risco'], observed=False).agg(
+                    df_g13 = df_prod_filtrado.groupby(['Faixa_Vol', coluna_classificacao], observed=False).agg(
                         Qtd=('Produto', 'count')
                     ).reset_index()
                     
                     fig13 = go.Figure()
-                    for c in ordem_11:
-                        d = df_g13[df_g13['Classe de Risco'] == c].set_index('Faixa_Vol').reindex(lbls).reset_index().fillna({'Qtd':0})
-                        fig13.add_trace(go.Bar(name=f'Risco {c}' if c in ['A','B','D'] else c, x=d['Faixa_Vol'], y=d['Qtd'], marker_color=get_cor_risco(c, 13), text=d['Qtd'].replace(0, ''), textposition='inside', cliponaxis=False, constraintext='none', textfont=dict(size=14, color='black')))
+                    
+                    if modo_g12 == "Classe de Risco":
+                        ordem_cat_13 = ['A', 'B', 'D', 'Não Classificado', 'Não Avaliado']
+                        for c in ordem_cat_13:
+                            d = df_g13[df_g13['Classe de Risco'] == c].set_index('Faixa_Vol').reindex(lbls).reset_index().fillna({'Qtd':0})
+                            fig13.add_trace(go.Bar(
+                                name=f'Risco {c}' if c in ['A','B','D'] else c, 
+                                x=d['Faixa_Vol'], y=d['Qtd'], 
+                                marker_color=get_cor_risco(c, 13), 
+                                text=d['Qtd'].replace(0, ''), textposition='inside', cliponaxis=False, constraintext='none', 
+                                textfont=dict(size=14, color='black')
+                            ))
+                    else:
+                        cores_tp = {'Não Oleoso': '#1FA1DD', 'Oleoso': '#8BC53F', 'Sem Informação': '#BDC3C7'}
+                        ordem_cat_13 = ['Oleoso', 'Não Oleoso', 'Sem Informação']
+                        for t in ordem_cat_13:
+                            d = df_g13[df_g13['Tipo'] == t].set_index('Faixa_Vol').reindex(lbls).reset_index().fillna({'Qtd':0})
+                            fig13.add_trace(go.Bar(
+                                name=t, 
+                                x=d['Faixa_Vol'], y=d['Qtd'], 
+                                marker_color=cores_tp.get(t, '#BDC3C7'), 
+                                text=d['Qtd'].replace(0, ''), textposition='inside', cliponaxis=False, constraintext='none', 
+                                textfont=dict(size=14, color='black')
+                            ))
                     
                     df_g13_tot = df_prod_filtrado.groupby('Faixa_Vol', observed=False).agg(Qtd=('Produto', 'count')).reset_index()
                     for _, r in df_g13_tot.iterrows():
@@ -1224,47 +1184,89 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                     fig13_final.update_layout(plot_bgcolor='white', paper_bgcolor='white')
                     config_g13 = {'toImageButtonOptions': {**CONFIG_EXPORTACAO['toImageButtonOptions'], 'width': 900, 'height': 550}}
                     st.plotly_chart(fig13_final, use_container_width=True, config=config_g13)
-        
-                    # --- GRÁFICO 14 ---
-                    df_g14 = df_prod_filtrado.groupby(['Produto', 'Classe de Risco']).agg(
+                    
+                    # --- GRÁFICO 14 --- Volume Total Liberado e Volume Médio por Produto
+                    df_g14 = df_prod_filtrado.groupby(['Produto', coluna_classificacao]).agg(
                         Vol=('Volume', 'sum'), 
-                        Qtd=('Produto', 'count')  # <-- Agrupamento ajustado para Liberações de Produtos
+                        Qtd=('Produto', 'count')
                     ).reset_index().sort_values(by='Vol', ascending=False)
                     
                     top20 = df_g14.head(20).copy()
                     demais = df_g14.iloc[20:].copy()
                     if not demais.empty:
-                        top20 = pd.concat([top20, pd.DataFrame([{'Produto':'Demais Produtos', 'Classe de Risco':'Não Avaliado', 'Vol':demais['Vol'].sum(), 'Qtd':demais['Qtd'].sum()}])], ignore_index=True)
+                        cat_demais = 'Não Avaliado' if modo_g12 == "Classe de Risco" else 'Sem Informação'
+                        top20 = pd.concat([top20, pd.DataFrame([{
+                            'Produto': 'Demais Produtos', 
+                            coluna_classificacao: cat_demais, 
+                            'Vol': demais['Vol'].sum(), 
+                            'Qtd': demais['Qtd'].sum()
+                        }])], ignore_index=True)
                     
-                    # Volume Médio calculado por Liberação de Produto
                     top20['Vol_Medio'] = top20['Vol'] / top20['Qtd']
                     top20['Rank'] = [f"{i}. {p}" if p != 'Demais Produtos' else p for i, p in enumerate(top20['Produto'], 1)]
                     ordem_rank_x = top20['Rank'].tolist()
                     
                     fig14 = make_subplots(specs=[[{"secondary_y": True}]])
-                    cores_texto_risco_escuras = {'A': '#0B5383', 'B': '#3E6B15', 'D': '#B87B08', 'Não Classificado': '#5B2C6F', 'Não Avaliado': '#A04000'}
+                    
                     limite_altura_barra_corte = 90
                     limite_eixo_unificado = 120
                     limite_corte_vol = 70
                     TAMANHO_ROTULO_BARRA = 13
                     TAMANHO_ROTULO_PONTO = 10
                     
-                    for c in ordem_11:
-                        d = top20[top20['Classe de Risco'] == c]
-                        if not d.empty:
-                            cor_barra = get_cor_risco(c, 14)
-                            cor_texto_barra = cores_texto_risco_escuras.get(c, '#2C3E50')
-                            y_desenhado, textos_barra = [], []
-                            
-                            for _, row in d.iterrows():
-                                vol_real = row['Vol']
-                                if vol_real > limite_corte_vol:
-                                    y_desenhado.append(limite_altura_barra_corte)
-                                else:
-                                    y_desenhado.append(vol_real)
-                                textos_barra.append(f"<b>{vol_real:,.2f}</b>".replace('.',','))
+                    if modo_g12 == "Classe de Risco":
+                        ordem_cat_14 = ['A', 'B', 'D', 'Não Classificado', 'Não Avaliado']
+                        cores_texto_risco_escuras = {'A': '#0B5383', 'B': '#3E6B15', 'D': '#B87B08', 'Não Classificado': '#5B2C6F', 'Não Avaliado': '#A04000'}
+                        
+                        for c in ordem_cat_14:
+                            d = top20[top20['Classe de Risco'] == c]
+                            if not d.empty:
+                                cor_barra = get_cor_risco(c, 14)
+                                cor_texto_barra = cores_texto_risco_escuras.get(c, '#2C3E50')
+                                y_desenhado, textos_barra = [], []
                                 
-                            fig14.add_trace(go.Bar(name=f'Risco {c}' if c in ['A','B','D'] else c, x=d['Rank'], y=y_desenhado, marker_color=cor_barra, text=textos_barra, textposition='outside', cliponaxis=False, constraintext='none', textfont=dict(color=cor_texto_barra, size=TAMANHO_ROTULO_BARRA), showlegend=True), secondary_y=False)
+                                for _, row in d.iterrows():
+                                    vol_real = row['Vol']
+                                    if vol_real > limite_corte_vol:
+                                        y_desenhado.append(limite_altura_barra_corte)
+                                    else:
+                                        y_desenhado.append(vol_real)
+                                    textos_barra.append(f"<b>{vol_real:,.2f}</b>".replace('.',','))
+                                    
+                                fig14.add_trace(go.Bar(
+                                    name=f'Risco {c}' if c in ['A','B','D'] else c, 
+                                    x=d['Rank'], y=y_desenhado, 
+                                    marker_color=cor_barra, 
+                                    text=textos_barra, textposition='outside', cliponaxis=False, constraintext='none', 
+                                    textfont=dict(color=cor_texto_barra, size=TAMANHO_ROTULO_BARRA), showlegend=True
+                                ), secondary_y=False)
+                    else:
+                        cores_tp = {'Não Oleoso': '#1FA1DD', 'Oleoso': '#8BC53F', 'Sem Informação': '#BDC3C7'}
+                        cores_texto_escuras = {'Não Oleoso': '#0B5383', 'Oleoso': '#3E6B15', 'Sem Informação': '#4A5559'}
+                        ordem_cat_14 = ['Oleoso', 'Não Oleoso', 'Sem Informação']
+                        
+                        for t in ordem_cat_14:
+                            d = top20[top20['Tipo'] == t]
+                            if not d.empty:
+                                cor_barra = cores_tp.get(t, '#BDC3C7')
+                                cor_texto_barra = cores_texto_escuras.get(t, '#2C3E50')
+                                y_desenhado, textos_barra = [], []
+                                
+                                for _, row in d.iterrows():
+                                    vol_real = row['Vol']
+                                    if vol_real > limite_corte_vol:
+                                        y_desenhado.append(limite_altura_barra_corte)
+                                    else:
+                                        y_desenhado.append(vol_real)
+                                    textos_barra.append(f"<b>{vol_real:,.2f}</b>".replace('.',','))
+                                    
+                                fig14.add_trace(go.Bar(
+                                    name=t, 
+                                    x=d['Rank'], y=y_desenhado, 
+                                    marker_color=cor_barra, 
+                                    text=textos_barra, textposition='outside', cliponaxis=False, constraintext='none', 
+                                    textfont=dict(color=cor_texto_barra, size=TAMANHO_ROTULO_BARRA), showlegend=True
+                                ), secondary_y=False)
                     
                     fig14.add_trace(go.Scatter(name='Volume Médio por Liberação', x=top20['Rank'], y=top20['Vol_Medio'], mode='markers', marker=dict(color='grey', size=8), showlegend=False), secondary_y=True)
                     
