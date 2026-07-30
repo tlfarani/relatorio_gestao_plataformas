@@ -48,20 +48,28 @@ def ajustar_layout_grafico(fig, fator_fonte=MULTIPLICADOR_FONTE, espessura_barra
 
 # --- FUNÇÕES GLOBAIS DE TRATAMENTO DE PRODUTOS E VOLUMES ---
 def limpar_volume_safely(val):
-    if pd.isna(val): return 0.0
-    if isinstance(val, (int, float)): return float(val)
-    val_str = str(val).strip()
-    if val_str.upper() == 'PREENCHER' or val_str == '': return 0.0
-    if 'E' in val_str.upper():
-        val_str = val_str.replace(',', '.')
-        try: return float(val_str)
-        except ValueError: pass
-    if '.' in val_str and ',' in val_str:
-        val_str = val_str.replace('.', '').replace(',', '.')
-    elif ',' in val_str:
-        val_str = val_str.replace(',', '.')
-    try: return float(val_str)
-    except ValueError: return 0.0
+    if pd.isna(val): 
+        return 0.0
+    if isinstance(val, (int, float)): 
+        return float(val)
+    
+    val_str = str(val).strip().upper()
+    if val_str in ['PREENCHER', 'NAN', 'NONE', '']: 
+        return 0.0
+    
+    # Remove espaços internos que travavam a conversão de notação científica (ex: "1.5 E 5", "1.5 E -5", "3.312 E 5")
+    val_clean = val_str.replace(' ', '')
+    
+    # Tratamento de formato decimal (vírgulas e pontos)
+    if '.' in val_clean and ',' in val_clean:
+        val_clean = val_clean.replace('.', '').replace(',', '.')
+    elif ',' in val_clean:
+        val_clean = val_clean.replace(',', '.')
+        
+    try:
+        return float(val_clean)
+    except ValueError:
+        return 0.0
 
 def padronizar_nome_produto(nome):
     if pd.isna(nome): return "Não Informado"
