@@ -1206,24 +1206,6 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                     st.dataframe(df_resumo.style.format({'Soma dos Volumes': '{:,.8f}'}, decimal=',', thousands='.'), use_container_width=True)
                 else:
                     st.info("Nenhum produto corresponde aos critérios dos filtros selecionados.")
-                    
-                    # --- TABELA CORPORATIVA DE LÍQUIDOS NOCIVOS ---
-                    def obter_unicos(series):
-                        s = set()
-                        for v in series:
-                            if pd.notna(v):
-                                for item in str(v).split(','):
-                                    cl = item.strip()
-                                    if cl and cl.lower() not in ['nan', 'não informado']: s.add(cl)
-                        return ", ".join(sorted(s)) if s else "Não Informado"
-
-                    df_resumo = df_prod_filtrado.groupby(['Produto', 'Classe de Risco', 'Tipo']).agg(Qtd_Acidentes=('Processo', 'nunique'), Vol_Total=('Volume', 'sum'), Equipamentos_Lista=('Equipamento', obter_unicos)).reset_index()
-                    df_resumo.columns = ['Nome do Produto', 'Classe de Risco', 'Tipo', 'Quantidade de Acidentes', 'Soma dos Volumes', 'Equipamentos Envolvidos']
-                    df_resumo = df_resumo[['Nome do Produto', 'Quantidade de Acidentes', 'Soma dos Volumes', 'Classe de Risco', 'Tipo', 'Equipamentos Envolvidos']].sort_values(by='Nome do Produto')
-                    
-                    st.dataframe(df_resumo.style.format({'Soma dos Volumes': '{:,.8f}'}, decimal=',', thousands='.'), use_container_width=True)
-                else:
-                    st.info("Nenhum produto corresponde aos critérios dos filtros selecionados.")
                 
     except Exception as e:
         st.error("Erro interno ao consolidar os dados das abas.")
