@@ -117,94 +117,23 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# --- ESTILIZAÇÃO DO TEMA DO IBAMA (CSS PREMIUM AJUSTADO) ---
+# --- ESTILIZAÇÃO DO TEMA DO IBAMA ---
 st.markdown("""
 <style>
-    /* 1. Cor de fundo principal da página (Cinza Claro) */
-    .stApp {
-        background-color: #F4F6F4 !important;
-    }
-    
-    /* 2. Garante contraste escuro para textos normais e rótulos */
-    .stApp p, .stApp span, .stApp label {
-        color: #2E3E2F !important;
-    }
-
-    /* 3. Estilo dos títulos e subtítulos (Verde Musgo Institucional) */
-    h1, h2, h3, h4, h5, h6 {
-        color: #1E4620 !important;
-        font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif !important;
-        font-weight: bold !important;
-    }
-    
-    /* 4. Rótulos de todos os widgets e filtros */
-    div[data-testid="stWidgetLabel"] p {
-        color: #1E4620 !important;
-        font-weight: bold !important;
-        font-size: 16px !important;
-    }
-    
-    /* 5. Customização das caixas de seleção (Multiselect) */
-    div[data-baseweb="select"] > div {
-        background-color: #FFFFFF !important;
-        color: #2E3E2F !important;
-        border-color: #C2CDC2 !important;
-    }
-    
-    /* 6. Estilo geral das tags selecionadas (chips) */
-    [data-baseweb="tag"] {
-        background-color: #D1E2D3 !important; 
-        border: 1px solid #1E4620 !important; 
-        border-radius: 4px !important;
-    }
-    [data-baseweb="tag"] * {
-        color: #1E4620 !important;
-        font-weight: bold !important;
-    }
-    
-    /* 7. Arredondamento e estilo dos cards de métricas (KPIs no topo) */
-    div[data-testid="stMetric"] {
-        background-color: #FFFFFF !important;
-        border-radius: 12px !important;
-        padding: 20px !important;
-        border: 1px solid #E2E8E2 !important;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.03) !important;
-    }
-    div[data-testid="stMetricLabel"] p {
-        color: #4A5D4E !important;
-        font-weight: bold !important;
-        font-size: 16px !important;
-    }
-    div[data-testid="stMetricValue"] > div {
-        color: #1E4620 !important;
-        font-weight: bold !important;
-    }
-    
-    /* 8. ARREDONDAMENTO DAS BORDAS DAS FIGURAS */
-    .stPlotlyChart {
-        background-color: #FFFFFF !important;
-        border-radius: 14px !important;
-        border: 1px solid #E2E8E2 !important;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.04) !important;
-        overflow: hidden !important; 
-    }
-    
-    /* 9. Customização do painel lateral de filtros (Sidebar) */
-    [data-testid="stSidebar"] {
-        background-color: #E2E8E2 !important;
-        border-right: 1px solid #C2CDC2;
-    }
-
-    /* 10. Customização das abas de navegação (Tabs) */
-    button[data-baseweb="tab"] {
-        color: #6E8B75 !important;
-        font-size: 15px !important;
-    }
-    button[data-baseweb="tab"][aria-selected="true"] {
-        color: #1E4620 !important;
-        border-bottom-color: #1E4620 !important;
-        font-weight: bold !important;
-    }
+    .stApp { background-color: #F4F6F4 !important; }
+    .stApp p, .stApp span, .stApp label { color: #2E3E2F !important; }
+    h1, h2, h3, h4, h5, h6 { color: #1E4620 !important; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif !important; font-weight: bold !important; }
+    div[data-testid="stWidgetLabel"] p { color: #1E4620 !important; font-weight: bold !important; font-size: 16px !important; }
+    div[data-baseweb="select"] > div { background-color: #FFFFFF !important; color: #2E3E2F !important; border-color: #C2CDC2 !important; }
+    [data-baseweb="tag"] { background-color: #D1E2D3 !important; border: 1px solid #1E4620 !important; border-radius: 4px !important; }
+    [data-baseweb="tag"] * { color: #1E4620 !important; font-weight: bold !important; }
+    div[data-testid="stMetric"] { background-color: #FFFFFF !important; border-radius: 12px !important; padding: 20px !important; border: 1px solid #E2E8E2 !important; box-shadow: 0 4px 6px rgba(0,0,0,0.03) !important; }
+    div[data-testid="stMetricLabel"] p { color: #4A5D4E !important; font-weight: bold !important; font-size: 16px !important; }
+    div[data-testid="stMetricValue"] > div { color: #1E4620 !important; font-weight: bold !important; }
+    .stPlotlyChart { background-color: #FFFFFF !important; border-radius: 14px !important; border: 1px solid #E2E8E2 !important; box-shadow: 0 4px 10px rgba(0,0,0,0.04) !important; overflow: hidden !important; }
+    [data-testid="stSidebar"] { background-color: #E2E8E2 !important; border-right: 1px solid #C2CDC2; }
+    button[data-baseweb="tab"] { color: #6E8B75 !important; font-size: 15px !important; }
+    button[data-baseweb="tab"][aria-selected="true"] { color: #1E4620 !important; border-bottom-color: #1E4620 !important; font-weight: bold !important; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -217,7 +146,7 @@ NOME_ATENDIMENTO = "Tempo_Atendimento.xlsx"
 NOME_ENCERRAMENTO = "Tempo_Encerramento.xlsx"
 NOME_MAP_PRODUTOS = "produtos_consolidados.xlsx"
 
-# --- FUNÇÕES DE LEITURA E LIMPEZA DE DADOS (COM CACHE) ---
+# --- FUNÇÕES DE LEITURA E LIMPEZA DE DADOS ---
 
 @st.cache_data(ttl=1800)
 def carregar_dados_2025(caminho):
@@ -295,7 +224,6 @@ def carregar_encerramento_historico(caminho):
 def carregar_mapeamento_produtos(caminho):
     return pd.read_excel(caminho, sheet_name="produtos_classe")
 
-
 # --- VERIFICAÇÃO DE CONFIGURAÇÃO DE ARQUIVOS ---
 if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.exists(NOME_ATENDIMENTO) and os.path.exists(NOME_ENCERRAMENTO):
     try:
@@ -313,7 +241,6 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
         else:
             df_plataformas_2025 = pd.DataFrame(columns=df_2025_bruto.columns)
 
-        # --- VARIÁVEIS E CRUZAMENTOS DE PRODUÇÃO/ACIDENTES PARA 2025 ---
         acid_total_2025 = len(df_plataformas_2025)
 
         if 'bacia_sedimentar' in df_plataformas_2025.columns:
@@ -323,18 +250,16 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
             df_bacias_prod['Acid_2025'] = df_bacias_prod['bacia_clean'].map(counts_2025_dict).fillna(0).astype(int)
 
         # =========================================================================
-        # TRATAMENTO GLOBAL DOS PRODUTOS E VOLUMES (Para uso na Aba 1, Aba 4, etc.)
+        # TRATAMENTO GLOBAL DOS PRODUTOS E VOLUMES
         # =========================================================================
         for p in ['1', '2', '3']:
             col_marca = f'marca_p{p}'
             col_prod = f'prod_{p}'
             col_qtd = f'qtd_p{p}'
             
-            # Limpa e formata a quantidade
             if col_qtd in df_plataformas_2025.columns:
                 df_plataformas_2025[col_qtd] = df_plataformas_2025[col_qtd].apply(limpar_volume_safely)
             
-            # Padroniza o nome do produto (prioriza marca comercial se informada)
             if col_marca in df_plataformas_2025.columns and col_prod in df_plataformas_2025.columns:
                 df_plataformas_2025[col_prod] = df_plataformas_2025.apply(
                     lambda r: padronizar_nome_produto(r[col_marca]) if pd.notna(r[col_marca]) and str(r[col_marca]).strip().upper() not in ['', 'PREENCHER', 'NAN'] 
@@ -423,7 +348,6 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
             with col_t_aba1:
                 st.subheader("Base Filtrada (Dados 2025)")
                 
-                # Exibe produtos e quantidades já higienizados e formatados
                 colunas_tabela = [
                     'num_processo', 'instalacao', 'bacia_sedimentar', 'empresa', 'dias_encerramento',
                     'prod_1', 'qtd_p1', 
@@ -433,7 +357,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                 
                 cols_existentes = [c for c in colunas_tabela if c in df_filtrado.columns]
                 st.dataframe(df_filtrado[cols_existentes], use_container_width=True, height=350)
-
+        
         # =========================================================================
         # ABA 2: RELATÓRIO COMPARATIVO E PRODUÇÃO
         # =========================================================================
@@ -897,8 +821,6 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
         # ABA 4: CONSOLIDAÇÃO POR PRODUTO
         # =========================================================================
         with tab_produtos:
-            # Como as funções e os dados já foram tratados globalmente, 
-            # apenas montamos a lista 'registros_brutos' diretamente de df_plataformas_2025:
             registros_brutos = []
             for _, row in df_plataformas_2025.iterrows():
                 eq_atual = str(row.get('equipment', 'Não Informado')).strip()
@@ -907,10 +829,13 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                 for p in ['1', '2', '3']:
                     prod_nome = str(row.get(f'prod_{p}', '')).strip()
                     vol = row.get(f'qtd_p{p}', 0.0)
+                    marca_orig = str(row.get(f'marca_p{p}', '')).strip()
+                    nome_original = marca_orig if marca_orig not in ['', 'PREENCHER', 'NAN', 'nan'] else prod_nome
                     
-                    if prod_nome != '' and prod_nome != 'Não Informado' and vol > 0:
+                    # Sem filtro "vol > 0" para capturar produtos informados com volume 0
+                    if prod_nome not in ['', 'Não Informado', 'PREENCHER', 'NAN', 'nan']:
                         registros_brutos.append({
-                            'Produto_Original': row.get(f'marca_p{p}', prod_nome),
+                            'Produto_Original': nome_original,
                             'Produto': prod_nome,
                             'Volume': vol,
                             'Equipamento': eq_atual,
@@ -924,7 +849,9 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                 df_todas_liberacoes['Classe de Risco'] = df_todas_liberacoes['Classe de Risco'].fillna('Não Avaliado')
                 df_todas_liberacoes['Tipo'] = df_todas_liberacoes['Tipo'].fillna('Sem Informação')
                 
+                # Exclusão estrita de Gás Natural e Não se Aplica (Guindaste)
                 df_liquidos = df_todas_liberacoes[
+                    ~df_todas_liberacoes['Produto'].str.contains('Gás natural|Não se Aplica', case=False, na=False) &
                     (df_todas_liberacoes['Classe de Risco'] != 'Não se Aplica') & 
                     (df_todas_liberacoes['Tipo'] != 'Não se Aplica')
                 ].copy()
@@ -967,12 +894,30 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
 
                 if not df_prod_filtrado.empty:
                     tot_acid_25 = len(df_plataformas_2025)
-                    df_plataformas_2025['cont_prods'] = df_plataformas_2025.apply(lambda r: sum([1 for i in ['1','2','3'] if pd.notna(r.get(f'marca_p{i}')) and str(r.get(f'marca_p{i}')).strip().upper() not in ['','PREENCHER', 'NAN']]), axis=1)
-                    acid_2_simultaneos = (df_plataformas_2025['cont_prods'] >= 2).sum()
                     
+                    # Detalhes de Gás Natural
                     df_gas = df_todas_liberacoes[df_todas_liberacoes['Produto'].str.contains('Gás natural', case=False, na=False)]
                     acid_gas = df_gas['Processo'].nunique()
                     vol_gas = df_gas['Volume'].sum()
+
+                    # Detalhes de Não se Aplica (Guindaste)
+                    df_na = df_todas_liberacoes[df_todas_liberacoes['Produto'].str.contains('Não se Aplica', case=False, na=False)]
+                    acid_na = df_na['Processo'].nunique()
+                    
+                    # Cálculo dos acidentes com liberações simultâneas nos eventos válidos
+                    procs_excluidos = set(df_gas['Processo']).union(set(df_na['Processo']))
+                    df_plataformas_liquidos = df_plataformas_2025[~df_plataformas_2025['num_processo'].isin(procs_excluidos)].copy()
+
+                    def contar_prods_validos(r):
+                        cnt = 0
+                        for i in ['1','2','3']:
+                            p = str(r.get(f'prod_{i}', '')).strip()
+                            if p not in ['', 'Não Informado', 'PREENCHER', 'NAN', 'nan', 'Gás natural', 'Não se Aplica']:
+                                cnt += 1
+                        return cnt
+
+                    df_plataformas_liquidos['cont_prods'] = df_plataformas_liquidos.apply(contar_prods_validos, axis=1)
+                    acid_2_simultaneos = (df_plataformas_liquidos['cont_prods'] >= 2).sum()
                     
                     st.write("---")
                     
@@ -982,7 +927,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                     with col_m3: st.metric("Soma do Volume Total Liberado", f"{formatar_volume_br(df_prod_filtrado['Volume'].sum())}")
                     
                     st.write("---")
-                    st.markdown(f"***Texto Auxiliar:** Em **{acid_2_simultaneos}** dos **{tot_acid_25}** acidentes ocorridos em 2025 houve a liberação simultânea de dois ou mais produtos distintos. Houve **{acid_gas}** acidentes envolvendo a liberação de gás natural, num volume total de aproximadamente **{vol_gas:,.2f}** m3, que foram excluídos desta análise. Desta forma, o universo amostral nos gráficos e tabela a seguir é de **{len(df_prod_filtrado)}** produtos líquidos liberados em **{df_prod_filtrado['Processo'].nunique()}** processos.*")
+                    st.markdown(f"***Texto Auxiliar:** Em **{acid_2_simultaneos}** dos **{tot_acid_25 - acid_gas - acid_na}** acidentes com produtos líquidos nocivos ocorridos em 2025 houve a liberação simultânea de dois ou mais produtos distintos. Houve **{acid_gas}** acidente envolvendo a liberação de gás natural (volume de aproximadamente **{vol_gas:,.2f}** m³) e **{acid_na}** acidente relativo a evento sem vazamento de produto (queda de guindaste), os quais foram desconsiderados desta análise. Desta forma, o universo amostral nos gráficos e tabela a seguir é de **{len(df_prod_filtrado)}** produtos líquidos liberados em **{df_prod_filtrado['Processo'].nunique()}** processos.*")
                     
                     buffer_excel = io.BytesIO()
                     with pd.ExcelWriter(buffer_excel, engine='openpyxl') as writer:
@@ -1010,108 +955,24 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                         cores_texto_escuras = {'Não Oleoso': '#0B5383', 'Oleoso': '#3E6B15', 'Sem Informação': '#4A5559'}
                         
                         max_vol = df_g10['Vol'].max() if not df_g10.empty else 100
-                        max_acid = df_g10['Acid'].max() if not df_g10.empty else 10
                         
                         for tipo in df_g10['Tipo'].unique():
                             d = df_g10[df_g10['Tipo'] == tipo]
                             cor_barra = cores_tp.get(tipo, '#BDC3C7')
                             cor_texto_barra = cores_texto_escuras.get(tipo, '#2C3E50')
                             
-                            # Barras de Volume: valor em negrito <b>, tamanho 16, posicionado fora/acima da barra
-                            fig10.add_trace(
-                                go.Bar(
-                                    name=tipo, 
-                                    x=d['Tipo'], 
-                                    y=d['Vol'], 
-                                    marker_color=cor_barra, 
-                                    text=d['Vol'].apply(lambda x: f"<b>{x:,.1f} m3</b>".replace('.',',')), # <-- Negrito em HTML
-                                    textposition='outside',               # <-- Força o texto para FORA/ACIMA da barra
-                                    cliponaxis=False,                     # <-- Impede o corte caso o texto passe do limite
-                                    textfont=dict(color=cor_texto_barra, size=20), # <-- Fonte 20 na cor escura
-                                    showlegend=True
-                                ), 
-                                secondary_y=False
-                            )
-                            
-                            # Pontos de Acidentes
-                            fig10.add_trace(
-                                go.Scatter(
-                                    name=f'Acidentes {tipo}', 
-                                    x=d['Tipo'], 
-                                    y=d['Acid'], 
-                                    mode='markers+text', 
-                                    marker=dict(color='black', size=12), 
-                                    text=d['Acid'], 
-                                    textposition='top center', 
-                                    textfont=dict(color='black', size=18), 
-                                    showlegend=False
-                                ), 
-                                secondary_y=True
-                            )
+                            fig10.add_trace(go.Bar(name=tipo, x=d['Tipo'], y=d['Vol'], marker_color=cor_barra, text=d['Vol'].apply(lambda x: f"<b>{x:,.1f} m3</b>".replace('.',',')), textposition='outside', cliponaxis=False, textfont=dict(color=cor_texto_barra, size=20), showlegend=True), secondary_y=False)
+                            fig10.add_trace(go.Scatter(name=f'Acidentes {tipo}', x=d['Tipo'], y=d['Acid'], mode='markers+text', marker=dict(color='black', size=12), text=d['Acid'], textposition='top center', textfont=dict(color='black', size=18), showlegend=False), secondary_y=True)
                         
-                        fig10.update_layout(
-                            plot_bgcolor='white', 
-                            paper_bgcolor='white', 
-                            font=dict(color='black', size=18),
-                            legend_title_text='', 
-                            legend=dict(
-                                orientation="h", 
-                                yanchor="bottom", 
-                                y=1.05, 
-                                xanchor="center", 
-                                x=0.5, 
-                                font=dict(size=18, color='black')
-                            ),
-                            margin=dict(t=60, b=40, l=40, r=40)
-                        )
+                        fig10.update_layout(plot_bgcolor='white', paper_bgcolor='white', font=dict(color='black', size=18), legend_title_text='', legend=dict(orientation="h", yanchor="bottom", y=1.05, xanchor="center", x=0.5, font=dict(size=18, color='black')), margin=dict(t=60, b=40, l=40, r=40))
+                        fig10.update_xaxes(showgrid=False, zeroline=False, showticklabels=False, linecolor='black')
+                        fig10.update_yaxes(title_text="Volume de Produto Liberado (m3)", title_font=dict(size=20, color='black'), secondary_y=False, range=[0, max_vol * 1.25], showgrid=False, zeroline=False, showticklabels=False, linecolor='black')
+                        fig10.update_yaxes(title_text="Número de Acidentes", title_font=dict(size=20, color='black'), secondary_y=True, range=[0, max_vol * 1.25], showgrid=False, zeroline=False, showticklabels=False, linecolor='black')
                         
-                        fig10.update_xaxes(
-                            showgrid=False, 
-                            zeroline=False, 
-                            showticklabels=False, 
-                            linecolor='black'
-                        )
-                        
-                        # Eixo Y Primário: Teto em 1.25 para dar respiro ao texto em negrito acima da barra
-                        fig10.update_yaxes(
-                            title_text="Volume de Produto Liberado (m3)", 
-                            title_font=dict(size=20, color='black'),
-                            secondary_y=False, 
-                            range=[0, max_vol * 1.25], 
-                            showgrid=False, 
-                            zeroline=False, 
-                            showticklabels=False, 
-                            linecolor='black'
-                        )
-                        
-                        fig10.update_yaxes(
-                            title_text="Número de Acidentes", 
-                            title_font=dict(size=20, color='black'),
-                            secondary_y=True, 
-                            range=[0, max_vol * 1.25], #range=[0, max_acid * 1.25],
-                            showgrid=False, 
-                            zeroline=False, 
-                            showticklabels=False, 
-                            linecolor='black'
-                        )
-                        
-                        # Configuração de exportação EXCLUSIVA para este gráfico
-                        config_g10 = {
-                            'toImageButtonOptions': {
-                                **CONFIG_EXPORTACAO['toImageButtonOptions'], # Herda formato, escala e nome
-                                'width': 540,   # <-- Largura menor exclusiva para a imagem salva deste gráfico
-                                'height': 400   # <-- Altura (pode manter ou alterar como preferir)
-                            }
-                        }
-                    
-                        # Renderização no Streamlit usando o config personalizado
-                        st.plotly_chart(
-                            ajustar_layout_grafico(fig10), 
-                            use_container_width=True, 
-                            config=config_g10  # <-- Passa a configuração exclusiva aqui
-                        )
+                        config_g10 = {'toImageButtonOptions': {**CONFIG_EXPORTACAO['toImageButtonOptions'], 'width': 540, 'height': 400}}
+                        st.plotly_chart(ajustar_layout_grafico(fig10), use_container_width=True, config=config_g10)
 
-                    # --- GRÁFICO 11 (Ajuste Pontual de Fonte para 'Não Classificado' na Exportação) ---
+                    # --- GRÁFICO 11 ---
                     with col_graf2:
                         df_g11 = df_prod_filtrado.groupby('Classe de Risco').agg(Vol=('Volume','sum'), Acid=('Processo','nunique')).reset_index()
                         ordem_11 = ['A', 'B', 'D', 'Não Classificado', 'Não Avaliado']
@@ -1119,19 +980,12 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                         df_g11 = df_g11.sort_values('Classe de Risco').dropna(subset=['Classe de Risco'])
                         
                         fig11 = make_subplots(specs=[[{"secondary_y": True}]])
-                        
-                        cores_texto_risco_escuras = {
-                            'A': '#0B5383', 
-                            'B': '#3E6B15', 
-                            'D': '#B87B08', 
-                            'Não Classificado': '#5B2C6F', 
-                            'Não Avaliado': '#A04000'
-                        }
+                        cores_texto_risco_escuras = {'A': '#0B5383', 'B': '#3E6B15', 'D': '#B87B08', 'Não Classificado': '#5B2C6F', 'Não Avaliado': '#A04000'}
                         
                         limite_eixo_unificado = 175  
                         TAMANHO_ROTULO_BARRA = 16
                         TAMANHO_ROTULO_PONTO = 13
-                        TAMANHO_ROTULO_ANNOTATION = 13  # <-- Tamanho exclusivo para equalizar a anotação na exportação
+                        TAMANHO_ROTULO_ANNOTATION = 13
                         
                         for _, r in df_g11.iterrows():
                             classe = r['Classe de Risco']
@@ -1140,7 +994,6 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                             vol_real = r['Vol']
                             acid_real = r['Acid']
                             
-                            # --- CORTE VISUAL EM 140 (CLASSE B) ---
                             if vol_real > 140:
                                 vol_desenhado = 140
                                 tem_corte = True
@@ -1148,7 +1001,6 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                                 vol_desenhado = vol_real
                                 tem_corte = False
                                 
-                            # --- FORMATAÇÃO DO TEXTO DE VOLUME E ACIDENTES ---
                             if classe == 'Não Classificado':
                                 texto_barra_custom = f"<b>{vol_real:,.2f} m3 ({acid_real})</b>".replace('.',',')
                                 texto_barra_trace = None
@@ -1157,340 +1009,85 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                                 texto_barra_trace = f"<b>{vol_real:,.2f} m3</b>".replace('.',',')
                                 exibir_texto_scatter = True
                             
-                            # Barras de Volume (Eixo Y Primário)
-                            fig11.add_trace(
-                                go.Bar(
-                                    name=str(classe), 
-                                    x=[classe], 
-                                    y=[vol_desenhado], 
-                                    marker_color=cor_barra, 
-                                    text=[texto_barra_trace] if texto_barra_trace else None, 
-                                    textposition='outside', 
-                                    cliponaxis=False, 
-                                    textfont=dict(color=cor_texto_barra, size=TAMANHO_ROTULO_BARRA),
-                                    showlegend=True
-                                ), 
-                                secondary_y=False
-                            )
+                            fig11.add_trace(go.Bar(name=str(classe), x=[classe], y=[vol_desenhado], marker_color=cor_barra, text=[texto_barra_trace] if texto_barra_trace else None, textposition='outside', cliponaxis=False, textfont=dict(color=cor_texto_barra, size=TAMANHO_ROTULO_BARRA), showlegend=True), secondary_y=False)
                             
-                            # Rótulo customizado para 'Não Classificado' ajustado para TAMANHO_ROTULO_ANNOTATION (13)
                             if classe == 'Não Classificado':
-                                fig11.add_annotation(
-                                    x=classe,
-                                    y=acid_real,
-                                    text=texto_barra_custom,
-                                    showarrow=False,
-                                    yshift=18,
-                                    font=dict(color=cor_texto_barra, size=TAMANHO_ROTULO_ANNOTATION), # <-- Ajustado aqui
-                                    yref="y2"
-                                )
+                                fig11.add_annotation(x=classe, y=acid_real, text=texto_barra_custom, showarrow=False, yshift=18, font=dict(color=cor_texto_barra, size=TAMANHO_ROTULO_ANNOTATION), yref="y2")
                             
-                            # Símbolo // e Linha Branca no corte da barra B (width=26 e size=16)
                             if tem_corte:
                                 idx = ordem_11.index(classe)
                                 y_corte = 70
-                                
-                                fig11.add_shape(
-                                    type="line",
-                                    x0=idx - 0.38,
-                                    x1=idx + 0.38,
-                                    y0=y_corte,
-                                    y1=y_corte,
-                                    line=dict(color="white", width=26),
-                                    xref="x",
-                                    yref="y"
-                                )
-                                
-                                fig11.add_annotation(
-                                    x=classe,
-                                    y=y_corte,
-                                    text="<b>//</b>",
-                                    showarrow=False,
-                                    font=dict(color="black", size=16),
-                                    bgcolor="white",
-                                    borderpad=1,
-                                    yref="y"
-                                )
+                                fig11.add_shape(type="line", x0=idx - 0.38, x1=idx + 0.38, y0=y_corte, y1=y_corte, line=dict(color="white", width=26), xref="x", yref="y")
+                                fig11.add_annotation(x=classe, y=y_corte, text="<b>//</b>", showarrow=False, font=dict(color="black", size=16), bgcolor="white", borderpad=1, yref="y")
                             
-                            # Pontos de Acidentes (Eixo Y Secundário)
-                            fig11.add_trace(
-                                go.Scatter(
-                                    name=f'Acidentes {classe}', 
-                                    x=[classe], 
-                                    y=[acid_real], 
-                                    mode='markers+text' if exibir_texto_scatter else 'markers', 
-                                    marker=dict(color='black', size=10), 
-                                    text=[str(acid_real)] if exibir_texto_scatter else None, 
-                                    textposition='top center', 
-                                    textfont=dict(color='black', size=TAMANHO_ROTULO_PONTO),
-                                    showlegend=False
-                                ), 
-                                secondary_y=True
-                            )
+                            fig11.add_trace(go.Scatter(name=f'Acidentes {classe}', x=[classe], y=[acid_real], mode='markers+text' if exibir_texto_scatter else 'markers', marker=dict(color='black', size=10), text=[str(acid_real)] if exibir_texto_scatter else None, textposition='top center', textfont=dict(color='black', size=TAMANHO_ROTULO_PONTO), showlegend=False), secondary_y=True)
                         
-                        # Layout e Legenda
-                        fig11.update_layout(
-                            plot_bgcolor='white', 
-                            paper_bgcolor='white', 
-                            font=dict(color='black', size=15),
-                            legend_title_text='', 
-                            legend=dict(
-                                orientation="h", 
-                                yanchor="bottom", 
-                                y=1.05, 
-                                xanchor="left",  
-                                x=0,
-                                font=dict(color='black', size=13),
-                                entrywidth=0.45,
-                                entrywidthmode="fraction"
-                            ),
-                            margin=dict(t=90, b=50, l=50, r=50)
-                        )
+                        fig11.update_layout(plot_bgcolor='white', paper_bgcolor='white', font=dict(color='black', size=15), legend_title_text='', legend=dict(orientation="h", yanchor="bottom", y=1.05, xanchor="left", x=0, font=dict(color='black', size=13), entrywidth=0.45, entrywidthmode="fraction"), margin=dict(t=90, b=50, l=50, r=50))
+                        fig11.update_xaxes(showgrid=False, zeroline=False, showticklabels=False, linecolor='black')
+                        fig11.update_yaxes(title_text="Volume Liberado (m3)", title_font=dict(size=18, color='black'), secondary_y=False, range=[0, limite_eixo_unificado], showgrid=False, zeroline=False, showticklabels=False, linecolor='black')
+                        fig11.update_yaxes(title_text="Número de Acidentes", title_font=dict(size=18, color='black'), secondary_y=True, range=[0, limite_eixo_unificado], showgrid=False, zeroline=False, showticklabels=False, linecolor='black')
                         
-                        fig11.update_xaxes(
-                            showgrid=False, 
-                            zeroline=False, 
-                            showticklabels=False, 
-                            linecolor='black'
-                        )
-                        
-                        fig11.update_yaxes(
-                            title_text="Volume Liberado (m3)", 
-                            title_font=dict(size=18, color='black'),
-                            secondary_y=False, 
-                            range=[0, limite_eixo_unificado], 
-                            showgrid=False, 
-                            zeroline=False, 
-                            showticklabels=False, 
-                            linecolor='black'
-                        )
-                        
-                        fig11.update_yaxes(
-                            title_text="Número de Acidentes", 
-                            title_font=dict(size=18, color='black'),
-                            secondary_y=True, 
-                            range=[0, limite_eixo_unificado], 
-                            showgrid=False, 
-                            zeroline=False, 
-                            showticklabels=False, 
-                            linecolor='black'
-                        )
-                        
-                        config_g11 = {
-                            'toImageButtonOptions': {
-                                **CONFIG_EXPORTACAO['toImageButtonOptions'],
-                                'width': 594,
-                                'height': 440
-                            }
-                        }
-                        
-                        st.plotly_chart(
-                            ajustar_layout_grafico(fig11), 
-                            use_container_width=True, 
-                            config=config_g11
-                        )
+                        config_g11 = {'toImageButtonOptions': {**CONFIG_EXPORTACAO['toImageButtonOptions'], 'width': 594, 'height': 440}}
+                        st.plotly_chart(ajustar_layout_grafico(fig11), use_container_width=True, config=config_g11)
 
-                    # --- GRÁFICO 12 (Com Margem de 480px para Rótulos de 55 Caracteres) ---
+                    # --- GRÁFICO 12 ---
                     df_g12 = df_prod_filtrado.groupby(['Produto', 'Classe de Risco']).agg(Acid=('Processo','nunique')).reset_index()
                     df_g12 = df_g12.sort_values(by='Acid', ascending=False).head(20)
                     df_g12['Rank'] = [f"{i}. {p}" for i, p in enumerate(df_g12['Produto'], 1)]
-                    
-                    # Cálculo do maior valor acumulado para dar margem à direita no eixo X
                     max_acid12 = df_g12.groupby('Rank')['Acid'].sum().max() if not df_g12.empty else 10
                     
                     fig12 = go.Figure()
                     for c in ordem_11:
                         d = df_g12[df_g12['Classe de Risco'] == c]
                         if not d.empty:
-                            fig12.add_trace(
-                                go.Bar(
-                                    name=f'Risco {c}' if c in ['A','B','D'] else c, 
-                                    y=d['Rank'], 
-                                    x=d['Acid'], 
-                                    orientation='h', 
-                                    marker_color=get_cor_risco(c, 12), 
-                                    text=d['Acid'], 
-                                    textposition='outside',
-                                    cliponaxis=False,
-                                    constraintext='none',
-                                    textfont=dict(color='black', size=15),
-                                    showlegend=False
-                                )
-                            )
+                            fig12.add_trace(go.Bar(name=f'Risco {c}' if c in ['A','B','D'] else c, y=d['Rank'], x=d['Acid'], orientation='h', marker_color=get_cor_risco(c, 12), text=d['Acid'], textposition='outside', cliponaxis=False, constraintext='none', textfont=dict(color='black', size=15), showlegend=False))
                     
                     lista_rank_eixo_y = df_g12['Rank'].tolist()[::-1]
+                    cor_a, cor_b, cor_d = get_cor_risco('A', 12), get_cor_risco('B', 12), get_cor_risco('D', 12)
+                    cor_nc, cor_na = get_cor_risco('Não Classificado', 12), get_cor_risco('Não Avaliado', 12)
                     
-                    # Cores para os marcadores da legenda customizada
-                    cor_a = get_cor_risco('A', 12)
-                    cor_b = get_cor_risco('B', 12)
-                    cor_d = get_cor_risco('D', 12)
-                    cor_nc = get_cor_risco('Não Classificado', 12)
-                    cor_na = get_cor_risco('Não Avaliado', 12)
-                    
-                    # Monta a legenda em 2 colunas alinhadas à direita
                     texto_legenda = (
                         f"<span style='color:{cor_a}'>■</span> Risco A &nbsp;&nbsp;&nbsp;&nbsp; <span style='color:{cor_na}'>■</span> Não Avaliado<br>"
                         f"<span style='color:{cor_b}'>■</span> Risco B &nbsp;&nbsp;&nbsp;&nbsp; <span style='color:{cor_nc}'>■</span> Não Classificado<br>"
                         f"<span style='color:{cor_d}'>■</span> Risco D"
                     )
                     
-                    fig12.update_layout(
-                        barmode='stack', 
-                        plot_bgcolor='white', 
-                        paper_bgcolor='white',
-                        font=dict(color='black', size=15),
-                        uniformtext_minsize=15, 
-                        uniformtext_mode='show',
-                        showlegend=False,
-                        margin=dict(t=30, b=30, l=480, r=40) # <-- Margem esquerda ampliada para 480px
-                    )
+                    fig12.update_layout(barmode='stack', plot_bgcolor='white', paper_bgcolor='white', font=dict(color='black', size=15), uniformtext_minsize=15, uniformtext_mode='show', showlegend=False, margin=dict(t=30, b=30, l=480, r=40))
+                    fig12.add_annotation(xref="paper", yref="paper", x=1, y=0, xanchor="right", yanchor="bottom", align="right", text=texto_legenda, showarrow=False, font=dict(color='black', size=13))
+                    fig12.update_xaxes(showgrid=False, zeroline=False, showline=False, showticklabels=False, range=[0, max_acid12 * 1.18])
+                    fig12.update_yaxes(showgrid=False, zeroline=False, linecolor='black', tickfont=dict(color='black', size=15), categoryorder='array', categoryarray=lista_rank_eixo_y, automargin=False)
                     
-                    # Adiciona a legenda via Anotação no canto inferior direito
-                    fig12.add_annotation(
-                        xref="paper", yref="paper",
-                        x=1, y=0,
-                        xanchor="right", 
-                        yanchor="bottom",
-                        align="right",
-                        text=texto_legenda,
-                        showarrow=False,
-                        font=dict(color='black', size=13)
-                    )
-                    
-                    # Eixo X: Remove valores, linhas, marcadores e grades
-                    fig12.update_xaxes(
-                        showgrid=False, 
-                        zeroline=False, 
-                        showline=False, 
-                        showticklabels=False, 
-                        range=[0, max_acid12 * 1.18]
-                    )
-                    
-                    # Eixo Y: Nomes dos produtos em tamanho 15 na cor preta
-                    fig12.update_yaxes(
-                        showgrid=False, 
-                        zeroline=False, 
-                        linecolor='black', 
-                        tickfont=dict(color='black', size=15),
-                        categoryorder='array', 
-                        categoryarray=lista_rank_eixo_y,
-                        automargin=False # Desativado para forçar rigorosamente a margem 'l=480'
-                    )
-                    
-                    # Aplica o layout do sistema e reforça a margem de 480px
                     fig12_final = ajustar_layout_grafico(fig12)
                     fig12_final.update_layout(margin=dict(t=30, b=30, l=480, r=40))
-                    
-                    # Configuração de exportação EXCLUSIVA para o Gráfico 12
-                    config_g12 = {
-                        'toImageButtonOptions': {
-                            **CONFIG_EXPORTACAO['toImageButtonOptions'],
-                            'width': 980,  # Largura expandida para acomodar a margem de 480px
-                            'height': 600
-                        }
-                    }
-                    
-                    st.plotly_chart(fig12_final, use_container_width=True, config=config_g12) #CONFIG_EXPORTACAO ou config_g12
+                    config_g12 = {'toImageButtonOptions': {**CONFIG_EXPORTACAO['toImageButtonOptions'], 'width': 980, 'height': 600}}
+                    st.plotly_chart(fig12_final, use_container_width=True, config=config_g12)
 
                     # --- GRÁFICO 13 ---
                     bins = [-float('inf'), 0.00001, 0.0001, 0.001, 0.01, 0.1, 1.0, 8.0, 200.0, float('inf')]
-                    lbls = [
-                        '<= 10 mL', '10 mL < x <= 100 mL', '100 mL < x <= 1 L', 
-                        '1 L < x <= 10 L', '10 L < x <= 100 L', '100 L < x <= 1 m3', 
-                        '1 m3 < x <= 8 m3', '8 m3 < x <= 200 m3', 'x > 200 m3'
-                    ]
+                    lbls = ['<= 10 mL', '10 mL < x <= 100 mL', '100 mL < x <= 1 L', '1 L < x <= 10 L', '10 L < x <= 100 L', '100 L < x <= 1 m3', '1 m3 < x <= 8 m3', '8 m3 < x <= 200 m3', 'x > 200 m3']
                     df_prod_filtrado['Faixa_Vol'] = pd.cut(df_prod_filtrado['Volume'], bins=bins, labels=lbls)
-                    
                     df_g13 = df_prod_filtrado.groupby(['Faixa_Vol', 'Classe de Risco'], observed=False).agg(Acid=('Processo','nunique')).reset_index()
                     
                     fig13 = go.Figure()
                     for c in ordem_11:
                         d = df_g13[df_g13['Classe de Risco'] == c].set_index('Faixa_Vol').reindex(lbls).reset_index().fillna({'Acid':0})
-                        fig13.add_trace(
-                            go.Bar(
-                                name=f'Risco {c}' if c in ['A','B','D'] else c, 
-                                x=d['Faixa_Vol'], 
-                                y=d['Acid'], 
-                                marker_color=get_cor_risco(c, 13), 
-                                text=d['Acid'].replace(0, ''), 
-                                textposition='inside',
-                                cliponaxis=False,
-                                constraintext='none', # Desativa o encolhimento/ocultação de textos em segmentos finos
-                                textfont=dict(size=14, color='black') # Valores internos das barras em tamanho 14 na cor preta
-                            )
-                        )
+                        fig13.add_trace(go.Bar(name=f'Risco {c}' if c in ['A','B','D'] else c, x=d['Faixa_Vol'], y=d['Acid'], marker_color=get_cor_risco(c, 13), text=d['Acid'].replace(0, ''), textposition='inside', cliponaxis=False, constraintext='none', textfont=dict(size=14, color='black')))
                     
-                    # Totais no topo de cada coluna
                     df_g13_tot = df_prod_filtrado.groupby('Faixa_Vol', observed=False).agg(Acid=('Processo','nunique')).reset_index()
                     for _, r in df_g13_tot.iterrows():
                         if r['Acid'] > 0:
-                            fig13.add_annotation(
-                                x=r['Faixa_Vol'], 
-                                y=r['Acid'], 
-                                text=f"<b>{r['Acid']}</b>", 
-                                showarrow=False, 
-                                yshift=15, 
-                                font=dict(color="white", size=13), 
-                                bgcolor="black", 
-                                bordercolor="black", 
-                                borderpad=3
-                            )
+                            fig13.add_annotation(x=r['Faixa_Vol'], y=r['Acid'], text=f"<b>{r['Acid']}</b>", showarrow=False, yshift=15, font=dict(color="white", size=13), bgcolor="black", bordercolor="black", borderpad=3)
                     
-                    # Layout com altura estendida e fundo rigorosamente branco
-                    fig13.update_layout(
-                        barmode='stack', 
-                        plot_bgcolor='white', 
-                        paper_bgcolor='white',
-                        height=600, # Aumenta a altura da exibição na web para expandir os segmentos verticais
-                        font=dict(color='black', size=15),
-                        legend_title_text='', 
-                        legend=dict(
-                            orientation="h", 
-                            yanchor="bottom", 
-                            y=1.05, 
-                            xanchor="center", 
-                            x=0.5,
-                            font=dict(color='black', size=15) # Legenda na cor preta
-                        ),
-                        margin=dict(t=80, b=120, l=60, r=40)
-                    )
+                    fig13.update_layout(barmode='stack', plot_bgcolor='white', paper_bgcolor='white', height=600, font=dict(color='black', size=15), legend_title_text='', legend=dict(orientation="h", yanchor="bottom", y=1.05, xanchor="center", x=0.5, font=dict(color='black', size=15)), margin=dict(t=80, b=120, l=60, r=40))
+                    fig13.update_xaxes(tickangle=45, showgrid=False, zeroline=False, linecolor='black', tickfont=dict(color='black', size=14))
+                    fig13.update_yaxes(showgrid=False, zeroline=False, linecolor='black', tickfont=dict(color='black', size=15))
                     
-                    # Eixo X com rótulos e marcadores pretos
-                    fig13.update_xaxes(
-                        tickangle=45, 
-                        showgrid=False, 
-                        zeroline=False,
-                        linecolor='black', 
-                        tickfont=dict(color='black', size=14)
-                    )
-                    
-                    # Eixo Y com números e linha na cor preta
-                    fig13.update_yaxes(
-                        showgrid=False, 
-                        zeroline=False,
-                        linecolor='black', 
-                        tickfont=dict(color='black', size=15)
-                    )
-                    
-                    # Processa com ajustar_layout e garante a sobreposição dos fundos brancos
                     fig13_final = ajustar_layout_grafico(fig13)
-                    fig13_final.update_layout(
-                        plot_bgcolor='white',
-                        paper_bgcolor='white'
-                    )
-                    
-                    # Configuração de exportação EXCLUSIVA para o Gráfico 13 (com altura ampliada)
-                    config_g13 = {
-                        'toImageButtonOptions': {
-                            **CONFIG_EXPORTACAO['toImageButtonOptions'],
-                            'width': 900,
-                            'height': 550 # Altura maior na exportação para evitar ocultaçâo de números
-                        }
-                    }
-                    
+                    fig13_final.update_layout(plot_bgcolor='white', paper_bgcolor='white')
+                    config_g13 = {'toImageButtonOptions': {**CONFIG_EXPORTACAO['toImageButtonOptions'], 'width': 900, 'height': 550}}
                     st.plotly_chart(fig13_final, use_container_width=True, config=config_g13)
 
-                    # --- GRÁFICO 14 (Harmonização Completa de Fontes e Folga de Topo na Exportação) ---
+                    # --- GRÁFICO 14 ---
                     df_g14 = df_prod_filtrado.groupby(['Produto', 'Classe de Risco']).agg(Vol=('Volume','sum'), Acid=('Processo','nunique')).reset_index().sort_values(by='Vol', ascending=False)
                     top20 = df_g14.head(20).copy()
                     demais = df_g14.iloc[20:].copy()
@@ -1499,197 +1096,56 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                     
                     top20['Vol_Medio'] = top20['Vol'] / top20['Acid']
                     top20['Rank'] = [f"{i}. {p}" if p != 'Demais Produtos' else p for i, p in enumerate(top20['Produto'], 1)]
-                    
-                    # Ordem estrita do maior para o menor volume (esquerda para a direita)
                     ordem_rank_x = top20['Rank'].tolist()
                     
                     fig14 = make_subplots(specs=[[{"secondary_y": True}]])
-                    
-                    cores_texto_risco_escuras = {
-                        'A': '#0B5383', 
-                        'B': '#3E6B15', 
-                        'D': '#B87B08', 
-                        'Não Classificado': '#5B2C6F', 
-                        'Não Avaliado': '#A04000'
-                    }
-                    
-                    limite_altura_barra_corte = 90  # Altura da barra cortada
-                    limite_eixo_unificado = 120    # Teto ampliado para dar folga no topo para o texto "outside"
-                    limite_corte_vol = 70          # Limite para aplicação do corte visual
-                    
+                    cores_texto_risco_escuras = {'A': '#0B5383', 'B': '#3E6B15', 'D': '#B87B08', 'Não Classificado': '#5B2C6F', 'Não Avaliado': '#A04000'}
+                    limite_altura_barra_corte = 90
+                    limite_eixo_unificado = 120
+                    limite_corte_vol = 70
                     TAMANHO_ROTULO_BARRA = 13
-                    TAMANHO_ROTULO_PONTO = 10      # Ajustado para 10 (sem negrito HTML) para igualar visualmente às barras na exportação
+                    TAMANHO_ROTULO_PONTO = 10
                     
-                    # Adiciona as barras por classe de risco
                     for c in ordem_11:
                         d = top20[top20['Classe de Risco'] == c]
                         if not d.empty:
                             cor_barra = get_cor_risco(c, 14)
                             cor_texto_barra = cores_texto_risco_escuras.get(c, '#2C3E50')
-                            
-                            y_desenhado = []
-                            textos_barra = []
+                            y_desenhado, textos_barra = [], []
                             
                             for _, row in d.iterrows():
                                 vol_real = row['Vol']
-                                
-                                # Aplica o corte na altura desenhada se for volume desproporcional
                                 if vol_real > limite_corte_vol:
                                     y_desenhado.append(limite_altura_barra_corte)
                                 else:
                                     y_desenhado.append(vol_real)
-                                
-                                # Texto da barra na cor escura correspondente
                                 textos_barra.append(f"<b>{vol_real:,.2f}</b>".replace('.',','))
                                 
-                            fig14.add_trace(
-                                go.Bar(
-                                    name=f'Risco {c}' if c in ['A','B','D'] else c, 
-                                    x=d['Rank'], 
-                                    y=y_desenhado, 
-                                    marker_color=cor_barra, 
-                                    text=textos_barra, 
-                                    textposition='outside',
-                                    cliponaxis=False,
-                                    constraintext='none', # Impede a redução automática da fonte das barras
-                                    textfont=dict(color=cor_texto_barra, size=TAMANHO_ROTULO_BARRA),
-                                    showlegend=True
-                                ), 
-                                secondary_y=False
-                            )
+                            fig14.add_trace(go.Bar(name=f'Risco {c}' if c in ['A','B','D'] else c, x=d['Rank'], y=y_desenhado, marker_color=cor_barra, text=textos_barra, textposition='outside', cliponaxis=False, constraintext='none', textfont=dict(color=cor_texto_barra, size=TAMANHO_ROTULO_BARRA), showlegend=True), secondary_y=False)
                     
-                    # Desenha apenas os pontos (marcadores cinzas) do Volume Médio
-                    fig14.add_trace(
-                        go.Scatter(
-                            name='Volume Médio', 
-                            x=top20['Rank'], 
-                            y=top20['Vol_Medio'], 
-                            mode='markers', 
-                            marker=dict(color='grey', size=8), 
-                            showlegend=False
-                        ), 
-                        secondary_y=True
-                    )
+                    fig14.add_trace(go.Scatter(name='Volume Médio', x=top20['Rank'], y=top20['Vol_Medio'], mode='markers', marker=dict(color='grey', size=8), showlegend=False), secondary_y=True)
                     
-                    # Adiciona os rótulos de Volume Médio com CAIXA BRANCA customizada (para Vol >= 8 m³)
                     for _, row in top20.iterrows():
                         if row['Vol'] >= 8 and abs(row['Vol'] - row['Vol_Medio']) >= 0.01:
-                            fig14.add_annotation(
-                                x=row['Rank'],
-                                y=row['Vol_Medio'],
-                                text=f"{row['Vol_Medio']:,.2f}".replace('.',','), # Sem <b> para evitar o "inchaço" SVG na exportação
-                                showarrow=False,
-                                yshift=14,
-                                font=dict(color="black", size=TAMANHO_ROTULO_PONTO),
-                                bgcolor="white",
-                                bordercolor="white",
-                                borderpad=1,
-                                yref="y2"
-                            )
+                            fig14.add_annotation(x=row['Rank'], y=row['Vol_Medio'], text=f"{row['Vol_Medio']:,.2f}".replace('.',','), showarrow=False, yshift=14, font=dict(color="black", size=TAMANHO_ROTULO_PONTO), bgcolor="white", bordercolor="white", borderpad=1, yref="y2")
                     
-                    # Adiciona a linha branca de corte na posição X exata da barra
                     for _, row in top20.iterrows():
                         if row['Vol'] > limite_corte_vol:
                             cat_rank = row['Rank']
                             if cat_rank in ordem_rank_x:
                                 x_pos = ordem_rank_x.index(cat_rank)
                                 y_corte = 78
-                                
-                                fig14.add_shape(
-                                    type="line",
-                                    x0=x_pos - 0.38,
-                                    x1=x_pos + 0.38,
-                                    y0=y_corte,
-                                    y1=y_corte,
-                                    line=dict(color="white", width=24),
-                                    xref="x",
-                                    yref="y",
-                                    layer="above"
-                                )
-                                
-                                fig14.add_annotation(
-                                    x=cat_rank,
-                                    y=y_corte,
-                                    text="<b>//</b>",
-                                    showarrow=False,
-                                    font=dict(color="black", size=14),
-                                    bgcolor="white",
-                                    borderpad=1,
-                                    yref="y"
-                                )
+                                fig14.add_shape(type="line", x0=x_pos - 0.38, x1=x_pos + 0.38, y0=y_corte, y1=y_corte, line=dict(color="white", width=24), xref="x", yref="y", layer="above")
+                                fig14.add_annotation(x=cat_rank, y=y_corte, text="<b>//</b>", showarrow=False, font=dict(color="black", size=14), bgcolor="white", borderpad=1, yref="y")
                     
-                    # Layout e Legenda
-                    fig14.update_layout(
-                        plot_bgcolor='white', 
-                        paper_bgcolor='white',
-                        height=720,
-                        font=dict(color='black', size=14),
-                        uniformtext_minsize=12,
-                        uniformtext_mode='show',
-                        legend_title_text='', 
-                        legend=dict(
-                            orientation="h", 
-                            yanchor="bottom", 
-                            y=1.03, 
-                            xanchor="center", 
-                            x=0.5,
-                            font=dict(color='black', size=13)
-                        ),
-                        margin=dict(t=80, b=180, l=60, r=60)
-                    )
+                    fig14.update_layout(plot_bgcolor='white', paper_bgcolor='white', height=720, font=dict(color='black', size=14), uniformtext_minsize=12, uniformtext_mode='show', legend_title_text='', legend=dict(orientation="h", yanchor="bottom", y=1.03, xanchor="center", x=0.5, font=dict(color='black', size=13)), margin=dict(t=80, b=180, l=60, r=60))
+                    fig14.update_xaxes(tickangle=45, showgrid=False, zeroline=False, linecolor='black', tickfont=dict(color='black', size=12), categoryorder='array', categoryarray=ordem_rank_x)
+                    fig14.update_yaxes(title_text="Volume Total Liberado (m3)", title_font=dict(size=16, color='black'), secondary_y=False, range=[0, limite_eixo_unificado], showgrid=False, zeroline=False, showticklabels=False, linecolor='black')
+                    fig14.update_yaxes(title_text="Volume Médio", title_font=dict(size=16, color='black'), secondary_y=True, range=[0, limite_eixo_unificado], showgrid=False, zeroline=False, showticklabels=False, linecolor='black')
                     
-                    # Eixo X
-                    fig14.update_xaxes(
-                        tickangle=45, 
-                        showgrid=False, 
-                        zeroline=False,
-                        linecolor='black', 
-                        tickfont=dict(color='black', size=12),
-                        categoryorder='array',
-                        categoryarray=ordem_rank_x
-                    )
-                    
-                    # Eixo Y Primário (Volume Total) - Com folga superior para o rótulo outside
-                    fig14.update_yaxes(
-                        title_text="Volume Total Liberado (m3)", 
-                        title_font=dict(size=16, color='black'),
-                        secondary_y=False, 
-                        range=[0, limite_eixo_unificado],
-                        showgrid=False, 
-                        zeroline=False,
-                        showticklabels=False,
-                        linecolor='black'
-                    )
-                    
-                    # Eixo Y Secundário (Volume Médio)
-                    fig14.update_yaxes(
-                        title_text="Volume Médio", 
-                        title_font=dict(size=16, color='black'),
-                        secondary_y=True, 
-                        range=[0, limite_eixo_unificado],
-                        showgrid=False, 
-                        zeroline=False,
-                        showticklabels=False,
-                        linecolor='black'
-                    )
-                    
-                    # Garante o fundo 100% branco após a função de ajuste
                     fig14_final = ajustar_layout_grafico(fig14)
-                    fig14_final.update_layout(
-                        plot_bgcolor='white',
-                        paper_bgcolor='white',
-                        height=720
-                    )
-                    
-                    # Configuração de exportação de imagem
-                    config_g14 = {
-                        'toImageButtonOptions': {
-                            **CONFIG_EXPORTACAO['toImageButtonOptions'],
-                            'width': 1000,
-                            'height': 650
-                        }
-                    }
-                    
+                    fig14_final.update_layout(plot_bgcolor='white', paper_bgcolor='white', height=720)
+                    config_g14 = {'toImageButtonOptions': {**CONFIG_EXPORTACAO['toImageButtonOptions'], 'width': 1000, 'height': 650}}
                     st.plotly_chart(fig14_final, use_container_width=True, config=config_g14)
                     
                     # --- TABELA CORPORATIVA DE LÍQUIDOS NOCIVOS ---
