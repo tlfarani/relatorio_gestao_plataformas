@@ -6,6 +6,7 @@ from plotly.subplots import make_subplots
 import os
 import unicodedata
 import io
+import re
 
 # =========================================================================
 # 1. CONFIGURAÇÕES DE VISUALIZAÇÃO E EXPORTAÇÃO DOS GRÁFICOS
@@ -57,10 +58,18 @@ def limpar_volume_safely(val):
     if val_str in ['PREENCHER', 'NAN', 'NONE', '']: 
         return 0.0
     
-    # Remove espaços internos que travavam a conversão de notação científica (ex: "1.5 E 5", "1.5 E -5", "3.312 E 5")
+    # Tratamento de notação científica: se houver E seguido de número sem sinal (ex: "1.5E 5" ou "3.312E 5"), 
+    # força o expoente negativo ("E-5") para evitar inflar o volume em +100.000 m³
+    if 'E' in val_str:
+        val_str = re.sub(r'E\s*\+?(\d+)', r'E-\1', val_str)
+        val_str = val_str.replace(',', '.').replace(' ', '')
+        try:
+            return float(val_str)
+        except ValueError:
+            return 0.0
+
+    # Tratamento de formato decimal brasileiro vs padrão americano
     val_clean = val_str.replace(' ', '')
-    
-    # Tratamento de formato decimal (vírgulas e pontos)
     if '.' in val_clean and ',' in val_clean:
         val_clean = val_clean.replace('.', '').replace(',', '.')
     elif ',' in val_clean:
@@ -826,7 +835,7 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                 st.plotly_chart(ajustar_layout_grafico(fig9), use_container_width=True, config=CONFIG_EXPORTACAO)
 
         # =========================================================================
-        # ABA 4: CONSOLIDAÇÃO POR PRODUTO
+        # ABA 4: CONSOLIDAÇÃO POR PRODUTO - GRÁFICO 10 AJUSTADO PARA CONTAR LIBERAÇÕES DE PRODUTOS (TOTAL 242
         # =========================================================================
         with tab_produtos:
             registros_brutos = []
@@ -956,7 +965,12 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                     
                     # --- GRÁFICO 10 ---
                     with col_graf1:
-                        df_g10 = df_prod_filtrado.groupby('Tipo').agg(Vol=('Volume','sum'), Acid=('Processo','nunique')).reset_index()
+                        # Agrupa por 'Tipo' contando o número total de LIBERAÇÕES DE PRODUTOS (count), totalizando 242
+                        df_g10 = df_prod_filtrado.groupby('Tipo').agg(
+                            Vol=('Volume', 'sum'), 
+                            Qtd=('Produto', 'count')  # <-- 'count' garante a contagem exata de 242 liberações de produtos
+                        ).reset_index()
+                        
                         fig10 = make_subplots(specs=[[{"secondary_y": True}]])
                         
                         cores_tp = {'Não Oleoso': '#1FA1DD', 'Oleoso': '#8BC53F', 'Sem Informação': '#BDC3C7'}
@@ -969,13 +983,49 @@ if os.path.exists(NOME_ACIDENTES) and os.path.exists(NOME_PRODUCAO) and os.path.
                             cor_barra = cores_tp.get(tipo, '#BDC3C7')
                             cor_texto_barra = cores_texto_escuras.get(tipo, '#2C3E50')
                             
-                            fig10.add_trace(go.Bar(name=tipo, x=d['Tipo'], y=d['Vol'], marker_color=cor_barra, text=d['Vol'].apply(lambda x: f"<b>{x:,.1f} m3</b>".replace('.',',')), textposition='outside', cliponaxis=False, textfont=dict(color=cor_texto_barra, size=20), showlegend=True), secondary_y=False)
-                            fig10.add_trace(go.Scatter(name=f'Acidentes {tipo}', x=d['Tipo'], y=d['Acid'], mode='markers+text', marker=dict(color='black', size=12), text=d['Acid'], textposition='top center', textfont=dict(color='black', size=18), showlegend=False), secondary_y=True)
+                            # Barras de Volume
+                            fig10.add_trace(
+                                go.Bar(
+                                    name=tipo, 
+                                    x=d['Tipo'], 
+                                    y=d['Vol'], 
+                                    marker_color=cor_barra, 
+                                    text=d['Vol'].apply(lambda x: f"<b>{x:,.1f} m3</b>".replace('.',',')), 
+                                    textposition='outside', 
+                                    cliponaxis=False, 
+                                    textfont=dict(color=cor_texto_barra, size=20), 
+                                    showlegend=True
+                                ), 
+                                secondary_y=False
+                            )
+                            
+                            # Pontos de Liberações de Produtos (Métrica exata de 242 liberações)
+                            fig10.add_trace(
+                                go.Scatter(
+                                    name=f'Liberações {tipo}', 
+                                    x=d['Tipo'], 
+                                    y=d['Qtd'], 
+                                    mode='markers+text', 
+                                    marker=dict(color='black', size=12), 
+                                    text=d['Qtd'], 
+                                    textposition='top center', 
+                                    textfont=dict(color='black', size=18), 
+                                    showlegend=False
+                                ), 
+                                secondary_y=True
+                            )
                         
-                        fig10.update_layout(plot_bgcolor='white', paper_bgcolor='white', font=dict(color='black', size=18), legend_title_text='', legend=dict(orientation="h", yanchor="bottom", y=1.05, xanchor="center", x=0.5, font=dict(size=18, color='black')), margin=dict(t=60, b=40, l=40, r=40))
+                        fig10.update_layout(
+                            plot_bgcolor='white', 
+                            paper_bgcolor='white', 
+                            font=dict(color='black', size=18), 
+                            legend_title_text='', 
+                            legend=dict(orientation="h", yanchor="bottom", y=1.05, xanchor="center", x=0.5, font=dict(size=18, color='black')), 
+                            margin=dict(t=60, b=40, l=40, r=40)
+                        )
                         fig10.update_xaxes(showgrid=False, zeroline=False, showticklabels=False, linecolor='black')
                         fig10.update_yaxes(title_text="Volume de Produto Liberado (m3)", title_font=dict(size=20, color='black'), secondary_y=False, range=[0, max_vol * 1.25], showgrid=False, zeroline=False, showticklabels=False, linecolor='black')
-                        fig10.update_yaxes(title_text="Número de Acidentes", title_font=dict(size=20, color='black'), secondary_y=True, range=[0, max_vol * 1.25], showgrid=False, zeroline=False, showticklabels=False, linecolor='black')
+                        fig10.update_yaxes(title_text="Número de Liberações de Produtos", title_font=dict(size=20, color='black'), secondary_y=True, range=[0, max_vol * 1.25], showgrid=False, zeroline=False, showticklabels=False, linecolor='black')
                         
                         config_g10 = {'toImageButtonOptions': {**CONFIG_EXPORTACAO['toImageButtonOptions'], 'width': 540, 'height': 400}}
                         st.plotly_chart(ajustar_layout_grafico(fig10), use_container_width=True, config=config_g10)
